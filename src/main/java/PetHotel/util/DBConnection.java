@@ -29,4 +29,29 @@ public class DBConnection {
         }
         return null;
     }
+    public static void rollbackQuietly(Connection conn) {
+        if (conn != null) {
+            try {
+                conn.rollback();
+            } catch (SQLException e) {
+                // Bỏ qua lỗi rollback, không muốn che exception gốc
+                System.err.println("[DBConnection] Rollback failed: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Đóng connection an toàn — dùng trong finally block.
+     *
+     * @param conn connection cần đóng (có thể null)
+     */
+    public static void closeQuietly(Connection conn) {
+        if (conn != null) {
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                System.err.println("[DBConnection] Close failed: " + e.getMessage());
+            }
+        }
+    }
 }
