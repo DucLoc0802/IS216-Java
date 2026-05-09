@@ -20,7 +20,7 @@ package PetHotel.util;
  */
 public enum Role {
 
-    CUSTOMER("0"),
+    ADMIN("0"),
     RECEPTIONIST("1"),
     PET_CARE_STAFF("2"),
     WAREHOUSE_STAFF("3"),

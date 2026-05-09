@@ -1,10 +1,20 @@
 package PetHotel.gui.controller;
 
+import java.io.IOException;
+import java.util.Optional;
+
+import PetHotel.bus.AuthBUS;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 public class SidebarController {
 
@@ -21,6 +31,9 @@ public class SidebarController {
     // Biến liên kết đến Controller gốc (MainController) để gọi hàm loadView()
     private MainController mainController;
 
+    // AuthBUS for logout business logic
+    private AuthBUS authBUS;
+
     @FXML
     public void initialize() {
         // Mặc định thông tin user
@@ -35,6 +48,11 @@ public class SidebarController {
     // Nhận quyền điều khiển từ MainController
     public void setMainController(MainController mainController) {
         this.mainController = mainController;
+    }
+
+    // Nhận AuthBUS instance từ MainController
+    public void setAuthBUS(AuthBUS authBUS) {
+        this.authBUS = authBUS;
     }
 
     // --- HÀM XỬ LÝ CHUNG CHO TẤT CẢ MENU ---
@@ -124,7 +142,53 @@ public class SidebarController {
 
     @FXML
     public void onLogout(MouseEvent event) {
-        System.out.println("Tiến hành đăng xuất...");
+        // 1. Hiển thị hộp thoại xác nhận
+        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmAlert.setTitle("Đăng xuất");
+        confirmAlert.setHeaderText(null);
+        confirmAlert.setContentText("Bạn có chắc chắn muốn đăng xuất?");
+
+        Optional<ButtonType> result = confirmAlert.showAndWait();
+
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            // 2. Người dùng xác nhận → thực hiện logout
+
+            // 2a. Gọi AuthBUS.logout() để xóa session business logic
+            String employeeId = SessionManager.getInstance().getUserId();
+            if (authBUS != null && employeeId != null) {
+                authBUS.logout(employeeId);
+            }
+
+            // 2b. Xóa SessionManager
+            SessionManager.getInstance().logout();
+
+            // 2c. Mở lại màn hình Login
+            try {
+                FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/PetHotel/gui/view/Login.fxml")
+                );
+                Parent root = loader.load();
+
+                Stage loginStage = new Stage();
+                loginStage.setTitle("PetHotel - Đăng nhập");
+                loginStage.setScene(new Scene(root));
+                loginStage.setResizable(false);
+                loginStage.show();
+
+                // 2d. Đóng cửa sổ Dashboard hiện tại
+                Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                currentStage.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                errorAlert.setTitle("Lỗi hệ thống");
+                errorAlert.setHeaderText(null);
+                errorAlert.setContentText("Không thể tải lại giao diện đăng nhập!");
+                errorAlert.showAndWait();
+            }
+        }
+        // 3. Nếu hủy → không làm gì cả
     }
 
     // Hàm tiện ích: Xóa màu của menu cũ, bôi màu cho menu mới

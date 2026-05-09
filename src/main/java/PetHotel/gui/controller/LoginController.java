@@ -59,7 +59,7 @@ public class LoginController {
                 dashboardStage.setScene(new Scene(root));
                 
                 // (Mẹo) Thường Dashboard sẽ mở full màn hình, bạn có thể bật dòng này:
-                // dashboardStage.setMaximized(true);
+                dashboardStage.setMaximized(true);
 
                 // Bước 3: Hiển thị cửa sổ Dashboard lên
                 dashboardStage.show();
