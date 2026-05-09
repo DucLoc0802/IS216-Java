@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="16" styleClass="dialog-content" stylesheets="@../css/style.css"
+      xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="PetHotel.gui.controller.CheckRoomController"
+      prefWidth="700" prefHeight="500">
+
+    <Label styleClass="dialog-title" text="Kiểm Tra Phòng Trống" />
+
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <VBox spacing="4">
+            <Label text="Ngày Check-in *"/>
+            <DatePicker fx:id="dateCheckin" prefWidth="160"/>
+        </VBox>
+        <VBox spacing="4">
+            <Label text="Ngày Check-out *"/>
+            <DatePicker fx:id="dateCheckout" prefWidth="160"/>
+        </VBox>
+        <VBox spacing="4">
+            <Label text="Loại Phòng"/>
+            <ComboBox fx:id="cbRoomType" prefWidth="140" promptText="Tất cả"/>
+        </VBox>
+        <VBox spacing="4">
+            <Label text=" "/>
+            <Button onAction="#onSearch" text="Tìm Phòng Trống"
+                    styleClass="action-btn action-btn-primary"/>
+        </VBox>
+    </HBox>
+
+    <Label fx:id="lblResult" text="" />
+
+    <TableView fx:id="availableRoomTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colRoomNumber" text="Số Phòng" prefWidth="100"/>
+            <TableColumn fx:id="colRoomType" text="Loại" prefWidth="120"/>
+            <TableColumn fx:id="colPrice" text="Giá/Ngày" prefWidth="120"/>
+            <TableColumn fx:id="colMaxPets" text="Sức Chứa" prefWidth="100"/>
+            <TableColumn fx:id="colStatus" text="Trạng Thái" prefWidth="120"/>
+        </columns>
+        <placeholder>
+            <Label text="Nhập ngày và bấm Tìm Phòng Trống" />
+        </placeholder>
+    </TableView>
+
+    <HBox alignment="CENTER_RIGHT" spacing="10">
+        <Button onAction="#onClose" text="Đóng"
+                styleClass="action-btn action-btn-outline"/>
+    </HBox>
+
+</VBox>

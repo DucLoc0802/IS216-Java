@@ -2,56 +2,78 @@ package PetHotel.gui.controller;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 
 public class BookingController {
 
-    @FXML private TextField txtSearch;
-    @FXML private ComboBox<String> cbStatusFilter; // Bộ lọc: Tất cả, Đang chờ, Đã Check-in...
-    @FXML private TableView<?> tableBooking;
+    @FXML private TextField searchField;
+    @FXML private TableView<?> bookingTable;
 
     @FXML
     public void initialize() {
         System.out.println("Đã load giao diện Quản lý Booking");
-        // cbStatusFilter.getItems().addAll("Tất cả", "Chờ Check-in", "Đang ở", "Đã trả phòng", "Đã hủy");
-    }
-
-    @FXML public void onCreateBooking(ActionEvent event) { System.out.println("Mở form Tạo Booking mới..."); }
-    @FXML public void onCheckin(ActionEvent event) { System.out.println("Thực hiện Check-in..."); }
-    @FXML public void onCheckout(ActionEvent event) { System.out.println("Thực hiện Check-out..."); }
-    @FXML public void onCheckRoom(ActionEvent event) { System.out.println("Mở bảng Kiểm phòng..."); }
-    @FXML public void onFilter(ActionEvent event) { System.out.println("Lọc danh sách Booking..."); }
-    
-    @FXML 
-    public void onTableClick(MouseEvent event) { 
-        System.out.println("Vừa click vào một dòng trong bảng Booking!"); 
     }
 
     @FXML
-    public void handleSearch(ActionEvent event) {
-        System.out.println("Lọc Booking theo từ khóa: " + txtSearch.getText());
+    public void onCreateBooking(ActionEvent event) {
+        showAlert("Thông báo", "Chức năng tạo booking đang phát triển.");
     }
 
     @FXML
-    public void handleCreateBooking(ActionEvent event) {
-        System.out.println("Mở form Tạo Booking mới");
+    public void onCheckin(ActionEvent event) {
+        showAlert("Thông báo", "Chức năng check-in đang phát triển.");
     }
 
     @FXML
-    public void handleCheckIn(ActionEvent event) {
-        System.out.println("Chuyển trạng thái Booking này sang 'Đã Check-in' và xếp phòng");
+    public void onCheckout(ActionEvent event) {
+        showAlert("Thông báo", "Chức năng check-out đang phát triển.");
     }
 
     @FXML
-    public void handleCheckOut(ActionEvent event) {
-        System.out.println("Chuyển trạng thái sang 'Đã trả phòng' và sinh Hóa đơn");
+    public void onCheckRoom(ActionEvent event) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                getClass().getResource("/PetHotel/gui/view/CheckRoomDialog.fxml"));
+            javafx.scene.Parent root = loader.load();
+
+            javafx.stage.Stage dialog = new javafx.stage.Stage();
+            dialog.setTitle("Kiểm Tra Phòng Trống");
+            dialog.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            dialog.setScene(new javafx.scene.Scene(root));
+            dialog.showAndWait();
+
+        } catch (Exception e) {
+            showAlert("Lỗi", "Không thể mở: " + e.getMessage());
+        }
     }
 
     @FXML
-    public void handleCancelBooking(ActionEvent event) {
-        System.out.println("Hủy Booking này");
+    public void onFilter(ActionEvent event) { }
+
+    @FXML
+    public void onTableClick(MouseEvent event) { }
+
+    @FXML
+    public void handleSearch(ActionEvent event) { }
+
+    @FXML
+    public void handleCreateBooking(ActionEvent event) { onCreateBooking(event); }
+
+    @FXML
+    public void handleCheckIn(ActionEvent event) { onCheckin(event); }
+
+    @FXML
+    public void handleCheckOut(ActionEvent event) { onCheckout(event); }
+
+    @FXML
+    public void handleCancelBooking(ActionEvent event) { }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
