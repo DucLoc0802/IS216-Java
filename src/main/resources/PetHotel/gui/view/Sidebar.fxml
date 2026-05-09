@@ -46,7 +46,7 @@
             </VBox>
 
             <!-- ── Nghiệp vụ ─────────────────────────────── -->
-            <VBox styleClass="menu-group">
+            <VBox fx:id="groupBusiness" styleClass="menu-group">
                 <Label styleClass="menu-group-title" text="QUẢN LÝ NGHIỆP VỤ" />
             </VBox>
 
@@ -97,7 +97,7 @@
             </VBox>
 
             <!-- ── Kho & Sản phẩm ───────────────────────── -->
-            <VBox styleClass="menu-group">
+            <VBox fx:id="groupInventory" styleClass="menu-group">
                 <Label styleClass="menu-group-title" text="KHO &amp; SẢN PHẨM" />
             </VBox>
 
@@ -125,7 +125,7 @@
             </VBox>
 
             <!-- ── Quản trị ──────────────────────────────── -->
-            <VBox styleClass="menu-group">
+            <VBox fx:id="groupAdmin" styleClass="menu-group">
                 <Label styleClass="menu-group-title" text="QUẢN TRỊ HỆ THỐNG" />
             </VBox>
 

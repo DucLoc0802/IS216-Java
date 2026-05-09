@@ -1,8 +1,9 @@
 package PetHotel.model;
 
-import PetHotel.util.Role;
 import java.time.OffsetDateTime;
 import java.util.Objects;
+
+import PetHotel.util.Role;
 
 /**
  * AppUser — Ánh xạ bảng APP_USER.
@@ -17,9 +18,14 @@ import java.util.Objects;
  *   created_at    TIMESTAMP(6) WITH TIME ZONE
  *   updated_at    TIMESTAMP(6) WITH TIME ZONE
  *
- * NOTE: PK là employee_id, không có cột user_id riêng.
- *       ISSUE: role '0' = CUSTOMER nhưng bảng lại FK sang employee_id
- *              → customer app user sẽ không tồn tại trong hệ thống này.
+ * ARCHITECTURE NOTE:
+ *   AppUser chỉ chứa dữ liệu xác thực / tài khoản.
+ *   Dữ liệu hồ sơ nhân viên (fullName, email, phone, branchId)
+ *   thuộc về Employee entity — được truy cập qua AppUser.getEmployee().
+ *
+ *   PK là employee_id, không có cột user_id riêng.
+ *   ISSUE: role '0' = CUSTOMER nhưng bảng lại FK sang employee_id
+ *          → customer app user sẽ không tồn tại trong hệ thống này.
  */
 public class AppUser {
 
@@ -52,6 +58,13 @@ public class AppUser {
 
     /** Thời điểm cập nhật lần cuối */
     private OffsetDateTime updatedAt;
+
+    /**
+     * Employee profile — dữ liệu hồ sơ nhân viên (fullName, email, phone, ...).
+     * Được JOIN và map trong AppUserDAO.
+     * Có thể null nếu chỉ truy vấn auth data thuần túy.
+     */
+    private Employee employee;
 
     // ── Constructors ─────────────────────────────────────────────
 
@@ -100,13 +113,38 @@ public class AppUser {
     public OffsetDateTime getUpdatedAt()    { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime v) { this.updatedAt = v; }
 
+    /** Employee profile object (fullName, email, phone, branchId, ...) */
+    public Employee getEmployee()           { return employee; }
+    public void setEmployee(Employee v)     { this.employee = v; }
+
     // ── Helpers ───────────────────────────────────────────────────
 
-    /** @return true nếu user có quyền bằng hoặc cao hơn role được chỉ định */
+/**
+     * Kiểm tra quyền truy cập (Role-Based Access Control).
+     * ADMIN và CEO có toàn quyền.
+     * BRANCH_MANAGER có quyền giám sát các nghiệp vụ.
+     * Nhân viên vận hành chỉ có quyền với đúng chuyên môn của mình.
+     *
+     * @param required Role yêu cầu để thực hiện hành động
+     * @return true nếu user có quyền
+     */
     public boolean hasRole(Role required) {
-        // So sánh theo thứ tự số của dbValue: CEO (5) > BRANCH_MANAGER (4) > ...
-        return Integer.parseInt(this.role.getDbValue())
-            >= Integer.parseInt(required.getDbValue());
+        // 1. Quyền tối cao (Superuser): Admin và CEO làm được mọi thứ
+        if (this.role == Role.ADMIN || this.role == Role.CEO) {
+            return true;
+        }
+
+        // 2. Quyền quản lý (Manager): Có thể xem/duyệt mọi nghiệp vụ của nhân viên (1, 2, 3)
+        // Nếu required không phải là Admin hay CEO, Manager sẽ được phép pass qua.
+        if (this.role == Role.BRANCH_MANAGER) {
+            if (required != Role.ADMIN && required != Role.CEO) {
+                return true; 
+            }
+        }
+
+        // 3. Nhân viên thông thường (Horizontal Roles): Phải khớp chính xác 100% chuyên môn
+        // Ví dụ: WAREHOUSE_STAFF chỉ trả về true nếu required đúng là WAREHOUSE_STAFF
+        return this.role == required;
     }
 
     @Override
@@ -121,7 +159,8 @@ public class AppUser {
 
     @Override
     public String toString() {
+        String empInfo = (employee != null) ? ", fullName='" + employee.getFullName() + "'" : "";
         return "AppUser{employeeId='" + employeeId + "', userName='" + userName
-             + "', role=" + role + ", isActive=" + isActive + "}";
+             + "', role=" + role + ", isActive=" + isActive + empInfo + "}";
     }
 }

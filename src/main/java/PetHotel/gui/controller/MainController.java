@@ -30,8 +30,11 @@ public class MainController {
             System.out.println("Đã kết nối Sidebar thành công!");
             // Truyền chính MainController này cho Sidebar, để Sidebar có thể mượn hàm loadView()
             sidebarController.setMainController(this);
-            // Truyền AuthBUS cho Sidebar để xử lý logout
-            sidebarController.setAuthBUS(new AuthBUS());
+            // Truyền AuthBUS từ SessionManager (đã được LoginController khởi tạo) cho Sidebar
+            AuthBUS sharedAuthBUS = SessionManager.getInstance().getAuthBUS();
+            if (sharedAuthBUS != null) {
+                sidebarController.setAuthBUS(sharedAuthBUS);
+            }
         }
         
         if (topbarController != null) {

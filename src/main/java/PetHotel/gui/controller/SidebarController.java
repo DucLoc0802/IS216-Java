@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.Optional;
 
 import PetHotel.bus.AuthBUS;
+import PetHotel.model.AppUser;
+import PetHotel.model.Employee;
+import PetHotel.util.Role;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -18,31 +21,176 @@ import javafx.stage.Stage;
 
 public class SidebarController {
 
+    // --- Khai báo biến Controller & BUS ---
+    private MainController mainController;
+    private AuthBUS authBUS;
+    private VBox activeMenuItem; // Biến lưu trạng thái menu đang được chọn
+
+    // --- Khai báo Profile ---
     @FXML private Label avatarLabel;
     @FXML private Label usernameLabel;
     @FXML private Label roleLabel;
 
-    // Biến lưu trữ menu đang được bôi màu để tắt nó đi khi chọn menu khác
-    private VBox activeMenuItem;
+    // --- Khai báo Menu Items ---
+    @FXML private VBox menuDashboard;
     
-    // Nút Dashboard mặc định được gắn fx:id để tô màu lúc vừa mở app
-    @FXML private VBox menuDashboard; 
+    @FXML private VBox menuCustomer;
+    @FXML private VBox menuPet;
+    @FXML private VBox menuBooking;
+    @FXML private VBox menuGrooming;
+    @FXML private VBox menuRoom;
+    @FXML private VBox menuInvoice;
 
-    // Biến liên kết đến Controller gốc (MainController) để gọi hàm loadView()
-    private MainController mainController;
+    @FXML private VBox groupInventory; // Tiêu đề nhóm Kho
+    @FXML private VBox menuProduct;
+    @FXML private VBox menuInventory;
+    @FXML private VBox menuSupplier;
 
-    // AuthBUS for logout business logic
-    private AuthBUS authBUS;
+    @FXML private VBox groupAdmin; // Tiêu đề nhóm Quản trị
+    @FXML private VBox menuStaff;
+    @FXML private VBox menuAccount;
+    @FXML private VBox menuReport;
 
     @FXML
     public void initialize() {
-        // Mặc định thông tin user
-        usernameLabel.setText("Nguyễn Văn A");
-        roleLabel.setText("Admin Hệ Thống");
-        avatarLabel.setText("A");
+        // 1. Lấy thông tin user hiện tại đang đăng nhập
+        AppUser currentUser = SessionManager.getInstance().getCurrentUser();
+        
+        if (currentUser != null) {
+            // 2. Set thông tin Profile lên UI
+            //    Profile data (fullName) thuộc Employee, không thuộc AppUser
+            Employee employee = currentUser.getEmployee();
+            String fullName = (employee != null && employee.getFullName() != null)
+                              ? employee.getFullName()
+                              : currentUser.getUserName();
+            usernameLabel.setText(fullName);
+            avatarLabel.setText(String.valueOf(fullName.charAt(0)).toUpperCase());
+            roleLabel.setText(currentUser.getRole().getDisplayName());
 
-        // Set nút Dashboard làm nút được bôi màu mặc định ban đầu
-        activeMenuItem = menuDashboard;
+            // 3. Xử lý phân quyền Sidebar (Ẩn UI)
+            applyRolePermissions(currentUser.getRole());
+        }
+    }
+
+    // Trong file SidebarController.java
+
+private void applyRolePermissions(Role role) {
+    switch (role) {
+        case RECEPTIONIST:
+            // 1. NHÂN VIÊN LỄ TÂN
+            // Ẩn Dashboard
+            hideMenu(menuDashboard); 
+            
+            // Về Kho hàng: Lễ tân chỉ được tra cứu sản phẩm, nên ẩn Nhập kho và Nhà cung cấp
+            hideMenu(menuInventory);
+            hideMenu(menuSupplier);
+            
+            // Ẩn hoàn toàn nhóm Quản trị hệ thống & Báo cáo
+            hideMenu(groupAdmin);
+            hideMenu(menuStaff);
+            hideMenu(menuAccount);
+            hideMenu(menuReport);
+            break;
+
+        case PET_CARE_STAFF:
+            // 2. NHÂN VIÊN CHĂM SÓC
+            // Chỉ tương tác với Thú cưng và Grooming (cập nhật trạng thái, sức khoẻ)
+            hideMenu(menuDashboard);
+            hideMenu(menuCustomer);
+            hideMenu(menuBooking);
+            hideMenu(menuRoom);
+            hideMenu(menuInvoice);
+            
+            // Ẩn hoàn toàn nhóm Kho
+            hideMenu(groupInventory);
+            hideMenu(menuProduct);
+            hideMenu(menuInventory);
+            hideMenu(menuSupplier);
+            
+            // Ẩn hoàn toàn nhóm Quản trị
+            hideMenu(groupAdmin);
+            hideMenu(menuStaff);
+            hideMenu(menuAccount);
+            hideMenu(menuReport);
+            break;
+
+        case BRANCH_MANAGER:
+            // 3. QUẢN LÝ CHI NHÁNH
+            // Vận hành toàn bộ chi nhánh, quản lý nhân viên, xem báo cáo nhưng KHÔNG quản lý tài khoản hệ thống
+            hideMenu(menuAccount); 
+            break;
+
+        case ADMIN:
+            // 4. ADMIN (Quản trị viên hệ thống)
+            // Chỉ quản lý cấu hình hệ thống: Tài khoản, Phân quyền, Danh mục Phòng. Không vận hành hàng ngày.
+            hideMenu(menuDashboard);
+            hideMenu(menuCustomer);
+            hideMenu(menuPet);
+            hideMenu(menuBooking);
+            hideMenu(menuGrooming);
+            hideMenu(menuInvoice);
+            
+            // Ẩn toàn bộ nhóm Kho
+            hideMenu(groupInventory);
+            hideMenu(menuProduct);
+            hideMenu(menuInventory);
+            hideMenu(menuSupplier);
+            
+            // Trong Quản trị, Admin không xem Báo cáo doanh thu và không quản lý Nhân sự chi nhánh
+            hideMenu(menuStaff);
+            hideMenu(menuReport);
+            // Giữ lại: menuRoom (cấu hình loại phòng) và menuAccount
+            break;
+
+        case CEO:
+            // 5. CEO (OWNER)
+            // Thiên về xem báo cáo tổng quan, dashboard, kiểm kê tồn kho và giám sát (Audit / Khoá TK)
+            // Ẩn các thao tác vận hành hàng ngày
+            hideMenu(menuCustomer);
+            hideMenu(menuPet);
+            hideMenu(menuBooking);
+            hideMenu(menuGrooming);
+            hideMenu(menuRoom);
+            hideMenu(menuInvoice);
+            
+            // Nhóm kho: Ẩn phần bán hàng/nhà cung cấp, chỉ giữ Inventory để xem thống kê
+            hideMenu(menuProduct);
+            hideMenu(menuSupplier);
+            
+            // Nhóm Quản trị: Không trực tiếp sửa nhân viên chi nhánh
+            hideMenu(menuStaff);
+            // Giữ lại: menuDashboard, menuInventory, menuAccount (để khoá tk), menuReport
+            break;
+
+        default:
+            // Nếu không xác định được role, ẩn tất cả, chỉ để lại menu trống (người dùng chỉ có thể Đăng xuất)
+            hideMenu(menuDashboard);
+            hideMenu(menuCustomer);
+            hideMenu(menuPet);
+            hideMenu(menuBooking);
+            hideMenu(menuGrooming);
+            hideMenu(menuRoom);
+            hideMenu(menuInvoice);
+            
+            hideMenu(groupInventory);
+            hideMenu(menuProduct);
+            hideMenu(menuInventory);
+            hideMenu(menuSupplier);
+            
+            hideMenu(groupAdmin);
+            hideMenu(menuStaff);
+            hideMenu(menuAccount);
+            hideMenu(menuReport);
+            break;
+    }
+}
+
+    // Hàm tiện ích giúp ẩn hoàn toàn Node khỏi Layout
+    private void hideMenu(Node node) {
+        if (node != null) {
+            node.setVisible(false);
+            node.setManaged(false); // Quan trọng: Thu hồi lại không gian của VBox này
+        }
     }
 
     // Nhận quyền điều khiển từ MainController
@@ -58,24 +206,28 @@ public class SidebarController {
     // --- HÀM XỬ LÝ CHUNG CHO TẤT CẢ MENU ---
     @FXML
     public void onMenu(MouseEvent event) {
-        // 1. Lấy ra cái nút (VBox) mà người dùng vừa click vào
         Node source = (Node) event.getSource();
         
         if (source instanceof VBox) {
             VBox clickedMenu = (VBox) source;
 
-            // 2. Đổi màu cho nút vừa click (Sáng lên)
+            // 1. Đổi màu cho nút vừa click (Sáng lên)
             setActive(clickedMenu);
 
-            // 3. Đọc thẻ userData đã gắn trong FXML
+            // 2. Đọc thẻ userData đã gắn trong FXML
             String menuType = (String) clickedMenu.getUserData();
+
+            // 3. Lấy Role hiện tại để kiểm tra bảo mật kép
+            Role currentRole = SessionManager.getInstance().getCurrentUser().getRole();
 
             // 4. Kiểm tra xem là nút nào và Load FXML tương ứng
             if (mainController != null && menuType != null) {
                 switch (menuType) {
                     case "dashboard":
-                        mainController.loadView("DashboardHome.fxml");
-                        mainController.getTopbarController().setTitle("Dashboard", "Trang chủ");
+                        if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER) {
+                            mainController.loadView("DashboardHome.fxml");
+                            mainController.getTopbarController().setTitle("Dashboard", "Trang chủ");
+                        }
                         break;
                     case "customer":
                         mainController.loadView("CustomerManagement.fxml");
@@ -98,34 +250,45 @@ public class SidebarController {
                         mainController.getTopbarController().setTitle("Hóa Đơn", "Quản lý hóa đơn");
                         break;
                     case "account":
-                        mainController.loadView("AccountManagement.fxml");
-                        mainController.getTopbarController().setTitle("Tài Khoản", "Quản lý tài khoản");
+                        if (currentRole == Role.ADMIN) {
+                            mainController.loadView("AccountManagement.fxml");
+                            mainController.getTopbarController().setTitle("Tài Khoản", "Quản lý tài khoản");
+                        }
                         break;
                     case "employee":
-                        mainController.loadView("EmployeeManagement.fxml"); // (Hoặc staff-management.fxml tùy bạn đặt)
-                        mainController.getTopbarController().setTitle("Nhân Viên", "Quản lý nhân viên");
+                        if (currentRole == Role.ADMIN) {
+                            mainController.loadView("EmployeeManagement.fxml"); 
+                            mainController.getTopbarController().setTitle("Nhân Viên", "Quản lý nhân viên");
+                        }
                         break;
                     case "report":
-                        mainController.loadView("ReportManagement.fxml");
-                        mainController.getTopbarController().setTitle("Báo Cáo", "Thống kê & báo cáo");
+                        if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER) {
+                            mainController.loadView("ReportManagement.fxml");
+                            mainController.getTopbarController().setTitle("Báo Cáo", "Thống kê & báo cáo");
+                        }
                         break;
                     case "supplier":
-                        mainController.loadView("SupplierManagement.fxml");
-                        mainController.getTopbarController().setTitle("Nhà Cung Cấp", "Quản lý đối tác & nhà cung cấp");
+                        if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER) {
+                            mainController.loadView("SupplierManagement.fxml");
+                            mainController.getTopbarController().setTitle("Nhà Cung Cấp", "Quản lý đối tác & nhà cung cấp");
+                        }
                         break;
                     case "pet":
                         mainController.loadView("PetManagement.fxml");
                         mainController.getTopbarController().setTitle("Thú Cưng", "Quản lý hồ sơ thú cưng");
                         break;
                     case "inventory":
-                        mainController.loadView("InventoryManagement.fxml");
-                        mainController.getTopbarController().setTitle("Kho Hàng", "Quản lý nhập xuất tồn kho");
+                        if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER) {
+                            mainController.loadView("InventoryManagement.fxml");
+                            mainController.getTopbarController().setTitle("Kho Hàng", "Quản lý nhập xuất tồn kho");
+                        }
                         break;
                     case "product":
-                        mainController.loadView("ProductManagement.fxml");
-                        mainController.getTopbarController().setTitle("Sản Phẩm", "Quản lý danh mục sản phẩm");
+                        if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER) {
+                            mainController.loadView("ProductManagement.fxml");
+                            mainController.getTopbarController().setTitle("Sản Phẩm", "Quản lý danh mục sản phẩm");
+                        }
                         break;
-                    // Bạn có thể tự bổ sung các case "pet", "product", "inventory"... vào đây
                     default:
                         System.out.println("⚠️ Chưa code tính năng chuyển trang cho menu: " + menuType);
                         break;
@@ -142,8 +305,9 @@ public class SidebarController {
 
     @FXML
     public void onLogout(MouseEvent event) {
-        // 1. Hiển thị hộp thoại xác nhận
+        // Hiển thị hộp thoại xác nhận
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        setActive(event.getSource() instanceof VBox ? (VBox) event.getSource() : null); // Bôi màu menu Logout khi click
         confirmAlert.setTitle("Đăng xuất");
         confirmAlert.setHeaderText(null);
         confirmAlert.setContentText("Bạn có chắc chắn muốn đăng xuất?");
@@ -151,22 +315,18 @@ public class SidebarController {
         Optional<ButtonType> result = confirmAlert.showAndWait();
 
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            // 2. Người dùng xác nhận → thực hiện logout
-
-            // 2a. Gọi AuthBUS.logout() để xóa session business logic
+            // Người dùng xác nhận → thực hiện logout
             String employeeId = SessionManager.getInstance().getUserId();
             if (authBUS != null && employeeId != null) {
                 authBUS.logout(employeeId);
             }
 
-            // 2b. Xóa SessionManager
+            // Xóa SessionManager
             SessionManager.getInstance().logout();
 
-            // 2c. Mở lại màn hình Login
+            // Mở lại màn hình Login
             try {
-                FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/PetHotel/gui/view/Login.fxml")
-                );
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/PetHotel/gui/view/Login.fxml"));
                 Parent root = loader.load();
 
                 Stage loginStage = new Stage();
@@ -175,7 +335,7 @@ public class SidebarController {
                 loginStage.setResizable(false);
                 loginStage.show();
 
-                // 2d. Đóng cửa sổ Dashboard hiện tại
+                // Đóng cửa sổ Dashboard hiện tại
                 Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 currentStage.close();
 
@@ -188,7 +348,6 @@ public class SidebarController {
                 errorAlert.showAndWait();
             }
         }
-        // 3. Nếu hủy → không làm gì cả
     }
 
     // Hàm tiện ích: Xóa màu của menu cũ, bôi màu cho menu mới
@@ -196,7 +355,9 @@ public class SidebarController {
         if (activeMenuItem != null) {
             activeMenuItem.getStyleClass().remove("menu-item-active");
         }
-        item.getStyleClass().add("menu-item-active");
-        activeMenuItem = item;
+        if (item != null) {
+            item.getStyleClass().add("menu-item-active");
+            activeMenuItem = item;
+        }
     }
 }
