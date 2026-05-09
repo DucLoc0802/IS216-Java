@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="16" styleClass="dialog-content" stylesheets="@../css/style.css"
+      xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="PetHotel.gui.controller.AddRoomController">
+
+    <Label styleClass="dialog-title" text="Thêm Phòng Mới" />
+
+    <GridPane hgap="12" vgap="12">
+        <Label text="Số Phòng *" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+        <TextField fx:id="txtRoomNumber" promptText="VD: 101, 202..." 
+                   GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="200"/>
+
+        <Label text="Loại Phòng *" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <ComboBox fx:id="cbRoomType" prefWidth="200"
+                  GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+        <Label text="Trạng Thái *" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+        <ComboBox fx:id="cbStatus" prefWidth="200"
+                  GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+    </GridPane>
+
+    <Label fx:id="lblError" styleClass="error-label" text="" />
+
+    <HBox alignment="CENTER_RIGHT" spacing="10">
+        <Button fx:id="btnCancel" onAction="#onCancel" text="Hủy"
+                styleClass="action-btn action-btn-outline"/>
+        <Button fx:id="btnSave" onAction="#onSave" text="Lưu"
+                styleClass="action-btn action-btn-primary"/>
+    </HBox>
+
+</VBox>

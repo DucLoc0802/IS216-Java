@@ -1,64 +1,235 @@
 package PetHotel.gui.controller;
 
+import PetHotel.bus.RoomBUS;
+import PetHotel.model.Room;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+
+import java.util.List;
 
 public class RoomController {
 
-    @FXML private TextField txtSearch;
-    @FXML private TableView<?> tableRoom;
+    // ── FXML fields — tên phải khớp fx:id trong FXML ────────────
+    @FXML private TextField searchField;
+    @FXML private ComboBox<String> filterStatus;
+    @FXML private ComboBox<String> filterType;
+    @FXML private TableView<Room> roomTable;
 
-    // ... các khai báo @FXML ở trên giữ nguyên
+    @FXML private TableColumn<Room, String> colRoomId;
+    @FXML private TableColumn<Room, String> colRoomType;
+    @FXML private TableColumn<Room, String> colRoomFloor;
+    @FXML private TableColumn<Room, Double> colRoomPrice;
+    @FXML private TableColumn<Room, Integer> colRoomCap;
+    @FXML private TableColumn<Room, String> colRoomStatus;
+    @FXML private TableColumn<Room, String> colRoomPet;
+    @FXML private TableColumn<Room, String> colRoomAction;
 
-    @FXML
-    public void onSearch(javafx.event.ActionEvent event) {
-        System.out.println("Đang tìm kiếm phòng...");
-    }
+    @FXML private Label countOccupied;
+    @FXML private Label countAvailable;
+    @FXML private Label countCleaning;
+    @FXML private Label countMaintenance;
 
-    @FXML
-    public void onFilter(javafx.event.ActionEvent event) {
-        System.out.println("Đang lọc danh sách phòng...");
-    }
+    @FXML private Pagination pagination;
 
-    @FXML
-    public void onAddRoom(javafx.event.ActionEvent event) {
-        System.out.println("Mở popup thêm phòng mới...");
-    }
+    private final RoomBUS roomBUS = new RoomBUS();
 
-    @FXML
-    public void onRoomTypes(javafx.event.ActionEvent event) {
-        System.out.println("Mở bảng cấu hình Loại phòng & Giá...");
-    }
     @FXML
     public void initialize() {
-        System.out.println("Đã load giao diện Quản lý Phòng");
-        // TODO: Cấu hình các cột (Mã phòng, Loại phòng, Giá, Trạng thái...)
+        setupColumns();
+        setupComboBoxes();
+        loadRooms();
+    }
+
+    private void setupColumns() {
+    colRoomId.setCellValueFactory(d ->
+        new SimpleStringProperty(d.getValue().getRoomId()));
+    colRoomType.setCellValueFactory(d ->
+        new SimpleStringProperty(d.getValue().getTypeName()));
+    colRoomFloor.setCellValueFactory(d ->
+        new SimpleStringProperty("—"));
+    colRoomPrice.setCellValueFactory(d ->
+        new SimpleObjectProperty<>(d.getValue().getBasePricePerDay()));
+    colRoomCap.setCellValueFactory(d ->
+        new SimpleObjectProperty<>(d.getValue().getMaxPets()));
+    colRoomStatus.setCellValueFactory(d ->
+        new SimpleStringProperty(d.getValue().getStatus()));
+    colRoomPet.setCellValueFactory(d ->
+        new SimpleStringProperty("—"));
+
+    // Cột Thao Tác — có nút Cập nhật trạng thái
+    colRoomAction.setCellFactory(col -> new TableCell<>() {
+        private final Button btnStatus = new Button("Trạng thái");
+
+        {
+            btnStatus.setOnAction(e -> {
+                Room room = getTableView().getItems().get(getIndex());
+                showStatusDialog(room);
+            });
+        }
+
+        @Override
+        protected void updateItem(String item, boolean empty) {
+            super.updateItem(item, empty);
+            setGraphic(empty ? null : btnStatus);
+        }
+    });
+}
+    private void setupComboBoxes() {
+        filterStatus.setItems(FXCollections.observableArrayList(
+            "Tất cả", "AVAILABLE", "IN_USE", "MAINTENANCE"
+        ));
+        filterStatus.setValue("Tất cả");
+
+        filterType.setItems(FXCollections.observableArrayList(
+            "Tất cả", "STANDARD", "PREMIUM", "SUITE"
+        ));
+        filterType.setValue("Tất cả");
+    }
+
+    private void loadRooms() {
+        try {
+            List<Room> rooms = roomBUS.getAllRooms();
+            roomTable.setItems(FXCollections.observableArrayList(rooms));
+            updateStatusCounts(rooms);
+        } catch (Exception e) {
+            showAlert("Lỗi", "Không thể tải danh sách phòng: " + e.getMessage());
+        }
+    }
+
+    private void updateStatusCounts(List<Room> rooms) {
+        long inUse     = rooms.stream().filter(r -> "IN_USE".equals(r.getStatus())).count();
+        long available = rooms.stream().filter(r -> "AVAILABLE".equals(r.getStatus())).count();
+        long maintain  = rooms.stream().filter(r -> "MAINTENANCE".equals(r.getStatus())).count();
+
+        countOccupied.setText(String.valueOf(inUse));
+        countAvailable.setText(String.valueOf(available));
+        countCleaning.setText("0"); // DB không có CLEANING
+        countMaintenance.setText(String.valueOf(maintain));
     }
 
     @FXML
-    public void handleSearch(ActionEvent event) {
-        System.out.println("Tìm kiếm phòng: " + txtSearch.getText());
+    public void onSearch(ActionEvent event) { onFilter(event); }
+
+    @FXML
+    public void onFilter(ActionEvent event) {
+        String keyword = searchField.getText();
+        String status  = "Tất cả".equals(filterStatus.getValue()) ? null : filterStatus.getValue();
+        String type    = "Tất cả".equals(filterType.getValue())   ? null : filterType.getValue();
+
+        try {
+            List<Room> rooms = roomBUS.searchRooms(keyword, status, type);
+            roomTable.setItems(FXCollections.observableArrayList(rooms));
+            updateStatusCounts(rooms);
+        } catch (Exception e) {
+            showAlert("Lỗi", "Lỗi tìm kiếm: " + e.getMessage());
+        }
     }
 
     @FXML
-    public void handleAdd(ActionEvent event) {
-        System.out.println("Thêm phòng mới (ví dụ khách sạn mở rộng thêm phòng)");
+    public void onAddRoom(ActionEvent event) {
+    try {
+        javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+            getClass().getResource("/PetHotel/gui/view/AddRoomDialog.fxml"));
+        javafx.scene.Parent root = loader.load();
+
+        AddRoomController controller = loader.getController();
+        controller.setOnSaveCallback(this::loadRooms);
+
+        javafx.stage.Stage dialog = new javafx.stage.Stage();
+        dialog.setTitle("Thêm Phòng Mới");
+        dialog.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+        dialog.setScene(new javafx.scene.Scene(root));
+        dialog.showAndWait();
+
+        } catch (Exception e) {
+        showAlert("Lỗi", "Không thể mở form: " + e.getMessage());
+        }
+    }   
+
+    @FXML
+    public void onRoomTypes(ActionEvent event) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                getClass().getResource("/PetHotel/gui/view/RoomTypeDialog.fxml"));
+            javafx.scene.Parent root = loader.load();
+
+            javafx.stage.Stage dialog = new javafx.stage.Stage();
+            dialog.setTitle("Loại Phòng & Giá");
+            dialog.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            dialog.setScene(new javafx.scene.Scene(root));
+            dialog.showAndWait();
+
+        } catch (Exception e) {
+        showAlert("Lỗi", "Không thể mở: " + e.getMessage());
+        }
     }
+
+    @FXML
+    public void handleSearch(ActionEvent event) { onFilter(event); }
+
+    @FXML
+    public void handleAdd(ActionEvent event) { onAddRoom(event); }
 
     @FXML
     public void handleEdit(ActionEvent event) {
-        System.out.println("Sửa thông tin phòng (Đổi giá, đổi loại phòng)");
-    }
-
-    @FXML
-    public void handleMarkAsCleaned(ActionEvent event) {
-        System.out.println("Cập nhật trạng thái phòng từ 'Đang dọn' sang 'Trống'");
+        Room selected = roomTable.getSelectionModel().getSelectedItem();
+        if (selected == null) { showAlert("Thông báo", "Vui lòng chọn phòng cần sửa."); return; }
+        showAlert("Thông báo", "Sửa phòng: " + selected.getRoomNumber());
     }
 
     @FXML
     public void handleDelete(ActionEvent event) {
-        System.out.println("Xóa phòng này khỏi hệ thống (Chỉ xóa khi phòng chưa từng có ai ở)");
+        Room selected = roomTable.getSelectionModel().getSelectedItem();
+        if (selected == null) { showAlert("Thông báo", "Vui lòng chọn phòng cần xóa."); return; }
+        try {
+            roomBUS.deleteRoom(selected.getRoomId());
+            loadRooms();
+            showAlert("Thành công", "Đã xóa phòng " + selected.getRoomNumber());
+        } catch (Exception e) {
+            showAlert("Lỗi", e.getMessage());
+        }
+    }
+
+    @FXML
+    public void handleMarkAsCleaned(ActionEvent event) {
+        Room selected = roomTable.getSelectionModel().getSelectedItem();
+        if (selected == null) { showAlert("Thông báo", "Vui lòng chọn phòng."); return; }
+        try {
+            roomBUS.updateRoomStatus(selected.getRoomId(), "AVAILABLE");
+            loadRooms();
+            showAlert("Thành công", "Đã cập nhật trạng thái phòng.");
+        } catch (Exception e) {
+            showAlert("Lỗi", e.getMessage());
+        }
+    }
+
+    private void showStatusDialog(Room room) {
+    List<String> statuses = List.of("AVAILABLE", "IN_USE", "MAINTENANCE");
+
+    ChoiceDialog<String> dialog = new ChoiceDialog<>(room.getStatus(), statuses);
+    dialog.setTitle("Cập nhật trạng thái");
+    dialog.setHeaderText("Phòng: " + room.getRoomNumber());
+    dialog.setContentText("Chọn trạng thái mới:");
+
+    dialog.showAndWait().ifPresent(newStatus -> {
+        try {
+            roomBUS.updateRoomStatus(room.getRoomId(), newStatus);
+            loadRooms();
+            showAlert("Thành công", "Đã cập nhật trạng thái phòng " + room.getRoomNumber());
+        } catch (Exception e) {
+            showAlert("Lỗi", e.getMessage());
+            }
+        });
+    }
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
