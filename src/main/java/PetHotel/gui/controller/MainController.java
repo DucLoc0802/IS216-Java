@@ -1,10 +1,12 @@
 package PetHotel.gui.controller;
 
+import java.io.IOException;
+
+import PetHotel.bus.AuthBUS;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.layout.StackPane;
-import java.io.IOException;
 
 public class MainController {
 
@@ -28,6 +30,11 @@ public class MainController {
             System.out.println("Đã kết nối Sidebar thành công!");
             // Truyền chính MainController này cho Sidebar, để Sidebar có thể mượn hàm loadView()
             sidebarController.setMainController(this);
+            // Truyền AuthBUS từ SessionManager (đã được LoginController khởi tạo) cho Sidebar
+            AuthBUS sharedAuthBUS = SessionManager.getInstance().getAuthBUS();
+            if (sharedAuthBUS != null) {
+                sidebarController.setAuthBUS(sharedAuthBUS);
+            }
         }
         
         if (topbarController != null) {

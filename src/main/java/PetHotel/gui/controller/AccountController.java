@@ -1,10 +1,18 @@
 package PetHotel.gui.controller;
 
+import java.io.IOException;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
+import javafx.stage.Stage;
 
 public class AccountController {
 
@@ -16,7 +24,34 @@ public class AccountController {
         System.out.println("Đã load giao diện Quản lý Tài Khoản");
         // TODO: Cấu hình các cột (Username, Họ tên, Quyền, Trạng thái...)
     }
-    @FXML public void onCreateAccount(ActionEvent event) { System.out.println("Mở form Tạo Tài khoản mới..."); }
+
+    private void showAlert(AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+    
+    @FXML public void onCreateAccount(ActionEvent event) { 
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/PetHotel/gui/view/AccountForm.fxml"));
+                Parent root = loader.load();
+
+                // Bước 2: Tạo một cửa sổ (Stage) mới
+                Stage accountForm = new Stage();
+                accountForm.setTitle("PetHotel - Tạo tài khoản mới");
+                accountForm.setScene(new Scene(root));
+                
+                // Bước 3: Hiển thị cửa sổ Dashboard lên
+                accountForm.show();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                showAlert(AlertType.ERROR, "Lỗi hệ thống", "Không thể tải giao diện Dashboard!");
+            }
+    }
+
     @FXML public void onSearch(ActionEvent event) { System.out.println("Tìm kiếm tài khoản..."); }
     @FXML public void onApplyFilter(ActionEvent event) { System.out.println("Áp dụng bộ lọc tài khoản..."); }
     @FXML public void onClearFilter(ActionEvent event) { System.out.println("Xóa bộ lọc..."); }

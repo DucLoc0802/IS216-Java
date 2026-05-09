@@ -1,5 +1,6 @@
 package PetHotel.gui.controller;
 
+import PetHotel.model.AppUser;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -17,8 +18,8 @@ public class AccountFormController {
     @FXML private Button btnSave;
     @FXML private Button btnCancel;
 
-    // Biến lưu trữ ID nếu đang ở chế độ Sửa (Edit), nếu null là Thêm mới (Add)
-    private String editingAccountId = null;
+    // Biến lưu trữ employeeId nếu đang ở chế độ Sửa (Edit), nếu null là Thêm mới (Add)
+    private String editingEmployeeId = null;
 
     @FXML
     public void initialize() {
@@ -39,10 +40,10 @@ public class AccountFormController {
     }
     
     // Hàm này được gọi từ trang Management truyền data sang nếu bấm nút "Sửa"
-    public void setEditData(Object account) {
-        // TODO: Lấy data từ account truyền vào các ô Text
-        // txtUsername.setText(account.getUsername());
-        // this.editingAccountId = account.getId();
+    public void setEditData(AppUser user) {
+        // TODO: Lấy data từ user truyền vào các ô Text
+        // txtUsername.setText(user.getUserName());
+        // this.editingEmployeeId = user.getEmployeeId();
     }
 
     @FXML
@@ -57,12 +58,12 @@ public class AccountFormController {
             return;
         }
 
-        if (editingAccountId == null) {
+        if (editingEmployeeId == null) {
             System.out.println("Tiến hành INSERT tài khoản mới xuống DB...");
-            // TODO: Gọi AccountBUS.add()
+            // TODO: Gọi AppUserBUS.add()
         } else {
             System.out.println("Tiến hành UPDATE tài khoản đang sửa xuống DB...");
-            // TODO: Gọi AccountBUS.update()
+            // TODO: Gọi AppUserBUS.update()
         }
 
         // Lưu xong thì đóng cửa sổ form lại

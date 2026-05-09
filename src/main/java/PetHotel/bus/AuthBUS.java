@@ -1,15 +1,13 @@
 package PetHotel.bus;
 
+import java.sql.SQLException;
+
 import PetHotel.dao.AppUserDAO;
 import PetHotel.exception.AuthenticationException;
 import PetHotel.exception.AuthorizationException;
 import PetHotel.exception.ValidationException;
 import PetHotel.model.AppUser;
 import PetHotel.util.Role;
-
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.sql.SQLException;
 
 /**
  * AuthBUS — Nghiệp vụ xác thực và quản lý phiên đăng nhập.
@@ -123,7 +121,7 @@ public class AuthBUS {
             return user;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi kết nối database khi đăng nhập.", e);
+            throw new RuntimeException("Lỗi database khi đăng nhập.", e);
         }
     }
 
@@ -280,7 +278,7 @@ public class AuthBUS {
      * @return chuỗi hex của SHA-256 hash
      */
     public static String hashPassword(String rawPassword) {
-        try {
+        /*try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] hash = md.digest(rawPassword.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             StringBuilder sb = new StringBuilder();
@@ -289,7 +287,8 @@ public class AuthBUS {
         } catch (NoSuchAlgorithmException e) {
             // SHA-256 luôn có sẵn trong Java SE → không bao giờ xảy ra
             throw new RuntimeException("SHA-256 không khả dụng.", e);
-        }
+        }*/
+       return rawPassword;
     }
 
     /**
