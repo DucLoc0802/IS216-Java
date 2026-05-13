@@ -17,6 +17,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class SidebarController {
@@ -256,7 +257,7 @@ private void applyRolePermissions(Role role) {
                         }
                         break;
                     case "employee":
-                        if (currentRole == Role.ADMIN) {
+                        if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER) {
                             mainController.loadView("EmployeeManagement.fxml"); 
                             mainController.getTopbarController().setTitle("Nhân Viên", "Quản lý nhân viên");
                         }
@@ -299,8 +300,13 @@ private void applyRolePermissions(Role role) {
 
     // --- Các thao tác khác ở Footer ---
     @FXML
+    public void onViewProfile(MouseEvent event) {
+        openModal("Thông tin cá nhân", "/PetHotel/gui/view/ProfileDialog.fxml");
+    }
+
+    @FXML
     public void onChangePassword(MouseEvent event) {
-        System.out.println("Mở Form Đổi Mật Khẩu");
+        openModal("Đổi mật khẩu", "/PetHotel/gui/view/ChangePasswordDialog.fxml");
     }
 
     @FXML
@@ -358,6 +364,37 @@ private void applyRolePermissions(Role role) {
         if (item != null) {
             item.getStyleClass().add("menu-item-active");
             activeMenuItem = item;
+        }
+    }
+
+    private void openModal(String title, String resourcePath) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(resourcePath));
+            Parent root = loader.load();
+
+            Stage dialog = new Stage();
+            dialog.setTitle(title);
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.setResizable(false);
+            dialog.setScene(new Scene(root));
+            dialog.showAndWait();
+
+            AppUser currentUser = SessionManager.getInstance().getCurrentUser();
+            if (currentUser != null) {
+                Employee employee = currentUser.getEmployee();
+                String fullName = (employee != null && employee.getFullName() != null)
+                    ? employee.getFullName()
+                    : currentUser.getUserName();
+                usernameLabel.setText(fullName);
+                avatarLabel.setText(String.valueOf(fullName.charAt(0)).toUpperCase());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+            errorAlert.setTitle("Lỗi hệ thống");
+            errorAlert.setHeaderText(null);
+            errorAlert.setContentText("Không thể tải giao diện: " + title);
+            errorAlert.showAndWait();
         }
     }
 }

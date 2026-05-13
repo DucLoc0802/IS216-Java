@@ -23,7 +23,7 @@
     </VBox>
 
     <!-- User Profile -->
-    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="sidebar-profile">
+    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="sidebar-profile" onMouseClicked="#onViewProfile">
         <Label fx:id="avatarLabel" styleClass="avatar-circle" text="A" />
         <VBox spacing="2">
             <Label fx:id="usernameLabel" styleClass="profile-name" text="Nguyễn Văn A" />

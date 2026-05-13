@@ -45,6 +45,15 @@ public class Employee {
     /** Ghi chú thêm (CLOB) */
     private String note;
 
+    /** Tên đăng nhập liên kết, có thể null nếu chưa có tài khoản */
+    private String userName;
+
+    /** Mã vai trò từ app_user, có thể null nếu chưa có tài khoản */
+    private String roleCode;
+
+    /** Tên vai trò hiển thị trên UI */
+    private String roleName;
+
     // ── Constructors ──────────────────────────────────────────────
 
     public Employee() {}
@@ -88,6 +97,15 @@ public class Employee {
 
     public String getNote()                    { return note; }
     public void setNote(String v)              { this.note = v; }
+
+    public String getUserName()                { return userName; }
+    public void setUserName(String v)          { this.userName = v; }
+
+    public String getRoleCode()                { return roleCode; }
+    public void setRoleCode(String v)          { this.roleCode = v; }
+
+    public String getRoleName()                { return roleName; }
+    public void setRoleName(String v)          { this.roleName = v; }
 
     /** @return true nếu nhân viên đang làm việc (WORKING) */
     public boolean isWorking() { return "WORKING".equalsIgnoreCase(statusCode); }
