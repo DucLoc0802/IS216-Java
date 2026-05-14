@@ -29,14 +29,14 @@
             </VBox>
         </HBox>
         <Region HBox.hgrow="ALWAYS" />
-        <Button onAction="#onAddProduct" styleClass="action-btn action-btn-primary" text="+ Thêm Sản Phẩm" />
-        <Button onAction="#onManageCategory" styleClass="action-btn action-btn-outline" text="📂 Danh Mục" />
+        <Button onAction="#onAddProduct" styleClass="action-btn action-btn-primary" text="Thêm Sản Phẩm" />
+        <Button onAction="#onManageCategory" styleClass="action-btn action-btn-outline" text="Danh Mục" />
     </HBox>
 
     <HBox spacing="14">
         <VBox styleClass="stat-card stat-card-brown" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label styleClass="stat-icon" text="📦" />
+                <Label styleClass="stat-icon" text="" />
                 <VBox spacing="2">
                     <Label styleClass="stat-label" text="Tổng Sản Phẩm" />
                     <Label fx:id="statTotalProducts" styleClass="stat-value" text="—" />
@@ -46,7 +46,7 @@
         </VBox>
         <VBox styleClass="stat-card stat-card-blue" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label styleClass="stat-icon" text="🏷" />
+                <Label styleClass="stat-icon" text="" />
                 <VBox spacing="2">
                     <Label styleClass="stat-label" text="Danh Mục" />
                     <Label fx:id="statCategories" styleClass="stat-value" text="—" />
@@ -56,7 +56,7 @@
         </VBox>
         <VBox styleClass="stat-card stat-card-green" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label styleClass="stat-icon" text="✅" />
+                <Label styleClass="stat-icon" text="" />
                 <VBox spacing="2">
                     <Label styleClass="stat-label" text="Còn Hàng" />
                     <Label fx:id="statInStock" styleClass="stat-value" text="—" />
@@ -66,7 +66,7 @@
         </VBox>
         <VBox styleClass="stat-card stat-card-red" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label styleClass="stat-icon" text="⚠️" />
+                <Label styleClass="stat-icon" text="" />
                 <VBox spacing="2">
                     <Label styleClass="stat-label" text="Tồn Kho Thấp" />
                     <Label fx:id="statLowStock" styleClass="stat-value" text="—" />
@@ -78,7 +78,7 @@
 
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
         <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
-            <Label styleClass="search-icon" text="🔍" />
+            <Label styleClass="search-icon" text="" />
             <TextField fx:id="searchField" onAction="#onSearch" promptText="Tìm theo tên, mã sản phẩm, nhà cung cấp..." styleClass="search-input" HBox.hgrow="ALWAYS" />
         </HBox>
 
@@ -110,9 +110,9 @@
         <VBox spacing="12" styleClass="content-panel" HBox.hgrow="ALWAYS">
 
             <HBox alignment="CENTER_LEFT" styleClass="action-toolbar">
-                <Button fx:id="btnEdit" disable="true" onAction="#onEditProduct" styleClass="action-btn action-btn-outline" text="✏ Sửa" />
-                <Button fx:id="btnDelete" disable="true" onAction="#onDeleteProduct" styleClass="action-btn action-btn-danger" text="🗑 Xóa" />
-                <Button fx:id="btnDetail" disable="true" onAction="#onViewDetail" styleClass="action-btn action-btn-outline" text="🔍 Chi Tiết" />
+                <Button fx:id="btnEdit" disable="true" onAction="#onEditProduct" styleClass="action-btn action-btn-outline" text="Sửa" />
+                <Button fx:id="btnDelete" disable="true" onAction="#onDeleteProduct" styleClass="action-btn action-btn-danger" text="Xóa" />
+                <Button fx:id="btnDetail" disable="true" onAction="#onViewDetail" styleClass="action-btn action-btn-outline" text="Chi Tiết" />
                 <Region HBox.hgrow="ALWAYS" />
                 <Label fx:id="totalLabel" style="-fx-font-size:11px; -fx-text-fill: -ph-text-muted;" text="" />
             </HBox>
@@ -131,7 +131,7 @@
                 </columns>
                 <placeholder>
                     <VBox alignment="CENTER" spacing="8">
-                        <Label style="-fx-font-size:28px;" text="📦" />
+                        <Label style="-fx-font-size:28px;" text="" />
                         <Label styleClass="table-empty" text="Không tìm thấy sản phẩm nào" />
                     </VBox>
                 </placeholder>
@@ -151,7 +151,7 @@
                 </HBox>
 
                 <VBox alignment="CENTER" spacing="6" style="-fx-padding: 8 0 4 0;">
-                    <Label fx:id="detailProductIcon" style="-fx-font-size:34px;" text="📦" />
+                    <Label fx:id="detailProductIcon" style="-fx-font-size:34px;" text="" />
                     <Label fx:id="detailProductName" maxWidth="260" styleClass="detail-name" text="—" textAlignment="CENTER" wrapText="true" />
                     <Label fx:id="detailProductCategory" styleClass="status-badge status-staff" text="—" />
                 </VBox>
@@ -197,12 +197,12 @@
 
                 <Separator styleClass="detail-divider" />
                 <HBox spacing="8">
-                    <Button fx:id="btnDetailEdit" disable="true" onAction="#onEditProduct" styleClass="action-btn action-btn-outline" text="✏ Sửa" />
-                    <Button fx:id="btnDetailDelete" disable="true" onAction="#onDeleteProduct" styleClass="action-btn action-btn-danger" text="🗑 Xóa" />
+                    <Button fx:id="btnDetailEdit" disable="true" onAction="#onEditProduct" styleClass="action-btn action-btn-outline" text="Sửa" />
+                    <Button fx:id="btnDetailDelete" disable="true" onAction="#onDeleteProduct" styleClass="action-btn action-btn-danger" text="Xóa" />
                 </HBox>
 
                 <VBox fx:id="noSelectionHint" spacing="8" styleClass="no-selection-hint">
-                    <Label style="-fx-font-size:26px;" text="📦" />
+                    <Label style="-fx-font-size:26px;" text="" />
                     <Label maxWidth="200" style="-fx-font-size:12px; -fx-text-fill: -ph-text-muted; -fx-text-alignment:center;" text="Chọn sản phẩm để xem chi tiết" textAlignment="CENTER" wrapText="true" />
                 </VBox>
             </VBox>

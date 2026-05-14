@@ -23,10 +23,10 @@
         <Region styleClass="section-header-line" />
         <Label styleClass="section-header" text="Quản Lý Booking" />
         <Region HBox.hgrow="ALWAYS" />
-        <Button onAction="#onCreateBooking" styleClass="action-btn action-btn-primary" text="+ Tạo Booking" />
-        <Button onAction="#onCheckin" styleClass="action-btn action-btn-success" text="✔ Check-in" />
-        <Button onAction="#onCheckout" styleClass="action-btn action-btn-outline" text="↩ Check-out" />
-        <Button onAction="#onCheckRoom" styleClass="action-btn action-btn-outline" text="🏠 Kiểm Phòng" />
+        <Button onAction="#onCreateBooking" styleClass="action-btn action-btn-primary" text="Tạo Booking" />
+        <Button onAction="#onCheckin" styleClass="action-btn action-btn-success" text="Check-in" />
+        <Button onAction="#onCheckout" styleClass="action-btn action-btn-outline" text="Check-out" />
+        <Button onAction="#onCheckRoom" styleClass="action-btn action-btn-outline" text="Kiểm Phòng" />
     </HBox>
 
     <HBox spacing="0" style="-fx-padding: 6 10 6 10;" styleClass="content-panel">
@@ -39,7 +39,7 @@
 
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
         <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
-            <Label styleClass="search-icon" text="🔍" />
+            <Label styleClass="search-icon" text="" />
             <TextField fx:id="searchField" promptText="Tìm theo mã booking, tên KH, thú cưng..." styleClass="search-input" HBox.hgrow="ALWAYS" />
         </HBox>
         <VBox spacing="3">

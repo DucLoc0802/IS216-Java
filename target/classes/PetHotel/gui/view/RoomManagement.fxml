@@ -22,14 +22,14 @@
         <Region styleClass="section-header-line" />
         <Label styleClass="section-header" text="Quản Lý Phòng" />
         <Region HBox.hgrow="ALWAYS" />
-        <Button onAction="#onAddRoom" styleClass="action-btn action-btn-primary" text="+ Thêm Phòng" />
-        <Button onAction="#onRoomTypes" styleClass="action-btn action-btn-outline" text="📋 Loại Phòng &amp; Giá" />
+        <Button onAction="#onAddRoom" styleClass="action-btn action-btn-primary" text="Thêm Phòng" />
+        <Button onAction="#onRoomTypes" styleClass="action-btn action-btn-outline" text="Loại Phòng và Giá" />
     </HBox>
 
     <HBox spacing="14">
         <VBox styleClass="stat-card stat-card-red" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label styleClass="stat-icon" text="🏠" />
+                <Label styleClass="stat-icon" text="" />
                 <VBox spacing="2">
                     <Label styleClass="stat-label" text="Đang Sử Dụng" />
                     <Label fx:id="countOccupied" styleClass="stat-value" text="—" />
@@ -38,7 +38,7 @@
         </VBox>
         <VBox styleClass="stat-card stat-card-green" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label styleClass="stat-icon" text="✅" />
+                <Label styleClass="stat-icon" text="" />
                 <VBox spacing="2">
                     <Label styleClass="stat-label" text="Phòng Trống" />
                     <Label fx:id="countAvailable" styleClass="stat-value" text="—" />
@@ -47,7 +47,7 @@
         </VBox>
         <VBox styleClass="stat-card stat-card-amber" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label styleClass="stat-icon" text="🧹" />
+                <Label styleClass="stat-icon" text="" />
                 <VBox spacing="2">
                     <Label styleClass="stat-label" text="Đang Dọn" />
                     <Label fx:id="countCleaning" styleClass="stat-value" text="—" />
@@ -56,7 +56,7 @@
         </VBox>
         <VBox styleClass="stat-card stat-card-purple" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label styleClass="stat-icon" text="🚧" />
+                <Label styleClass="stat-icon" text="" />
                 <VBox spacing="2">
                     <Label styleClass="stat-label" text="Bảo Trì" />
                     <Label fx:id="countMaintenance" styleClass="stat-value" text="—" />
@@ -67,7 +67,7 @@
 
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
         <HBox alignment="CENTER_LEFT" prefWidth="240" spacing="8" styleClass="search-box">
-            <Label styleClass="search-icon" text="🔍" />
+            <Label styleClass="search-icon" text="" />
             <TextField fx:id="searchField" onAction="#onSearch" promptText="Mã phòng, loại phòng..." styleClass="search-input" />
         </HBox>
         <ComboBox fx:id="filterStatus" prefWidth="140" promptText="Trạng thái" styleClass="filter-combo" />

@@ -22,16 +22,16 @@
             </VBox>
         </HBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="+ Nhập Hàng"          styleClass="action-btn action-btn-primary"
+        <Button text="Nhập Hàng"          styleClass="action-btn action-btn-primary"
                 onAction="#onAddImport"/>
-        <Button text="⚖ Điều Chỉnh Tồn Kho" styleClass="action-btn action-btn-amber"
+        <Button text="Điều Chỉnh Tồn Kho" styleClass="action-btn action-btn-amber"
                 onAction="#onAdjustStock"/>
     </HBox>
 
     <HBox spacing="14">
         <VBox styleClass="stat-card stat-card-brown" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="🏭" styleClass="stat-icon"/>
+                <Label text="" styleClass="stat-icon"/>
                 <VBox spacing="2">
                     <Label text="Tổng SKU Quản Lý" styleClass="stat-label"/>
                     <Label fx:id="statTotalSKU" text="—" styleClass="stat-value"/>
@@ -41,7 +41,7 @@
         </VBox>
         <VBox styleClass="stat-card stat-card-green" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="✅" styleClass="stat-icon"/>
+                <Label text="" styleClass="stat-icon"/>
                 <VBox spacing="2">
                     <Label text="Đủ Tồn Kho" styleClass="stat-label"/>
                     <Label fx:id="statOkStock" text="—" styleClass="stat-value"/>
@@ -51,7 +51,7 @@
         </VBox>
         <VBox styleClass="stat-card stat-card-amber" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="⚠️" styleClass="stat-icon"/>
+                <Label text="" styleClass="stat-icon"/>
                 <VBox spacing="2">
                     <Label text="Tồn Kho Thấp" styleClass="stat-label"/>
                     <Label fx:id="statLowStock" text="—" styleClass="stat-value"/>
@@ -61,7 +61,7 @@
         </VBox>
         <VBox styleClass="stat-card stat-card-red" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="🚨" styleClass="stat-icon"/>
+                <Label text="" styleClass="stat-icon"/>
                 <VBox spacing="2">
                     <Label text="Nguy Hiểm / Hết" styleClass="stat-label"/>
                     <Label fx:id="statCriticalStock" text="—" styleClass="stat-value"/>
@@ -71,7 +71,7 @@
         </VBox>
         <VBox styleClass="stat-card stat-card-blue" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="📥" styleClass="stat-icon"/>
+                <Label text="" styleClass="stat-icon"/>
                 <VBox spacing="2">
                     <Label text="Nhập Hàng Tháng Này" styleClass="stat-label"/>
                     <Label fx:id="statMonthImport" text="—" styleClass="stat-value"/>
@@ -85,11 +85,11 @@
         <HBox alignment="CENTER_LEFT">
             <HBox alignment="CENTER_LEFT" spacing="8">
                 <Region styleClass="section-header-line"/>
-                <Label text="🚨  Cảnh Báo Tồn Kho Thấp — Cần Hành Động Ngay"
+                <Label text="Cảnh Báo Tồn Kho Thấp — Cần Hành Động Ngay"
                        styleClass="panel-title panel-title-alert"/>
             </HBox>
             <Region HBox.hgrow="ALWAYS"/>
-            <Button text="+ Tạo Phiếu Nhập Hàng" styleClass="action-btn action-btn-amber"
+            <Button text="Tạo Phiếu Nhập Hàng" styleClass="action-btn action-btn-amber"
                     onAction="#onAddImport" style="-fx-padding: 6 14 6 14;"/>
         </HBox>
 
@@ -123,10 +123,10 @@
     <VBox styleClass="content-panel" spacing="14" VBox.vgrow="ALWAYS">
 
         <HBox spacing="0" style="-fx-background-color: #FAF5F0; -fx-background-radius: 8px; -fx-padding: 4;">
-            <ToggleButton fx:id="tabStock"   text="📦  Tồn Kho Hiện Tại"
+            <ToggleButton fx:id="tabStock"   text="Tồn Kho Hiện Tại"
                           styleClass="period-btn period-btn-active" selected="true"
                           onAction="#onTabStock"   prefWidth="200"/>
-            <ToggleButton fx:id="tabImport"  text="📥  Lịch Sử Nhập Hàng"
+            <ToggleButton fx:id="tabImport"  text="Lịch Sử Nhập Hàng"
                           styleClass="period-btn"
                           onAction="#onTabImport"  prefWidth="200"/>
         </HBox>
@@ -134,7 +134,7 @@
         <VBox fx:id="stockPanel" spacing="12" VBox.vgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <HBox styleClass="search-box" alignment="CENTER_LEFT" spacing="8" prefWidth="280">
-                    <Label text="🔍" styleClass="search-icon"/>
+                    <Label text="" styleClass="search-icon"/>
                     <TextField fx:id="searchStock" promptText="Tìm sản phẩm..."
                                styleClass="search-input" onAction="#onSearchStock"/>
                 </HBox>
@@ -176,7 +176,7 @@
         <VBox fx:id="importPanel" spacing="12" VBox.vgrow="ALWAYS" visible="false" managed="false">
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <HBox styleClass="search-box" alignment="CENTER_LEFT" spacing="8" prefWidth="260">
-                    <Label text="🔍" styleClass="search-icon"/>
+                    <Label text="" styleClass="search-icon"/>
                     <TextField fx:id="searchImport" promptText="Mã phiếu, tên sản phẩm..."
                                styleClass="search-input" onAction="#onSearchImport"/>
                 </HBox>
@@ -190,14 +190,14 @@
                 </VBox>
                 <Button text="Lọc" styleClass="action-btn action-btn-primary"
                         onAction="#onFilterImport" style="-fx-padding: 7 16 7 16;"/>
-                <Button text="+ Nhập Hàng" styleClass="action-btn action-btn-primary"
+                <Button text="Nhập Hàng" styleClass="action-btn action-btn-primary"
                         onAction="#onAddImport"/>
             </HBox>
 
             <HBox styleClass="action-toolbar" alignment="CENTER_LEFT">
-                <Button fx:id="btnEditImport"   text="✏ Sửa Phiếu"  styleClass="action-btn action-btn-outline"
+                <Button fx:id="btnEditImport"   text="Sửa Phiếu"  styleClass="action-btn action-btn-outline"
                         onAction="#onEditImport"   disable="true"/>
-                <Button fx:id="btnDeleteImport" text="🗑 Xóa Phiếu"  styleClass="action-btn action-btn-danger"
+                <Button fx:id="btnDeleteImport" text="Xóa Phiếu"  styleClass="action-btn action-btn-danger"
                         onAction="#onDeleteImport" disable="true"/>
             </HBox>
 
