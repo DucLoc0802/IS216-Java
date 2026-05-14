@@ -20,14 +20,14 @@
         <Region styleClass="section-header-line" />
         <Label styleClass="section-header" text="Quản Lý Hóa Đơn" />
         <Region HBox.hgrow="ALWAYS" />
-        <Button onAction="#onCreateInvoice" styleClass="action-btn action-btn-primary" text="+ Tạo Hóa Đơn" />
-        <Button fx:id="btnPay" disable="true" onAction="#onPayment" styleClass="action-btn action-btn-success" text="💳 Thanh Toán" />
-        <Button fx:id="btnPrint" disable="true" onAction="#onPrint" styleClass="action-btn action-btn-outline" text="🖨 In / Xuất" />
+        <Button onAction="#onCreateInvoice" styleClass="action-btn action-btn-primary" text="Tạo Hóa Đơn" />
+        <Button fx:id="btnPay" disable="true" onAction="#onPayment" styleClass="action-btn action-btn-success" text="Thanh Toán" />
+        <Button fx:id="btnPrint" disable="true" onAction="#onPrint" styleClass="action-btn action-btn-outline" text="In / Xuất" />
     </HBox>
 
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
         <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
-            <Label styleClass="search-icon" text="🔍" />
+            <Label styleClass="search-icon" text="" />
             <TextField fx:id="searchField" promptText="Mã HĐ, tên khách hàng..." styleClass="search-input" HBox.hgrow="ALWAYS" />
         </HBox>
         <DatePicker fx:id="filterFrom" prefWidth="140" styleClass="filter-combo" />

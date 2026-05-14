@@ -22,14 +22,14 @@
             </VBox>
         </HBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="+ Thêm Nhân Viên" styleClass="action-btn action-btn-primary"
+        <Button text="Thêm Nhân Viên" styleClass="action-btn action-btn-primary"
                 onAction="#onAddEmployee"/>
     </HBox>
 
     <HBox spacing="14">
         <VBox styleClass="stat-card stat-card-brown" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="👥" styleClass="stat-icon"/>
+                <Label text="" styleClass="stat-icon"/>
                 <VBox spacing="2">
                     <Label text="Tổng Nhân Viên" styleClass="stat-label"/>
                     <Label fx:id="statTotal" text="—" styleClass="stat-value"/>
@@ -40,7 +40,7 @@
 
         <VBox styleClass="stat-card stat-card-green" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="✅" styleClass="stat-icon"/>
+                <Label text="" styleClass="stat-icon"/>
                 <VBox spacing="2">
                     <Label text="Đang Hoạt Động" styleClass="stat-label"/>
                     <Label fx:id="statActive" text="—" styleClass="stat-value"/>
@@ -51,7 +51,7 @@
 
         <VBox styleClass="stat-card stat-card-red" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="⏸" styleClass="stat-icon"/>
+                <Label text="" styleClass="stat-icon"/>
                 <VBox spacing="2">
                     <Label text="Ngưng Hoạt Động" styleClass="stat-label"/>
                     <Label fx:id="statInactive" text="—" styleClass="stat-value"/>
@@ -62,7 +62,7 @@
 
         <VBox styleClass="stat-card stat-card-purple" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="✂️" styleClass="stat-icon"/>
+                <Label text="" styleClass="stat-icon"/>
                 <VBox spacing="2">
                     <Label text="Groomer" styleClass="stat-label"/>
                     <Label fx:id="statGroomers" text="—" styleClass="stat-value"/>
@@ -73,7 +73,7 @@
 
         <VBox styleClass="stat-card stat-card-blue" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="🏅" styleClass="stat-icon"/>
+                <Label text="" styleClass="stat-icon"/>
                 <VBox spacing="2">
                     <Label text="Hiệu Suất TB" styleClass="stat-label"/>
                     <Label fx:id="statAvgPerf" text="—" styleClass="stat-value"/>
@@ -85,7 +85,7 @@
 
     <HBox styleClass="filter-bar" alignment="CENTER_LEFT" spacing="12">
         <HBox styleClass="search-box" alignment="CENTER_LEFT" spacing="8" HBox.hgrow="ALWAYS">
-            <Label text="🔍" styleClass="search-icon"/>
+            <Label text="" styleClass="search-icon"/>
             <TextField fx:id="searchField"
                        promptText="Tìm theo tên, mã NV, SĐT, email..."
                        styleClass="search-input" HBox.hgrow="ALWAYS"
@@ -140,13 +140,13 @@
         <VBox styleClass="content-panel" HBox.hgrow="ALWAYS" spacing="12">
 
             <HBox styleClass="action-toolbar" alignment="CENTER_LEFT">
-                <Button fx:id="btnEdit"       text="✏ Sửa"           styleClass="action-btn action-btn-outline"
+                <Button fx:id="btnEdit"       text="Sửa"           styleClass="action-btn action-btn-outline"
                         onAction="#onEditEmployee"    disable="true"/>
-                <Button fx:id="btnDeactivate" text="⏸ Ngưng HĐ"     styleClass="action-btn action-btn-danger"
+                <Button fx:id="btnDeactivate" text="Ngưng HĐ"     styleClass="action-btn action-btn-danger"
                         onAction="#onDeactivateEmployee" disable="true"/>
-                <Button fx:id="btnActivate"   text="▶ Kích Hoạt"     styleClass="action-btn action-btn-success"
+                <Button fx:id="btnActivate"   text="Kích Hoạt"     styleClass="action-btn action-btn-success"
                         onAction="#onActivateEmployee"   disable="true"/>
-                <Button fx:id="btnPerf"       text="📊 Hiệu Suất"    styleClass="action-btn action-btn-outline"
+                <Button fx:id="btnPerf"       text="Hiệu Suất"    styleClass="action-btn action-btn-outline"
                         onAction="#onViewPerformance"    disable="true"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Label fx:id="selectionInfo" text=""
@@ -168,7 +168,7 @@
                 </columns>
                 <placeholder>
                     <VBox alignment="CENTER" spacing="8">
-                        <Label text="👥" style="-fx-font-size:28px;"/>
+                        <Label text="" style="-fx-font-size:28px;"/>
                         <Label text="Không tìm thấy nhân viên nào" styleClass="table-empty"/>
                     </VBox>
                 </placeholder>
@@ -240,16 +240,16 @@
 
                 <Separator styleClass="detail-divider"/>
                 <HBox spacing="8">
-                    <Button fx:id="btnDetailEdit"  text="✏ Sửa"    styleClass="action-btn action-btn-outline"
+                    <Button fx:id="btnDetailEdit"  text="Sửa"    styleClass="action-btn action-btn-outline"
                             onAction="#onEditEmployee"     disable="true"/>
-                    <Button fx:id="btnDetailDeact" text="⏸ Ngưng"  styleClass="action-btn action-btn-danger"
+                    <Button fx:id="btnDetailDeact" text="Ngưng"  styleClass="action-btn action-btn-danger"
                             onAction="#onDeactivateEmployee" disable="true"/>
-                    <Button fx:id="btnDetailPerf"  text="📊 Hiệu Suất" styleClass="action-btn action-btn-outline"
+                    <Button fx:id="btnDetailPerf"  text="Hiệu Suất" styleClass="action-btn action-btn-outline"
                             onAction="#onViewPerformance"   disable="true"/>
                 </HBox>
 
                 <VBox fx:id="noSelectionHint" styleClass="no-selection-hint" spacing="8">
-                    <Label text="👤" style="-fx-font-size:26px;"/>
+                    <Label text="" style="-fx-font-size:26px;"/>
                     <Label text="Chọn nhân viên để xem hồ sơ"
                            style="-fx-font-size:12px; -fx-text-fill:-ph-text-muted; -fx-text-alignment:center;"
                            wrapText="true" maxWidth="200" textAlignment="CENTER"/>
@@ -289,7 +289,7 @@
                 </HBox>
 
                 <VBox styleClass="chart-placeholder" prefHeight="100" alignment="CENTER" spacing="6">
-                    <Label text="📈" styleClass="chart-placeholder-icon"/>
+                    <Label text="" styleClass="chart-placeholder-icon"/>
                     <Label text="Biểu đồ hiệu suất&#10;sẽ hiển thị tại đây"
                            styleClass="chart-placeholder-label" textAlignment="CENTER"/>
                 </VBox>

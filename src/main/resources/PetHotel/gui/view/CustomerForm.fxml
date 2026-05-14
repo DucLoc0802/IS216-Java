@@ -18,7 +18,7 @@
 
     <!-- HEADER -->
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="form-header">
-        <Label styleClass="form-header-icon" text="👤" />
+        <Label styleClass="form-header-icon" text="" />
         <VBox spacing="2">
             <Label fx:id="formTitle" 
                    styleClass="form-header-title"
@@ -30,7 +30,7 @@
         <Region HBox.hgrow="ALWAYS" />
         <Button onAction="#onCancel" 
                 styleClass="form-close-btn"
-                text="✕" />
+                text="Đóng" />
     </HBox>
 
     <!-- BODY -->

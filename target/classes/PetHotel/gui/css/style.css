@@ -25,6 +25,7 @@
    19. STOCK ALERTS
    20. REPORT MODULE
    21. SCROLLBAR
+   22. DIALOG / TAB / PAGINATION (bổ sung)
    ═══════════════════════════════════════════════════════════════════ */
 
 
@@ -544,69 +545,136 @@
 }
 
 
-/* ──────────────────────────────────────────────────────────────────
-   08. BUTTONS & TOOLBARS
-   ────────────────────────────────────────────────────────────────── */
-.action-toolbar {
-    -fx-spacing: 10;
-    -fx-padding: 4 0 4 0;
+/* ═══════════════════════════════════════════════════════════════════
+   08. BUTTONS & TOOLBARS — ĐỒNG BỘ HOÁ TOÀN BỘ
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ---- Mặc định Button base ---- */
+.button {
+    -fx-background-color: white;
+    -fx-text-fill: -ph-text-primary;
+    -fx-font-size: 12px;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-border-color: #D8CCBE;
+    -fx-border-width: 1.5px;
+    -fx-padding: 7 16 7 16;
+    -fx-cursor: hand;
+    -fx-focus-traversable: true;
 }
 
-.action-btn {
-    -fx-padding: 8 16 8 16;
+.button:hover {
+    -fx-background-color: #FAF0E6;
+    -fx-text-fill: -ph-brown;
+    -fx-border-color: -ph-brown;
+    -fx-effect: dropshadow(gaussian, rgba(160, 82, 45, 0.20), 8, 0, 0, 2);
+}
+
+.button:pressed {
+    -fx-background-color: -ph-cream-dark;
+}
+
+.button:disabled {
+    -fx-opacity: 0.45;
+    -fx-cursor: default;
+}
+
+/* ---- ToggleButton ---- */
+.toggle-button {
+    -fx-background-color: white;
+    -fx-text-fill: -ph-text-secondary;
     -fx-font-size: 12px;
     -fx-font-weight: bold;
-    -fx-background-radius: -ph-r-sm;
-    -fx-border-radius: -ph-r-sm;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-border-color: #D8CCBE;
     -fx-border-width: 1.5px;
+    -fx-padding: 8 18 8 18;
     -fx-cursor: hand;
 }
 
-.action-btn-primary {
+.toggle-button:hover {
+    -fx-background-color: #FAF0E6;
+    -fx-text-fill: -ph-brown;
+    -fx-border-color: -ph-brown;
+}
+
+.toggle-button:selected {
     -fx-background-color: -ph-brown;
     -fx-text-fill: white;
     -fx-border-color: -ph-brown;
 }
 
+/* ---- Action Toolbar ---- */
+.action-toolbar {
+    -fx-spacing: 10;
+    -fx-padding: 4 0 4 0;
+}
+
+/* ---- Action Buttons ---- */
+.action-btn {
+    -fx-padding: 8 16 8 16;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-border-width: 1.5px;
+    -fx-cursor: hand;
+}
+
+.action-btn-primary {
+    -fx-background-color: white;
+    -fx-text-fill: -ph-brown;
+    -fx-border-color: -ph-brown;
+}
+
 .action-btn-primary:hover {
-    -fx-background-color: -ph-brown-dark;
-    -fx-effect: dropshadow(gaussian, rgba(160, 82, 45, 0.38), 10, 0, 0, 3);
+    -fx-background-color: -ph-brown;
+    -fx-text-fill: white;
+    -fx-border-color: -ph-brown;
+    -fx-effect: dropshadow(gaussian, rgba(160, 82, 45, 0.30), 10, 0, 0, 3);
 }
 
 .action-btn-success {
+    -fx-background-color: white;
+    -fx-text-fill: -ph-green;
+    -fx-border-color: -ph-green;
+}
+
+.action-btn-success:hover {
     -fx-background-color: -ph-green;
     -fx-text-fill: white;
     -fx-border-color: -ph-green;
 }
 
-.action-btn-success:hover {
-    -fx-background-color: #15803D;
+.action-btn-amber {
+    -fx-background-color: white;
+    -fx-text-fill: -ph-amber;
+    -fx-border-color: -ph-amber;
 }
 
-.action-btn-amber {
+.action-btn-amber:hover {
     -fx-background-color: -ph-amber;
     -fx-text-fill: white;
     -fx-border-color: -ph-amber;
 }
 
-.action-btn-amber:hover {
-    -fx-background-color: #B45309;
+.action-btn-danger {
+    -fx-background-color: white;
+    -fx-text-fill: -ph-red;
+    -fx-border-color: -ph-red;
 }
 
-.action-btn-danger {
+.action-btn-danger:hover {
     -fx-background-color: -ph-red;
     -fx-text-fill: white;
     -fx-border-color: -ph-red;
 }
 
-.action-btn-danger:hover {
-    -fx-background-color: #B91C1C;
-}
-
 .action-btn-outline {
     -fx-background-color: white;
     -fx-text-fill: -ph-dark;
-    -fx-border-color: -ph-cream-dark;
+    -fx-border-color: #D8CCBE;
 }
 
 .action-btn-outline:hover {
@@ -615,36 +683,58 @@
     -fx-text-fill: -ph-brown;
 }
 
-/* :disabled state cho tất cả nút */
 .action-btn:disabled {
     -fx-opacity: 0.45;
     -fx-cursor: default;
 }
 
-/* Generic form buttons */
+/* ---- Form Buttons ---- */
 .btn-primary {
-    -fx-background-color: -ph-brown;
-    -fx-text-fill: white;
+    -fx-background-color: white;
+    -fx-text-fill: -ph-brown;
     -fx-font-weight: bold;
     -fx-font-size: 13px;
-    -fx-background-radius: -ph-r-sm;
+    -fx-background-radius: 6px;
     -fx-padding: 9 22 9 22;
     -fx-cursor: hand;
-    -fx-border-color: transparent;
+    -fx-border-color: -ph-brown;
+    -fx-border-width: 1.5px;
 }
 
 .btn-primary:hover {
+    -fx-background-color: -ph-brown;
+    -fx-text-fill: white;
+    -fx-border-color: -ph-brown;
+    -fx-effect: dropshadow(gaussian, rgba(160, 82, 45, 0.30), 10, 0, 0, 3);
+}
+
+.btn-login {
+    -fx-background-color: -ph-brown;
+    -fx-text-fill: white;
+    -fx-border-color: -ph-brown;
+}
+
+.btn-login:hover {
     -fx-background-color: -ph-brown-dark;
+    -fx-text-fill: white;
+    -fx-border-color: -ph-brown-dark;
+}
+
+.btn-login:disabled {
+    -fx-background-color: -ph-brown;
+    -fx-text-fill: white;
+    -fx-border-color: -ph-brown;
+    -fx-opacity: 0.55;
 }
 
 .btn-secondary {
     -fx-background-color: white;
     -fx-text-fill: -ph-text-secondary;
     -fx-font-size: 13px;
-    -fx-background-radius: -ph-r-sm;
-    -fx-border-radius: -ph-r-sm;
-    -fx-border-color: -ph-border-input;
-    -fx-border-width: 1px;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-border-color: #D8CCBE;
+    -fx-border-width: 1.5px;
     -fx-padding: 9 22 9 22;
     -fx-cursor: hand;
 }
@@ -652,21 +742,73 @@
 .btn-secondary:hover {
     -fx-background-color: #FAF0E6;
     -fx-text-fill: -ph-dark;
+    -fx-border-color: -ph-brown;
 }
 
 .btn-danger {
-    -fx-background-color: -ph-red;
-    -fx-text-fill: white;
+    -fx-background-color: white;
+    -fx-text-fill: -ph-red;
     -fx-font-weight: bold;
     -fx-font-size: 13px;
-    -fx-background-radius: -ph-r-sm;
+    -fx-background-radius: 6px;
     -fx-padding: 9 22 9 22;
     -fx-cursor: hand;
-    -fx-border-color: transparent;
+    -fx-border-color: -ph-red;
+    -fx-border-width: 1.5px;
 }
 
 .btn-danger:hover {
-    -fx-background-color: #B91C1C;
+    -fx-background-color: -ph-red;
+    -fx-text-fill: white;
+    -fx-border-color: -ph-red;
+    -fx-effect: dropshadow(gaussian, rgba(220, 38, 38, 0.30), 10, 0, 0, 3);
+}
+
+/* ---- Panel Link Buttons ---- */
+.panel-link-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: -ph-brown;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+    -fx-padding: 2 0 2 0;
+}
+
+.panel-link-btn:hover {
+    -fx-text-fill: -ph-brown-dark;
+    -fx-underline: true;
+}
+
+/* ---- Form Close Button ---- */
+.form-close-btn {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-font-size: 13px;
+    -fx-text-fill: -ph-text-muted;
+    -fx-border-color: transparent;
+    -fx-padding: 6 12 6 12;
+    -fx-background-radius: 6px;
+    -fx-font-weight: bold;
+}
+
+.form-close-btn:hover {
+    -fx-background-color: #FEE2E2;
+    -fx-text-fill: -ph-red;
+}
+
+/* ---- Topbar Icon Buttons ---- */
+.topbar-icon-btn {
+    -fx-background-color: transparent;
+    -fx-font-size: 17px;
+    -fx-cursor: hand;
+    -fx-padding: 6;
+    -fx-background-radius: 6px;
+    -fx-border-color: transparent;
+}
+
+.topbar-icon-btn:hover {
+    -fx-background-color: #FAF0E6;
 }
 
 
@@ -695,20 +837,6 @@
 
 .panel-title-alert {
     -fx-text-fill: -ph-amber;
-}
-
-.panel-link-btn {
-    -fx-background-color: transparent;
-    -fx-text-fill: -ph-brown;
-    -fx-font-size: 12px;
-    -fx-font-weight: bold;
-    -fx-cursor: hand;
-    -fx-border-color: transparent;
-    -fx-padding: 2 0 2 0;
-}
-
-.panel-link-btn:hover {
-    -fx-text-fill: -ph-brown-dark;
 }
 
 .alert-panel {
@@ -1342,7 +1470,6 @@
 .period-btn-active {
     -fx-background-color: -ph-brown;
     -fx-text-fill: white;
-    -fx-border-color: -ph-brown;
 }
 
 .chart-placeholder {
@@ -1412,6 +1539,54 @@
     -fx-pref-height: 0;
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════
+   22. DIALOG / TAB / PAGINATION (bổ sung)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Dialog container */
+.dialog-content {
+    -fx-padding: 18 20 18 20;
+    -fx-background-color: white;
+    -fx-background-radius: 14px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.18), 30, 0, 0, 8);
+}
+
+.dialog-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ph-dark;
+}
+
+.error-label {
+    -fx-text-fill: -ph-red;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+/* Tab buttons - sử dụng css cho toggle-button ở trên */
+
+/* Pagination styling */
+.pagination {
+    -fx-padding: 4 0 4 0;
+}
+
+.pagination .page-link {
+    -fx-background-radius: 4px;
+    -fx-padding: 4 8 4 8;
+    -fx-font-size: 11px;
+}
+
+.pagination .page-link:hover {
+    -fx-background-color: #FAF0E6;
+}
+
+.pagination .page-link:selected {
+    -fx-background-color: -ph-brown;
+    -fx-text-fill: white;
+}
+
+
 /* ═══════════════════════════════════════════════════════════════════
    FORMS.CSS — Styles cho tất cả Form Components
    Bổ sung cho style.css chính
@@ -1450,18 +1625,6 @@
 .form-header-subtitle {
     -fx-font-size: 11px;
     -fx-text-fill: -ph-text-muted;
-}
-
-.form-close-btn {
-    -fx-background-color: transparent;
-    -fx-cursor: hand;
-    -fx-font-size: 14px;
-    -fx-text-fill: -ph-text-muted;
-    -fx-border-color: transparent;
-}
-
-.form-close-btn:hover {
-    -fx-text-fill: -ph-red;
 }
 
 /* ──────────────────────────────────────────────────────────────────

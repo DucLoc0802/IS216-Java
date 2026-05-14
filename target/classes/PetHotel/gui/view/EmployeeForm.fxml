@@ -17,13 +17,13 @@
       fx:controller="PetHotel.gui.controller.EmployeeFormController">
 
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="form-header">
-        <Label styleClass="form-header-icon" text="👥" />
+        <Label styleClass="form-header-icon" text="" />
         <VBox spacing="2">
             <Label styleClass="form-header-title" text="Thông Tin Nhân Viên" />
             <Label styleClass="form-header-subtitle" text="Thêm mới hoặc cập nhật hồ sơ nhân viên" />
         </VBox>
         <Region HBox.hgrow="ALWAYS" />
-        <Button onAction="#onCancel" styleClass="form-close-btn" text="✕" />
+        <Button onAction="#onCancel" styleClass="form-close-btn" text="Đóng" />
     </HBox>
 
     <VBox spacing="14" styleClass="form-body">

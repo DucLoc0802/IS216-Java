@@ -99,6 +99,7 @@ public class InventoryController {
 
         loadStats();
         loadLowStockAlerts();
+        updateTabState(true);
         loadStockData();
     }
 
@@ -173,6 +174,7 @@ public class InventoryController {
 
     /** Tab: Tồn Kho */
     @FXML public void onTabStock(ActionEvent event) {
+        updateTabState(true);
         stockPanel.setVisible(true);  stockPanel.setManaged(true);
         importPanel.setVisible(false); importPanel.setManaged(false);
         loadStockData();
@@ -180,6 +182,7 @@ public class InventoryController {
 
     /** Tab: Lịch Sử Nhập Hàng */
     @FXML public void onTabImport(ActionEvent event) {
+        updateTabState(false);
         importPanel.setVisible(true);  importPanel.setManaged(true);
         stockPanel.setVisible(false);  stockPanel.setManaged(false);
         loadImportData();
@@ -251,6 +254,20 @@ public class InventoryController {
             loadLowStockAlerts();
         } catch (IOException e) {
             System.err.println("Không mở được ImportForm.fxml: " + e.getMessage());
+        }
+    }
+
+    private void updateTabState(boolean stockActive) {
+        tabStock.setSelected(stockActive);
+        tabImport.setSelected(!stockActive);
+
+        tabStock.getStyleClass().remove("period-btn-active");
+        tabImport.getStyleClass().remove("period-btn-active");
+
+        if (stockActive) {
+            tabStock.getStyleClass().add("period-btn-active");
+        } else {
+            tabImport.getStyleClass().add("period-btn-active");
         }
     }
 }

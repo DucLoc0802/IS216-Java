@@ -62,7 +62,7 @@
                         <Font name="System Bold" size="13.0" />
                     </font>
                 </Label>
-                <PasswordField fx:id="txtPassword" prefHeight="45.0" promptText="••••••••" style="-fx-background-radius: 6; -fx-border-color: #E0E0E0; -fx-border-radius: 6; -fx-background-color: #FAFAFA; -fx-padding: 10;" />
+                <PasswordField fx:id="txtPassword" onAction="#handleLogin" prefHeight="45.0" promptText="••••••••" style="-fx-background-radius: 6; -fx-border-color: #E0E0E0; -fx-border-radius: 6; -fx-background-color: #FAFAFA; -fx-padding: 10;" />
             <Text fx:id="wrongWarning" fill="RED" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="nowrong-warning" text="Sai tài khoản hoặc mật khẩu, vui lòng thử lại" />
             </VBox>
 
@@ -70,7 +70,7 @@
                 <Hyperlink text="Quên mật khẩu?" textFill="#A0522D" />
             </HBox>
 
-            <Button maxWidth="1.7976931348623157E308" onAction="#handleLogin" prefHeight="45.0" style="-fx-background-color: #A0522D; -fx-text-fill: white; -fx-background-radius: 6; -fx-font-weight: bold; -fx-font-size: 14px;" text="Đăng nhập">
+            <Button fx:id="btnLogin" disable="true" maxWidth="1.7976931348623157E308" onAction="#handleLogin" prefHeight="45.0" styleClass="btn-primary btn-login" text="Đăng nhập">
                 <VBox.margin>
                     <Insets top="5.0" />
                 </VBox.margin>

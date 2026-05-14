@@ -7,6 +7,7 @@ PetHotel\gui\controller\AddRoomController$1.class
 PetHotel\gui\controller\LoginController.class
 PetHotel\util\DBConnection.class
 PetHotel\dao\PetHealthRecordDAO.class
+PetHotel\gui\controller\ChangePasswordController.class
 PetHotel\exception\NotFoundException.class
 PetHotel\gui\controller\BookingController.class
 PetHotel\gui\controller\InventoryController.class
@@ -23,6 +24,7 @@ PetHotel\exception\AuthorizationException.class
 PetHotel\model\BookingRoom.class
 PetHotel\util\PasswordUtil.class
 PetHotel\gui\controller\AccountFormController.class
+PetHotel\gui\controller\EmployeeFormController.class
 PetHotel\gui\controller\ReportController.class
 PetHotel\gui\controller\InvoiceController.class
 PetHotel\bus\TypeRoomBUS.class
@@ -34,12 +36,15 @@ PetHotel\exception\BusinessException.class
 PetHotel\util\IDGenerator.class
 PetHotel\gui\controller\MainController.class
 PetHotel\dao\AppUserDAO.class
+PetHotel\dao\EmployeeDAO.class
 PetHotel\model\PetHealthRecord.class
 PetHotel\bus\PetBUS.class
 PetHotel\dao\CustomerDAO.class
 PetHotel\model\TypeRoom.class
 PetHotel\gui\controller\EmployeeController$1.class
+PetHotel\bus\EmployeeBUS.class
 PetHotel\gui\controller\PetController$2.class
+PetHotel\gui\controller\ProfileController.class
 PetHotel\model\Booking.class
 PetHotel\gui\controller\AddRoomController.class
 PetHotel\model\Room.class

@@ -13,6 +13,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.text.Text;
@@ -28,6 +29,9 @@ public class LoginController {
     private PasswordField txtPassword;
 
     @FXML
+    private Button btnLogin;
+
+    @FXML
     private Text wrongWarning;
     // Khai báo lớp AuthBUS để xử lý logic xác thực
     private AuthBUS authBUS;
@@ -36,6 +40,9 @@ public class LoginController {
     @FXML
     public void initialize() {
         authBUS = new AuthBUS();
+        txtUsername.textProperty().addListener((obs, oldVal, newVal) -> updateLoginButtonState());
+        txtPassword.textProperty().addListener((obs, oldVal, newVal) -> updateLoginButtonState());
+        updateLoginButtonState();
     }
 
     // 2. Hàm xử lý sự kiện khi bấm nút (Trùng tên với onAction="#handleLogin")
@@ -103,5 +110,13 @@ public class LoginController {
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    private void updateLoginButtonState() {
+        boolean canLogin = txtUsername != null
+            && txtPassword != null
+            && !txtUsername.getText().trim().isEmpty()
+            && !txtPassword.getText().trim().isEmpty();
+        btnLogin.setDisable(!canLogin);
     }
 }
