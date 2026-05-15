@@ -17,6 +17,7 @@
 --  12. sp_update_booking_service_status        -- Thủ tục cập nhật trạng thái dịch vụ đặt thêm
 --  13. sp_check_in_booking                     -- Thủ tục check-in booking lưu trú
 --  14. sp_check_out_booking                    -- Thủ tục check-out booking lưu trú
+--  15. sp_recalculate_order_totals             -- Thủ tục tính lại tổng tiền hóa đơn sau khi có thay đổi dịch vụ
 
 -- =========================================================
 -- II. PROCEDURE
@@ -576,19 +577,18 @@ BEGIN
     WHERE o.booking_id = p_booking_id;
 
     IF v_existing_count > 0 THEN
-        -- Booking này đã có hóa đơn
         RAISE_APPLICATION_ERROR(
             -20201,
             'This booking already has an order.'
         );
     END IF;
 
-    -- Tạo hóa đơn ở trạng thái chờ thanh toán
+    -- Tạo hóa đơn
     INSERT INTO orders (
         order_id,
-        booking_id,
         customer_id,
         branch_id,
+        booking_id,
         created_by_emp,
         status,
         subtotal,
@@ -597,9 +597,9 @@ BEGIN
     )
     VALUES (
         p_order_id,
-        p_booking_id,
         v_customer_id,
         v_branch_id,
+        p_booking_id,
         p_created_by_emp,
         'PENDING',
         0,
@@ -607,22 +607,26 @@ BEGIN
         SYSTIMESTAMP
     );
 
-    -- Tạo chi tiết hóa đơn từ các dịch vụ đã đặt
+    -- Tạo chi tiết hóa đơn từ dịch vụ đã đặt
     INSERT INTO order_details (
         order_detail_id,
-        order_id,
-        booking_id,
+        booking_service_id,
+        booking_room_id,
         service_id,
+        order_id,
+        note,
         quantity,
         unit_price,
         line_total,
         created_at
     )
     SELECT
-        'OD' || LPAD(ROWNUM, 8, '0'),
-        p_order_id,
-        bs.booking_id,
+        'OD' || SUBSTR(RAWTOHEX(SYS_GUID()), 1, 8),
+        bs.booking_service_id,
+        NULL,
         bs.service_id,
+        p_order_id,
+        NULL,
         1,
         s.base_price,
         s.base_price,
@@ -633,17 +637,15 @@ BEGIN
     WHERE bs.booking_id = p_booking_id
       AND bs.status <> 'CANCELLED';
 
-    -- Trigger trg_sync_order_totals sẽ tự cập nhật subtotal và grand_total
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
-        -- Không tìm thấy booking
         RAISE_APPLICATION_ERROR(
             -20202,
             'Booking does not exist.'
         );
 END;
 /
--- 12. Ghi nhận thanh toán cho hóa đơn
+-- 11. Ghi nhận thanh toán cho hóa đơn
 CREATE OR REPLACE PROCEDURE sp_add_payment (
     p_payment_id     IN payments.payment_id%TYPE,
     p_order_id       IN payments.order_id%TYPE,
@@ -657,7 +659,6 @@ IS
     v_grand_total   orders.grand_total%TYPE;
     v_total_paid    NUMBER;
 BEGIN
-    -- Lấy thông tin hóa đơn
     SELECT o.status, o.grand_total
     INTO v_order_status, v_grand_total
     FROM orders o
@@ -665,7 +666,6 @@ BEGIN
     FOR UPDATE;
 
     IF v_order_status = 'CANCELLED' THEN
-        -- Hóa đơn đã hủy thì không được thanh toán
         RAISE_APPLICATION_ERROR(
             -20210,
             'Cancelled order cannot receive payment.'
@@ -673,7 +673,6 @@ BEGIN
     END IF;
 
     IF v_order_status = 'PAID' THEN
-        -- Hóa đơn đã thanh toán đủ
         RAISE_APPLICATION_ERROR(
             -20211,
             'This order has already been fully paid.'
@@ -681,14 +680,12 @@ BEGIN
     END IF;
 
     IF p_amount <= 0 THEN
-        -- Số tiền thanh toán phải lớn hơn 0
         RAISE_APPLICATION_ERROR(
             -20212,
             'Payment amount must be greater than zero.'
         );
     END IF;
 
-    -- Tính tổng tiền đã thanh toán thành công
     SELECT NVL(SUM(p.amount), 0)
     INTO v_total_paid
     FROM payments p
@@ -696,14 +693,12 @@ BEGIN
       AND p.status = 'SUCCESS';
 
     IF v_total_paid + p_amount > v_grand_total THEN
-        -- Không cho thanh toán vượt quá tổng tiền hóa đơn
         RAISE_APPLICATION_ERROR(
             -20213,
             'Payment amount exceeds the remaining order balance.'
         );
     END IF;
 
-    -- Ghi nhận thanh toán thành công
     INSERT INTO payments (
         payment_id,
         order_id,
@@ -714,7 +709,7 @@ BEGIN
         paid_at,
         note,
         created_at,
-        update_at
+        updated_at
     )
     VALUES (
         p_payment_id,
@@ -729,19 +724,17 @@ BEGIN
         SYSTIMESTAMP
     );
 
-    -- Cập nhật trạng thái hóa đơn
     update_orders_status(p_order_id);
 
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
-        -- Không tìm thấy hóa đơn
         RAISE_APPLICATION_ERROR(
             -20214,
             'Order does not exist.'
         );
 END;
 /
--- 13. Cập nhật trạng thái dịch vụ đặt thêm
+-- 12. Cập nhật trạng thái dịch vụ đặt thêm
 CREATE OR REPLACE PROCEDURE sp_update_booking_service_status (
     p_booking_service_id IN booking_services.booking_service_id%TYPE,
     p_new_status         IN booking_services.status%TYPE,
@@ -805,7 +798,7 @@ EXCEPTION
         );
 END;
 /
--- 4. Check-in booking lưu trú
+-- 13. Check-in booking lưu trú
 CREATE OR REPLACE PROCEDURE sp_check_in_booking (
     p_booking_id IN booking.booking_id%TYPE
 )
@@ -891,5 +884,34 @@ EXCEPTION
             -20242,
             'Booking does not exist.'
         );
+END;
+/
+
+-- 15. Tính lại tổng tiền hóa đơn sau khi có thay đổi dịch vụ
+CREATE OR REPLACE PROCEDURE sp_recalculate_order_totals (
+    p_order_id IN orders.order_id%TYPE
+)
+IS
+    v_subtotal       orders.subtotal%TYPE;
+    v_deposit_amount booking.deposit_amount%TYPE;
+BEGIN
+    -- Tổng tiền chi tiết hóa đơn
+    SELECT NVL(SUM(od.line_total), 0)
+    INTO v_subtotal
+    FROM order_details od
+    WHERE od.order_id = p_order_id;
+
+    -- Tiền cọc của booking tương ứng
+    SELECT NVL(b.deposit_amount, 0)
+    INTO v_deposit_amount
+    FROM orders o
+    JOIN booking b
+        ON o.booking_id = b.booking_id
+    WHERE o.order_id = p_order_id;
+
+    UPDATE orders
+    SET subtotal    = v_subtotal,
+        grand_total = v_subtotal + v_deposit_amount
+    WHERE order_id = p_order_id;
 END;
 /

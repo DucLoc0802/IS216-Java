@@ -8,12 +8,12 @@ public class DBConnection {
     // Thông số kết nối 
     private static final String HOST = "localhost";
     private static final String PORT = "1521";
-    private static final String SERVICE_NAME = "xe"; 
+    private static final String SERVICE_NAME = "orcldb"; 
     private static final String USER = "pethotel"; 
     private static final String PASS = "admin";
 
-    // Chuỗi URL kết nối chuẩn Oracle
-    private static final String URL = "jdbc:oracle:thin:@//" + HOST + ":" + PORT + "/" + SERVICE_NAME;
+    // Chuỗi URL kết nối Oracle dùng SID (orcldb là SID)
+    private static final String URL = "jdbc:oracle:thin:@" + HOST + ":" + PORT + ":" + SERVICE_NAME;
     public static Connection getConnection() {
         try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
