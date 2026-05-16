@@ -120,7 +120,7 @@ public class PetBUS {
             }
 
             // 4. Sinh ID
-            String newId = IDGenerator.nextPetId();
+            String newId = petDAO.generateNextPetId();
 
             // 5. Insert
             Pet pet = new Pet(
@@ -339,6 +339,38 @@ public class PetBUS {
         }
     }
 
+    public List<Pet> getAllPets() {
+        authBUS.requireRole(Role.RECEPTIONIST);
+        try {
+            return petDAO.findAll();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi database khi lấy danh sách thú cưng.", e);
+        }
+    }
+
+    public Pet linkOwner(String petId, String customerId) {
+        authBUS.requireRole(Role.RECEPTIONIST);
+        try {
+            Pet pet = petDAO.findById(petId);
+            if (pet == null) {
+                throw new NotFoundException("Không tìm thấy thú cưng ID: " + petId);
+            }
+            if (customerDAO.findById(customerId) == null) {
+                throw new NotFoundException("Không tìm thấy khách hàng ID: " + customerId);
+            }
+            int rows = petDAO.updateOwner(petId, customerId, null);
+            if (rows == 0) {
+                throw new NotFoundException("Không thể liên kết chủ sở hữu cho thú cưng ID: " + petId);
+            }
+            pet.setCustomerId(customerId);
+            return pet;
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi database khi liên kết chủ sở hữu.", e);
+        }
+    }
+
     /**
      * Lấy lịch sử dịch vụ của thú cưng.
      *
@@ -400,7 +432,7 @@ public class PetBUS {
             throw new ValidationException("Trạng thái sức khoẻ phải là 0 (có vấn đề) hoặc 1 (bình thường).");
         }
         if (bookingId == null || bookingId.trim().isEmpty()) {
-            throw new ValidationException("Booking ID không được để trống.");
+            throw new ValidationException("Mã booking không được để trống vì bảng PET_HEALTH_RECORD hiện yêu cầu booking_id.");
         }
 
         try {

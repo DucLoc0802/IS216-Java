@@ -9,6 +9,7 @@ import javafx.scene.Node;
 import javafx.scene.layout.StackPane;
 
 public class MainController {
+    private static MainController activeInstance;
 
     // Đây là cái khung trống để "thay ruột"
     @FXML
@@ -25,6 +26,7 @@ public class MainController {
 
     @FXML
     public void initialize() {
+        activeInstance = this;
         // Kiểm tra xem JavaFX đã "bơm" thành công các sub-controller vào chưa
         if (sidebarController != null) {
             System.out.println("Đã kết nối Sidebar thành công!");
@@ -63,6 +65,35 @@ public class MainController {
     }
     
     // Hàm hỗ trợ để Topbar đổi dòng chữ Tiêu đề (Ví dụ: "Quản lý khách hàng")
+    public void showPetManagement(String selectedPetId) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/PetHotel/gui/view/PetManagement.fxml"));
+            Node view = loader.load();
+
+            contentArea.getChildren().clear();
+            contentArea.getChildren().add(view);
+
+            if (topbarController != null) {
+                topbarController.setTitle("ThÃº CÆ°ng", "Quáº£n lÃ½ há»“ sÆ¡ thÃº cÆ°ng");
+            }
+            if (sidebarController != null) {
+                sidebarController.setActivePetMenu();
+            }
+
+            PetController controller = loader.getController();
+            if (selectedPetId != null && !selectedPetId.isBlank()) {
+                controller.selectAndOpenPet(selectedPetId);
+            }
+        } catch (IOException e) {
+            System.err.println("Lá»—i khÃ´ng táº£i Ä‘Æ°á»£c file: PetManagement.fxml");
+            e.printStackTrace();
+        }
+    }
+
+    public static MainController getActiveInstance() {
+        return activeInstance;
+    }
+
     public TopbarController getTopbarController() {
         return topbarController;
     }

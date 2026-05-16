@@ -5,7 +5,9 @@ import PetHotel.util.DBConnection;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * PetHealthRecordDAO — Thao tác DB cho bảng PET_HEALTH_RECORD.
@@ -33,8 +35,17 @@ public class PetHealthRecordDAO {
     private static final String SQL_FIND_LATEST_BY_PET =
         "SELECT health_record_id, pet_id, booking_id, recorded_at, note, status " +
         "FROM pet_health_record " +
-        "WHERE pet_id = ? AND recorded_at = (" +
-        "   SELECT MAX(recorded_at) FROM pet_health_record WHERE pet_id = ?)";
+        "WHERE pet_id = ? " +
+        "ORDER BY recorded_at DESC FETCH FIRST 1 ROW ONLY";
+
+    private static final String SQL_FIND_LATEST_ALL =
+        "SELECT health_record_id, pet_id, booking_id, recorded_at, note, status " +
+        "FROM (" +
+        "    SELECT phr.*, ROW_NUMBER() OVER (" +
+        "        PARTITION BY pet_id ORDER BY recorded_at DESC, health_record_id DESC" +
+        "    ) rn " +
+        "    FROM pet_health_record phr" +
+        ") WHERE rn = 1";
 
     // ── Public Methods ───────────────────────────────────────────
 
@@ -62,6 +73,10 @@ public class PetHealthRecordDAO {
         }
     }
 
+    public void insertHealthRecord(PetHealthRecord record) throws SQLException {
+        insert(record, null);
+    }
+
     /**
      * Lấy tất cả health record của một thú cưng, mới nhất trước.
      *
@@ -79,6 +94,10 @@ public class PetHealthRecordDAO {
             }
         }
         return list;
+    }
+
+    public List<PetHealthRecord> getHealthRecordsByPetId(String petId) throws SQLException {
+        return findByPetId(petId);
     }
 
     /**
@@ -111,11 +130,27 @@ public class PetHealthRecordDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(SQL_FIND_LATEST_BY_PET)) {
             ps.setString(1, petId);
-            ps.setString(2, petId);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? mapRow(rs) : null;
             }
         }
+    }
+
+    public PetHealthRecord getLatestHealthRecordByPetId(String petId) throws SQLException {
+        return findLatestByPetId(petId);
+    }
+
+    public Map<String, PetHealthRecord> findLatestByAllPetIds() throws SQLException {
+        Map<String, PetHealthRecord> result = new HashMap<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_FIND_LATEST_ALL);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                PetHealthRecord record = mapRow(rs);
+                result.put(record.getPetId(), record);
+            }
+        }
+        return result;
     }
 
     // ── Private Helpers ──────────────────────────────────────────

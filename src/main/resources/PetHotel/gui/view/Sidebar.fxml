@@ -59,7 +59,7 @@
                 </HBox>
             </VBox>
 
-            <VBox fx:id="menuPet" onMouseClicked="#onMenu" styleClass="menu-item" userData="pet">
+            <VBox fx:id="menuPet" managed="false" visible="false" onMouseClicked="#onMenu" styleClass="menu-item" userData="pet">
                 <HBox alignment="CENTER_LEFT" spacing="12">
                     <Label styleClass="menu-icon" text="🐶" />
                     <Label styleClass="menu-label" text="Thú Cưng" />

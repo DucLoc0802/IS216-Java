@@ -29,13 +29,22 @@ public class PetDAO {
         "       weight_kg, special_note, created_at, updated_at " +
         "FROM pet WHERE customer_id = ? ORDER BY pet_name";
 
+    private static final String SQL_FIND_ALL =
+        "SELECT pet_id, customer_id, pet_name, species, breed, sex, " +
+        "       weight_kg, special_note, created_at, updated_at " +
+        "FROM pet ORDER BY created_at DESC";
+
+    private static final String SQL_FIND_IDS_BY_PREFIX =
+        "SELECT pet_id FROM pet WHERE pet_id LIKE 'PET%'";
+
     /** Tìm kiếm: tên pet, loài, giống, hoặc tên chủ */
     private static final String SQL_SEARCH =
         "SELECT p.pet_id, p.customer_id, p.pet_name, p.species, p.breed, p.sex, " +
         "       p.weight_kg, p.special_note, p.created_at, p.updated_at " +
         "FROM pet p " +
         "JOIN customer c ON p.customer_id = c.customer_id " +
-        "WHERE LOWER(p.pet_name) LIKE LOWER(?) " +
+        "WHERE LOWER(p.pet_id) LIKE LOWER(?) " +
+        "   OR LOWER(p.pet_name) LIKE LOWER(?) " +
         "   OR LOWER(p.species)  LIKE LOWER(?) " +
         "   OR LOWER(p.breed)    LIKE LOWER(?) " +
         "   OR LOWER(c.full_name) LIKE LOWER(?) " +
@@ -51,6 +60,9 @@ public class PetDAO {
         "SET pet_name = ?, species = ?, breed = ?, sex = ?, " +
         "    weight_kg = ?, special_note = ?, updated_at = SYSTIMESTAMP " +
         "WHERE pet_id = ?";
+
+    private static final String SQL_UPDATE_OWNER =
+        "UPDATE pet SET customer_id = ?, updated_at = SYSTIMESTAMP WHERE pet_id = ?";
 
     private static final String SQL_DELETE =
         "DELETE FROM pet WHERE pet_id = ?";
@@ -125,6 +137,16 @@ public class PetDAO {
         return list;
     }
 
+    public List<Pet> findAll() throws SQLException {
+        List<Pet> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_FIND_ALL);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) list.add(mapRow(rs));
+        }
+        return list;
+    }
+
     /**
      * Tìm kiếm pet theo keyword (tên, loài, giống, tên chủ).
      *
@@ -141,11 +163,35 @@ public class PetDAO {
             ps.setString(2, pattern);
             ps.setString(3, pattern);
             ps.setString(4, pattern);
+            ps.setString(5, pattern);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(mapRow(rs));
             }
         }
         return list;
+    }
+
+    public String generateNextPetId() throws SQLException {
+        synchronized (PetDAO.class) {
+            int max = 0;
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(SQL_FIND_IDS_BY_PREFIX);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String id = rs.getString("pet_id");
+                    if (isValidGeneratedPetId(id)) {
+                        max = Math.max(max, Integer.parseInt(id.substring(3)));
+                    }
+                }
+            }
+            return String.format("PET%03d", max + 1);
+        }
+    }
+
+    private boolean isValidGeneratedPetId(String id) {
+        if (id == null || !id.matches("^PET\\d+$")) return false;
+        int number = Integer.parseInt(id.substring(3));
+        return number < 1_000_000;
     }
 
     /**
@@ -201,6 +247,21 @@ public class PetDAO {
                 ps.setNull(5, Types.NUMERIC);
             ps.setString(6, pet.getSpecialNote());
             ps.setString(7, pet.getPetId());
+            int rows = ps.executeUpdate();
+            ps.close();
+            return rows;
+        } finally {
+            if (own) DBConnection.closeQuietly(c);
+        }
+    }
+
+    public int updateOwner(String petId, String customerId, Connection conn) throws SQLException {
+        boolean own = (conn == null);
+        Connection c = own ? DBConnection.getConnection() : conn;
+        try {
+            PreparedStatement ps = c.prepareStatement(SQL_UPDATE_OWNER);
+            ps.setString(1, customerId);
+            ps.setString(2, petId);
             int rows = ps.executeUpdate();
             ps.close();
             return rows;
