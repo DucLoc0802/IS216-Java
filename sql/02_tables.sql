@@ -13,12 +13,12 @@
 12. Room
 13. Booking
 14. Booking_Servieces
-15. Orders
-16. Orders_details
-17. Payments
-18. Booking_room
-19. Pet_health_record
-20. Booking_room_pet
+15. Booking_room
+16. Booking_room_pet
+17. Orders
+18. Orders_details
+19. Payments
+20. Pet_health_record
 21. Service_product_standard
 22. Goods_receipt
 23. Goods_receipt_detail
@@ -65,6 +65,7 @@ create table employee (
    employee_id varchar2(10) not null,
    branch_id   varchar2(10) not null,
    full_name   nvarchar2(120) not null,
+   salary      number(12,2) not null,
    email       varchar2(254),
    phone       varchar2(20) not null,
    hire_date   timestamp(6) with time zone,
@@ -87,7 +88,7 @@ create table employee (
 create table app_user (
    employee_id   varchar2(10) not null,
    password_hash nvarchar2(255),
-   role_emp      nvarchar2(20) not null,
+   role_emp      number(1) not null,
    user_name     nvarchar2(254) not null,
    is_active     number(1) default 1 not null,
    last_login    timestamp(6) with time zone,
@@ -263,6 +264,8 @@ create table room (
       references branch ( branch_id ),
    constraint fk_room_type foreign key ( type_room_id )
       references type_room ( type_room_id ),
+   constraint uq_room_number unique ( branch_id,
+                                       room_number ),
    constraint ck_room_status
       check ( status in ( 'AVAILABLE',
                           'IN_USE',
@@ -313,6 +316,7 @@ create table booking_services (
    booking_service_id varchar2(10) not null,
    booking_id         varchar2(10) not null,
    service_id         varchar2(10),
+   pet_id            varchar2(10),
    employee_id        varchar2(10),
    scheduled_at       timestamp(6) with time zone,
    status             nvarchar2(20) not null,
@@ -322,6 +326,8 @@ create table booking_services (
    constraint pk_booking_services primary key ( booking_service_id ),
    constraint fk_bks_booking foreign key ( booking_id )
       references booking ( booking_id ),
+   constraint fk_bks_pet foreign key ( pet_id )
+      references pet ( pet_id ),
    constraint fk_bks_service foreign key ( service_id )
       references services ( service_id ),
    constraint fk_bks_employee foreign key ( employee_id )
@@ -335,12 +341,47 @@ create table booking_services (
 );
 
 -- =========================================================
--- 15. ORDERS
+-- 15. Booking_room
+-- =========================================================
+create table booking_room (
+   booking_room_id varchar2(10) not null,
+   booking_id      varchar2(10) not null,
+   room_id         varchar2(10) not null,
+   assigned_at     timestamp(6) with time zone default systimestamp,
+   note            clob,
+   constraint pk_booking_room primary key ( booking_room_id ),
+   constraint fk_bkr_booking_id foreign key ( booking_id )
+      references booking ( booking_id ),
+   constraint fk_bkr_room_id foreign key ( room_id )
+      references room ( room_id ),
+   constraint uq_booking_room unique ( booking_id,
+                                       room_id )
+);
+
+-- =========================================================
+-- 16. Booking_room_pet
+-- =========================================================
+create table booking_room_pet (
+   booking_room_id varchar2(10) not null,
+   pet_id          varchar2(10) not null,
+   assigned_at     timestamp(6) with time zone default systimestamp,
+   note            clob,
+   constraint pk_brp primary key ( booking_room_id,
+                                   pet_id ),
+   constraint fk_brp_pet foreign key ( pet_id )
+      references pet ( pet_id ),
+   constraint fk_brp_booking_room foreign key ( booking_room_id )
+      references booking_room ( booking_room_id )
+);
+
+-- =========================================================
+-- 17. ORDERS
 -- =========================================================
 create table orders (
    order_id       varchar2(10) not null,
    customer_id    varchar2(10) not null,
    branch_id      varchar2(10) not null,
+   booking_id     varchar2(10) not null,
    created_by_emp varchar2(10) not null,
    status         varchar2(20) not null,
    subtotal       number(12,2) not null,
@@ -351,6 +392,8 @@ create table orders (
       references customer ( customer_id ),
    constraint fk_orders_branch foreign key ( branch_id )
       references branch ( branch_id ),
+   constraint fk_orders_booking foreign key ( booking_id )
+      references booking ( booking_id ),
    constraint fk_orders_employee foreign key ( created_by_emp )
       references employee ( employee_id ),
    constraint ck_orders_subtotal check ( subtotal >= 0 ),
@@ -368,12 +411,14 @@ create table orders (
     --CANCELLED: Hủy hóa đơn
     --REFUND: Hoàn tiền
 );
+
 -- =========================================================
--- 16. ORDER_DETAILS
+-- 18. ORDER_DETAILS
 -- =========================================================
 create table order_details (
    order_detail_id varchar2(10) not null,
-   booking_id      varchar2(10),
+   booking_service_id varchar2(10),
+   booking_room_id varchar2(10),
    service_id      varchar2(10),
    order_id        varchar2(10) not null,
    note            clob,
@@ -382,8 +427,10 @@ create table order_details (
    line_total      number(12,2) not null,
    created_at      timestamp(6) with time zone default systimestamp,
    constraint pk_order_details primary key ( order_detail_id ),
-   constraint fk_od_booking foreign key ( booking_id )
-      references booking ( booking_id ),
+   constraint fk_od_booking_service foreign key ( booking_service_id )
+      references booking_services ( booking_service_id ),
+   constraint fk_od_booking_room foreign key ( booking_room_id )
+      references booking_room ( booking_room_id ),
    constraint fk_od_service foreign key ( service_id )
       references services ( service_id ),
    constraint fk_od_order foreign key ( order_id )
@@ -394,7 +441,7 @@ create table order_details (
 );--để ý công thức của linetotal
 
 -- =========================================================
--- 17. PAYMENTS
+-- 19. PAYMENTS
 -- =========================================================
 create table payments (
    payment_id     varchar2(10) not null,
@@ -430,25 +477,9 @@ create table payments (
                            'FAILED' )
          and paid_at is null ) )
 );
+
 -- =========================================================
--- 18. Booking_room
--- =========================================================
-create table booking_room (
-   booking_room_id varchar2(10) not null,
-   booking_id      varchar2(10) not null,
-   room_id         varchar2(10) not null,
-   assigned_at     timestamp(6) with time zone default systimestamp,
-   note            clob,
-   constraint pk_booking_room primary key ( booking_room_id ),
-   constraint fk_bkr_booking_id foreign key ( booking_id )
-      references booking ( booking_id ),
-   constraint fk_bkr_room_id foreign key ( room_id )
-      references room ( room_id ),
-   constraint uq_booking_room unique ( booking_id,
-                                       room_id )
-);
--- =========================================================
--- 19. PET_HEALTH_RECORD
+-- 20. PET_HEALTH_RECORD
 -- =========================================================
 create table pet_health_record (
    health_record_id varchar2(10) not null,
@@ -465,28 +496,16 @@ create table pet_health_record (
    constraint hpr_ck_status_01 check ( status in ( 0,
                                                    1 ) )
 );
--- =========================================================
--- 20. Booking_room_pet
--- =========================================================
-create table booking_room_pet (
-   booking_room_id varchar2(10) not null,
-   pet_id          varchar2(10) not null,
-   assigned_at     timestamp(6) with time zone default systimestamp,
-   note            clob,
-   constraint pk_brp primary key ( booking_room_id,
-                                   pet_id ),
-   constraint fk_brp_pet foreign key ( pet_id )
-      references pet ( pet_id ),
-   constraint fk_brp_booking_room foreign key ( booking_room_id )
-      references booking_room ( booking_room_id )
-);
+
+
 -- =========================================================
 -- 21. Service_product_standard
 -- =========================================================
 create table service_product_standard (
-   standard_id   varchar2(10) not null,
+   service_product_standard_id varchar2(10) not null,
    service_id    varchar2(10) not null,
    product_id    varchar2(10) not null,
+   species       varchar2(20) not null,
    min_weight_kg number(5,2) not null,
    max_weight_kg number(5,2) not null,
    usage_amount  number(10,2) not null,
@@ -494,7 +513,7 @@ create table service_product_standard (
    note          clob,
    created_at    timestamp(6) with time zone default systimestamp,
    updated_at    timestamp(6) with time zone default systimestamp,
-   constraint pk_service_product_standard primary key ( standard_id ),
+   constraint pk_service_product_standard primary key ( service_product_standard_id ),
    constraint fk_sps_service foreign key ( service_id )
       references services ( service_id ),
    constraint fk_sps_product foreign key ( product_id )
@@ -511,6 +530,8 @@ create table service_product_standard (
    constraint ck_sps_species check ( species in ( 'DOG',
                                                   'CAT' ) )
 );
+
+
 -- =========================================================
 -- 22. GOODS_RECEIPT
 -- =========================================================
@@ -525,6 +546,7 @@ create table goods_receipt (
    status           nvarchar2(20) not null,
    note             clob,
    created_at       timestamp(6) with time zone,
+   updated_at       timestamp(6) with time zone,
    constraint pk_goods_receipt primary key ( goods_receipt_id ),
    constraint fk_gr_branch foreign key ( branch_id )
       references branch ( branch_id ),
@@ -537,11 +559,11 @@ create table goods_receipt (
                           'APPROVED',
                           'CANCELLED' ) )
 );
+
 -- =========================================================
 -- 23. GOODS_RECEIPT_DETAIL
 -- =========================================================
 create table goods_receipt_detail (
-   goods_receipt_detail_id varchar2(10) not null,
    goods_receipt_id        varchar2(10) not null,
    product_id              varchar2(10) not null,
    quantity                number(12,2) not null,
@@ -549,13 +571,13 @@ create table goods_receipt_detail (
    line_total              number(12,2) default 0 not null,
    note                    clob,
    created_at              timestamp(6) with time zone,
-   constraint pk_goods_receipt_detail primary key ( goods_receipt_detail_id ),
+   updated_at              timestamp(6) with time zone,
+   constraint pk_goods_receipt_detail primary key ( goods_receipt_id,
+                                                        product_id ),
    constraint fk_grd_receipt foreign key ( goods_receipt_id )
       references goods_receipt ( goods_receipt_id ),
    constraint fk_grd_product foreign key ( product_id )
       references product ( product_id ),
-   constraint uq_grd_receipt_product unique ( goods_receipt_id,
-                                              product_id ),
    constraint ck_grd_quantity check ( quantity > 0 ),
    constraint ck_grd_line_total check ( line_total >= 0 ),
    constraint ck_grd_unit
@@ -576,7 +598,7 @@ create table stock_audit (
    note           clob,
    created_at     timestamp(6) with time zone,
    updated_at     timestamp(6) with time zone,
-   constraint pk_stock_audit primary key ( stock_audit_id ),
+   constraint pk_stock_audit primary key ( stock_audit_id),
    constraint fk_sa_branch foreign key ( branch_id )
       references branch ( branch_id ),
    constraint fk_sa_employee foreign key ( employee_id )
@@ -590,7 +612,6 @@ create table stock_audit (
 -- 25. STOCK_AUDIT_DETAIL
 -- =========================================================
 create table stock_audit_detail (
-   stock_audit_detail_id varchar2(10) not null,
    stock_audit_id        varchar2(10) not null,
    product_id            varchar2(10) not null,
    system_quantity       number(12,2) default 0 not null,
@@ -600,13 +621,12 @@ create table stock_audit_detail (
    note                  clob,
    created_at            timestamp(6) with time zone,
    updated_at            timestamp(6) with time zone,
-   constraint pk_stock_audit_detail primary key ( stock_audit_detail_id ),
+   constraint pk_stock_audit_detail primary key ( stock_audit_id,
+                                                    product_id ),
    constraint fk_sad_audit foreign key ( stock_audit_id )
       references stock_audit ( stock_audit_id ),
    constraint fk_sad_product foreign key ( product_id )
       references product ( product_id ),
-   constraint uq_sad_audit_product unique ( stock_audit_id,
-                                            product_id ),
    constraint ck_sad_system_quantity check ( system_quantity >= 0 ),
    constraint ck_sad_actual_quantity check ( actual_quantity >= 0 ),
    constraint ck_sad_difference_rate

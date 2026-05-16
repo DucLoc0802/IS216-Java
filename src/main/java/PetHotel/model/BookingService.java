@@ -10,6 +10,7 @@ import java.util.Objects;
  *   booking_service_id  VARCHAR2(10)    PK
  *   booking_id          VARCHAR2(10)    NOT NULL, FK → booking
  *   service_id          VARCHAR2(10)    FK → services (nullable)
+ *   pet_id              VARCHAR2(10)    FK → pet (nullable)
  *   employee_id         VARCHAR2(10)    FK → employee (nullable — nhân viên thực hiện)
  *   scheduled_at        TIMESTAMP(6) WITH TIME ZONE
  *   status              NVARCHAR2(20)   CHECK IN ('PENDING','SCHEDULED','IN_PROGRESS','DONE','CANCELLED')
@@ -28,6 +29,7 @@ public class BookingService {
     private String bookingServiceId;
     private String bookingId;
     private String serviceId;      // nullable
+    private String petId;          // nullable
     private String employeeId;     // nullable
     private OffsetDateTime scheduledAt;
     private String status;
@@ -40,11 +42,12 @@ public class BookingService {
     public BookingService() {}
 
     public BookingService(String bookingServiceId, String bookingId, String serviceId,
-                          String employeeId, OffsetDateTime scheduledAt, String status,
+                          String petId, String employeeId, OffsetDateTime scheduledAt, String status,
                           String note, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
         this.bookingServiceId = bookingServiceId;
         this.bookingId        = bookingId;
         this.serviceId        = serviceId;
+        this.petId            = petId;
         this.employeeId       = employeeId;
         this.scheduledAt      = scheduledAt;
         this.status           = status;
@@ -63,6 +66,9 @@ public class BookingService {
 
     public String getServiceId()                         { return serviceId; }
     public void setServiceId(String v)                   { this.serviceId = v; }
+
+    public String getPetId()                             { return petId; }
+    public void setPetId(String v)                       { this.petId = v; }
 
     public String getEmployeeId()                        { return employeeId; }
     public void setEmployeeId(String v)                  { this.employeeId = v; }

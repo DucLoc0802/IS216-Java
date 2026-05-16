@@ -74,4 +74,4 @@
         <Button fx:id="btnSave" onAction="#handleSave" styleClass="btn-primary" text="Tạo Tài Khoản" />
     </HBox>
 
-</VBox>
+</VBox>  

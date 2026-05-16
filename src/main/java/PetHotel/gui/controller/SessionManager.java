@@ -13,7 +13,7 @@ public class SessionManager {
 
     private static SessionManager instance;
 
-    private AppUser currentUser; // Lưu nguyên object AppUser sẽ tiện hơn lưu từng field rời rạc
+    private static AppUser currentUser; // Lưu nguyên object AppUser sẽ tiện hơn lưu từng field rời rạc
     private String branchId;
     private String branchName;
 
@@ -47,7 +47,7 @@ public class SessionManager {
     }
 
     // ─── Getters ────────────────────────────────────────
-    public AppUser getCurrentUser() { return currentUser; }
+    public static AppUser getCurrentUser() { return currentUser; }
     public String getUserId()       { return currentUser != null ? currentUser.getEmployeeId() : null; }
     public String getBranchId()   { return branchId; }
     public String getBranchName() { return branchName; }
