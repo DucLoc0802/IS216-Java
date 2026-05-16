@@ -33,6 +33,7 @@ create table customer (
    customer_id varchar2(10) not null,
    full_name   nvarchar2(120) not null,
    email       nvarchar2(254),
+   cccd        nvarchar2(12),
    phone       nvarchar2(20) not null,
    address     nvarchar2(120),
    note        clob,
@@ -40,7 +41,8 @@ create table customer (
    updated_at  timestamp(6) with time zone default systimestamp,
    constraint pk_customer primary key ( customer_id ),
    constraint uq_customer_phone unique ( phone ),
-   constraint uq_customer_email unique ( email )
+   constraint uq_customer_email unique ( email ),
+   constraint uq_customer_cccd  unique ( cccd )
 );
 -- =========================================================
 -- 2. BRANCH
