@@ -39,6 +39,7 @@ public class SidebarController {
     @FXML private VBox menuPet;
     @FXML private VBox menuBooking;
     @FXML private VBox menuGrooming;
+    @FXML private VBox menuAssignedTasks;
     @FXML private VBox menuRoom;
     @FXML private VBox menuInvoice;
 
@@ -82,6 +83,9 @@ private void applyRolePermissions(Role role) {
             // Ẩn Dashboard
             hideMenu(menuDashboard); 
             
+            // Ẩn các menu liên quan đến nghiệp vụ không liên quan
+            hideMenu(menuAssignedTasks);
+
             // Về Kho hàng: Lễ tân chỉ được tra cứu sản phẩm, nên ẩn Nhập kho và Nhà cung cấp
             hideMenu(menuInventory);
             hideMenu(menuSupplier);
@@ -100,8 +104,8 @@ private void applyRolePermissions(Role role) {
             hideMenu(menuCustomer);
             hideMenu(menuBooking);
             hideMenu(menuRoom);
-            hideMenu(menuInvoice);
-            
+            hideMenu(menuInvoice); 
+
             // Ẩn hoàn toàn nhóm Kho
             hideMenu(groupInventory);
             hideMenu(menuProduct);
@@ -119,6 +123,7 @@ private void applyRolePermissions(Role role) {
             // 3. QUẢN LÝ CHI NHÁNH
             // Vận hành toàn bộ chi nhánh, quản lý nhân viên, xem báo cáo nhưng KHÔNG quản lý tài khoản hệ thống
             hideMenu(menuAccount); 
+            hideMenu(menuAssignedTasks);
             break;
 
         case ADMIN:
@@ -130,6 +135,7 @@ private void applyRolePermissions(Role role) {
             hideMenu(menuBooking);
             hideMenu(menuGrooming);
             hideMenu(menuInvoice);
+            hideMenu(menuAssignedTasks);
             
             // Ẩn toàn bộ nhóm Kho
             hideMenu(groupInventory);
@@ -153,6 +159,7 @@ private void applyRolePermissions(Role role) {
             hideMenu(menuGrooming);
             hideMenu(menuRoom);
             hideMenu(menuInvoice);
+            hideMenu(menuAssignedTasks);
             
             // Nhóm kho: Ẩn phần bán hàng/nhà cung cấp, chỉ giữ Inventory để xem thống kê
             hideMenu(menuProduct);
@@ -172,6 +179,7 @@ private void applyRolePermissions(Role role) {
             hideMenu(menuGrooming);
             hideMenu(menuRoom);
             hideMenu(menuInvoice);
+            hideMenu(menuAssignedTasks);
             
             hideMenu(groupInventory);
             hideMenu(menuProduct);
@@ -243,8 +251,24 @@ private void applyRolePermissions(Role role) {
                         mainController.getTopbarController().setTitle("Phòng", "Quản lý phòng");
                         break;
                     case "grooming":
-                        mainController.loadView("GroomingManagement.fxml");
-                        mainController.getTopbarController().setTitle("Grooming", "Quản lý lịch cắt tỉa");
+                        if (currentRole == Role.RECEPTIONIST
+                                || currentRole == Role.PET_CARE_STAFF
+                                || currentRole == Role.BRANCH_MANAGER) {
+                            mainController.loadView("GroomingManagement.fxml");
+                            mainController.getTopbarController().setTitle(
+                                "Grooming",
+                                "Quản lý lịch cắt tỉa"
+                            );
+                        }
+                        break;
+                    case "assigned-tasks":
+                        if (currentRole == Role.PET_CARE_STAFF || currentRole == Role.BRANCH_MANAGER) {
+                            mainController.loadView("AssignedTasks.fxml");
+                            mainController.getTopbarController().setTitle(
+                                "Công Việc Được Phân Công",
+                                "Danh sách dịch vụ cần thực hiện"
+                            );
+                        }
                         break;
                     case "invoice":
                         mainController.loadView("InvoiceManagement.fxml");

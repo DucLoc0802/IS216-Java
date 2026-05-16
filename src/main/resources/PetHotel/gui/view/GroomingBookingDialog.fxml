@@ -32,28 +32,40 @@
         <ComboBox fx:id="cbPet" prefWidth="360"
                   GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-        <Label text="Dịch vụ grooming:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-        <ComboBox fx:id="cbService" prefWidth="360"
-                  GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        <Label text="Loại dịch vụ:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <HBox spacing="8" GridPane.rowIndex="2" GridPane.columnIndex="1">
+            <TextField fx:id="txtServiceType"
+                       prefWidth="300"
+                       editable="false"
+                       promptText="Chọn loại dịch vụ grooming"/>
+            <Button fx:id="btnSelectServiceType"
+                    text="Chọn"
+                    onAction="#handleSelectServiceType"
+                    style="-fx-padding: 6px 14px; -fx-font-size: 11px;"/>
+        </HBox>
 
-        <Label text="Nhân viên:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <ComboBox fx:id="cbEmployee" prefWidth="360"
+        <Label text="Dịch vụ grooming:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="cbService" prefWidth="360"
                   GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 
-        <Label text="Ngày hẹn:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-        <DatePicker fx:id="dpScheduleDate" prefWidth="360"
-                    GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+        <Label text="Nhân viên:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="cbEmployee" prefWidth="360"
+                  GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 
-        <Label text="Giờ hẹn:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+        <Label text="Ngày hẹn:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+        <DatePicker fx:id="dpScheduleDate" prefWidth="360"
+                    GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+        <Label text="Giờ hẹn:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
         <TextField fx:id="txtScheduleTime"
                    promptText="Ví dụ: 09:30"
-                   GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                   GridPane.rowIndex="6" GridPane.columnIndex="1"/>
 
-        <Label text="Ghi chú:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+        <Label text="Ghi chú:" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
         <TextArea fx:id="txtNote"
                   prefRowCount="3"
                   wrapText="true"
-                  GridPane.rowIndex="6"
+                  GridPane.rowIndex="7"
                   GridPane.columnIndex="1"/>
     </GridPane>
 

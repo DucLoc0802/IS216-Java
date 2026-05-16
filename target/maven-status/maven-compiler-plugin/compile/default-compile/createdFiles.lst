@@ -1,6 +1,7 @@
 PetHotel\model\AppUser.class
 PetHotel\gui\controller\RoomController.class
 PetHotel\model\PetService.class
+PetHotel\gui\controller\GroomingStaffAssignmentController$1.class
 PetHotel\exception\AuthenticationException.class
 PetHotel\gui\controller\GroomingController.class
 PetHotel\gui\controller\PetController.class
@@ -22,6 +23,7 @@ PetHotel\gui\controller\CheckRoomController.class
 PetHotel\gui\controller\SidebarController.class
 PetHotel\bus\AuthBUS.class
 PetHotel\gui\controller\RoomTypeController.class
+PetHotel\gui\controller\AssignedTasksController.class
 PetHotel\gui\Main.class
 PetHotel\dao\BookingServiceDAO.class
 PetHotel\gui\controller\GroomingBookingController$7.class
@@ -35,6 +37,7 @@ PetHotel\gui\controller\InvoiceController.class
 PetHotel\bus\TypeRoomBUS.class
 PetHotel\gui\controller\ProductController.class
 PetHotel\gui\controller\CustomerController.class
+PetHotel\model\ServiceCategory.class
 PetHotel\model\BookingService.class
 PetHotel\model\BookingRoomPet.class
 PetHotel\bus\GroomingBUS.class
@@ -49,6 +52,7 @@ PetHotel\bus\PetBUS.class
 PetHotel\dao\CustomerDAO.class
 PetHotel\model\TypeRoom.class
 PetHotel\gui\controller\EmployeeController$1.class
+PetHotel\dao\ServiceCategoryDAO.class
 PetHotel\gui\controller\GroomingBookingController$2.class
 PetHotel\bus\EmployeeBUS.class
 PetHotel\gui\controller\PetController$2.class
@@ -58,8 +62,11 @@ PetHotel\gui\controller\GroomingBookingController$8.class
 PetHotel\model\Booking.class
 PetHotel\gui\controller\AddRoomController.class
 PetHotel\model\Room.class
+PetHotel\gui\controller\AssignedTasksController$1.class
 PetHotel\gui\controller\SupplierController.class
 PetHotel\gui\controller\AccountController$2.class
+PetHotel\gui\controller\GroomingStaffAssignmentController$2.class
+PetHotel\gui\controller\GroomingStaffAssignmentController.class
 PetHotel\exception\DuplicateRecordException.class
 PetHotel\gui\controller\AccountController$1.class
 PetHotel\gui\controller\TopbarController.class
@@ -80,6 +87,7 @@ PetHotel\gui\controller\GroomingBookingController.class
 PetHotel\gui\controller\GroomingController$1.class
 PetHotel\dao\RoomDAO.class
 PetHotel\model\Pet.class
+PetHotel\gui\controller\GroomingServiceTypeController.class
 PetHotel\gui\controller\AccountController.class
 PetHotel\gui\controller\SidebarController$1.class
 PetHotel\gui\controller\SupplierController$1.class

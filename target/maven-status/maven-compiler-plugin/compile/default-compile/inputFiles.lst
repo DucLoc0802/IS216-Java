@@ -1,10 +1,12 @@
 D:\project\IS216-Java\src\main\java\PetHotel\exception\DuplicateRecordException.java
 D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\AccountFormController.java
 D:\project\IS216-Java\src\main\java\PetHotel\bus\EmployeeBUS.java
+D:\project\IS216-Java\src\main\java\PetHotel\model\ServiceCategory.java
 D:\project\IS216-Java\src\main\java\PetHotel\bus\TypeRoomBUS.java
 D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\TopbarController.java
 D:\project\IS216-Java\src\main\java\PetHotel\bus\AuthBUS.java
 D:\project\IS216-Java\src\main\java\PetHotel\model\Employee.java
+D:\project\IS216-Java\src\main\java\PetHotel\dao\ServiceCategoryDAO.java
 D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\SessionManager.java
 D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\SidebarController.java
 D:\project\IS216-Java\src\main\java\PetHotel\model\PetService.java
@@ -23,6 +25,7 @@ D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\ProductController.ja
 D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\BookingController.java
 D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\PetController.java
 D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\ProfileController.java
+D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\GroomingServiceTypeController.java
 D:\project\IS216-Java\src\main\java\PetHotel\bus\GroomingBUS.java
 D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\GroomingController.java
 D:\project\IS216-Java\src\main\java\PetHotel\model\TypeRoom.java
@@ -42,6 +45,7 @@ D:\project\IS216-Java\src\main\java\PetHotel\util\IDGenerator.java
 D:\project\IS216-Java\src\main\java\PetHotel\gui\Main.java
 D:\project\IS216-Java\src\main\java\PetHotel\exception\ValidationException.java
 D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\AddRoomController.java
+D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\AssignedTasksController.java
 D:\project\IS216-Java\src\main\java\PetHotel\util\PasswordUtil.java
 D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\EmployeeFormController.java
 D:\project\IS216-Java\src\main\java\PetHotel\model\AppUser.java
@@ -56,6 +60,7 @@ D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\CheckRoomController.
 D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\GroomingBookingController.java
 D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\SupplierController.java
 D:\project\IS216-Java\src\main\java\PetHotel\model\Room.java
+D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\GroomingStaffAssignmentController.java
 D:\project\IS216-Java\src\main\java\PetHotel\model\BookingRoom.java
 D:\project\IS216-Java\src\main\java\PetHotel\gui\controller\AccountController.java
 D:\project\IS216-Java\src\main\java\PetHotel\model\Booking.java

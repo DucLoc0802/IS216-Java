@@ -170,6 +170,14 @@ public class BookingServiceDAO {
         }
     }
 
+    private String getStringSafe(ResultSet rs, String columnName) {
+        try {
+            return rs.getString(columnName);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private BookingService mapRow(ResultSet rs) throws SQLException {
         BookingService bs = new BookingService();
         bs.setBookingServiceId(rs.getString("booking_service_id"));
@@ -196,6 +204,12 @@ public class BookingServiceDAO {
             bs.setUpdatedAt(updatedTs.toInstant().atOffset(java.time.ZoneOffset.UTC));
         }
         
+        bs.setServiceName(getStringSafe(rs, "service_name"));
+        bs.setPetName(getStringSafe(rs, "pet_name"));
+        bs.setPetSpecies(getStringSafe(rs, "species"));
+        bs.setCustomerName(getStringSafe(rs, "customer_name"));
+        bs.setCustomerPhone(getStringSafe(rs, "phone"));
+        bs.setCustomerAddress(getStringSafe(rs, "address"));
         return bs;
     }
     public List<Customer> getAllCustomers() throws SQLException {
@@ -416,5 +430,229 @@ public void createGroomingSchedule(
             conn.close();
         }
     }
+}
+
+/**
+ * Lấy danh sách dịch vụ grooming theo loại dịch vụ
+ */
+public List<PetService> getGroomingServicesByCategory(String serviceCategoryId) throws SQLException {
+    List<PetService> list = new ArrayList<>();
+
+    String sql =
+        "SELECT s.service_id, s.service_category_id, s.service_name, " +
+        "       s.species, s.base_price, s.duration_minutes " +
+        "FROM services s " +
+        "WHERE s.service_category_id = ? " +
+        "  AND s.is_active = 1 " +
+        "ORDER BY s.service_name";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        ps.setString(1, serviceCategoryId);
+
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                PetService s = new PetService();
+                s.setServiceId(rs.getString("service_id"));
+                s.setServiceCategoryId(rs.getString("service_category_id"));
+                s.setServiceName(rs.getString("service_name"));
+                s.setSpecies(rs.getString("species"));
+                s.setBasePrice(rs.getDouble("base_price"));
+                s.setDurationMinutes(rs.getInt("duration_minutes"));
+                list.add(s);
+            }
+        }
+    }
+
+    return list;
+}
+
+/**
+ * Lấy danh sách công việc grooming chưa phân công
+ */
+public List<BookingService> findUnassignedGroomingTasks(String dateStr, String status, String keyword) throws SQLException {
+    List<BookingService> list = new ArrayList<>();
+
+    StringBuilder sql = new StringBuilder(
+        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bs.pet_id, bs.employee_id, " +
+        "       bs.scheduled_at, bs.status, bs.note, bs.created_at, bs.updated_at, " +
+        "       sv.service_name, p.pet_name, c.full_name as customer_name " +
+        "FROM booking_services bs " +
+        "LEFT JOIN services sv ON bs.service_id = sv.service_id " +
+        "LEFT JOIN booking b ON bs.booking_id = b.booking_id " +
+        "LEFT JOIN pet p ON bs.pet_id = p.pet_id " +
+        "LEFT JOIN customer c ON b.customer_id = c.customer_id " +
+        "WHERE TRUNC(bs.scheduled_at) = TRUNC(TO_DATE(?, 'YYYY-MM-DD')) " +
+        "  AND bs.employee_id IS NULL " // Only unassigned tasks
+    );
+
+    if (status != null && !status.isEmpty()) {
+        sql.append(" AND bs.status = ? ");
+    }
+
+    if (keyword != null && !keyword.isEmpty()) {
+        sql.append(" AND (LOWER(p.pet_name) LIKE LOWER(?) OR LOWER(c.full_name) LIKE LOWER(?)) ");
+    }
+
+    sql.append(" ORDER BY bs.scheduled_at ASC");
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+        int paramIndex = 1;
+        ps.setString(paramIndex++, dateStr);
+
+        if (status != null && !status.isEmpty()) {
+            ps.setString(paramIndex++, status);
+        }
+
+        if (keyword != null && !keyword.isEmpty()) {
+            String pattern = "%" + keyword + "%";
+            ps.setString(paramIndex++, pattern);
+            ps.setString(paramIndex++, pattern);
+        }
+
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapRow(rs));
+            }
+        }
+    }
+
+    return list;
+}
+
+/**
+ * Phân công nhân viên cho công việc grooming
+ */
+public void assignEmployeeToTask(String bookingServiceId, String employeeId, String note) throws SQLException {
+    String sql = "UPDATE booking_services SET employee_id = ?, status = 'SCHEDULED', note = ?, updated_at = SYSTIMESTAMP " +
+                 "WHERE booking_service_id = ?";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        ps.setString(1, employeeId);
+        if (note != null && !note.isEmpty()) {
+            ps.setString(2, note);
+        } else {
+            ps.setNull(2, Types.CLOB);
+        }
+        ps.setString(3, bookingServiceId);
+
+        ps.executeUpdate();
+    }
+}
+
+/**
+ * Đếm số công việc của nhân viên trong một ngày
+ */
+public int countEmployeeTasksByDate(String employeeId, String dateStr) throws SQLException {
+    String sql = "SELECT COUNT(*) FROM booking_services " +
+                 "WHERE employee_id = ? AND TRUNC(scheduled_at) = TRUNC(TO_DATE(?, 'YYYY-MM-DD'))";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        ps.setString(1, employeeId);
+        ps.setString(2, dateStr);
+
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * Lấy danh sách công việc được phân công cho nhân viên
+ */
+public List<BookingService> findEmployeeAssignedTasks(String employeeId, String dateStr, String status, String keyword) throws SQLException {
+    List<BookingService> list = new ArrayList<>();
+
+    StringBuilder sql = new StringBuilder(
+        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bs.pet_id, bs.employee_id, " +
+        "       bs.scheduled_at, bs.status, bs.note, bs.created_at, bs.updated_at, " +
+        "       sv.service_name, p.pet_name, p.species, " +
+        "       c.full_name AS customer_name, c.phone, c.address " +
+        "FROM booking_services bs " +
+        "LEFT JOIN services sv ON bs.service_id = sv.service_id " +
+        "LEFT JOIN booking b ON bs.booking_id = b.booking_id " +
+        "LEFT JOIN pet p ON bs.pet_id = p.pet_id " +
+        "LEFT JOIN customer c ON b.customer_id = c.customer_id " +
+        "WHERE bs.employee_id = ? " +
+        "  AND TRUNC(bs.scheduled_at) = TRUNC(TO_DATE(?, 'YYYY-MM-DD')) "
+    );
+
+    if (status != null && !status.isEmpty()) {
+        sql.append(" AND bs.status = ? ");
+    }
+
+    if (keyword != null && !keyword.isEmpty()) {
+        sql.append(" AND (LOWER(p.pet_name) LIKE LOWER(?) OR LOWER(c.full_name) LIKE LOWER(?)) ");
+    }
+
+    sql.append(" ORDER BY bs.scheduled_at ASC");
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+        int paramIndex = 1;
+        ps.setString(paramIndex++, employeeId);
+        ps.setString(paramIndex++, dateStr);
+
+        if (status != null && !status.isEmpty()) {
+            ps.setString(paramIndex++, status);
+        }
+
+        if (keyword != null && !keyword.isEmpty()) {
+            String pattern = "%" + keyword + "%";
+            ps.setString(paramIndex++, pattern);
+            ps.setString(paramIndex++, pattern);
+        }
+
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapRow(rs));
+            }
+        }
+    }
+
+    return list;
+}
+
+/**
+ * Đếm số công việc của nhân viên theo trạng thái trong một ngày
+ */
+public int countEmployeeTasksByDateAndStatus(String employeeId, String dateStr, String status) throws SQLException {
+    String sql = "SELECT COUNT(*) FROM booking_services " +
+                 "WHERE employee_id = ? AND TRUNC(scheduled_at) = TRUNC(TO_DATE(?, 'YYYY-MM-DD')) " +
+                 "  AND (? IS NULL OR status = ?)";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        ps.setString(1, employeeId);
+        ps.setString(2, dateStr);
+        if (status != null && !status.isEmpty()) {
+            ps.setString(3, status);
+            ps.setString(4, status);
+        } else {
+            ps.setNull(3, Types.VARCHAR);
+            ps.setNull(4, Types.VARCHAR);
+        }
+
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    return 0;
 }
 }
