@@ -55,6 +55,7 @@ public class SidebarController {
     @FXML
     public void initialize() {
         // 1. Lấy thông tin user hiện tại đang đăng nhập
+        hideMenu(menuPet);
         AppUser currentUser = SessionManager.getInstance().getCurrentUser();
         
         if (currentUser != null) {
@@ -94,6 +95,8 @@ private void applyRolePermissions(Role role) {
             break;
 
         case PET_CARE_STAFF:
+            showMenu(menuPet);
+            showMenu(menuGrooming);
             // 2. NHÂN VIÊN CHĂM SÓC
             // Chỉ tương tác với Thú cưng và Grooming (cập nhật trạng thái, sức khoẻ)
             hideMenu(menuDashboard);
@@ -195,6 +198,13 @@ private void applyRolePermissions(Role role) {
     }
 
     // Nhận quyền điều khiển từ MainController
+    private void showMenu(Node node) {
+        if (node != null) {
+            node.setVisible(true);
+            node.setManaged(true);
+        }
+    }
+
     public void setMainController(MainController mainController) {
         this.mainController = mainController;
     }
@@ -205,6 +215,10 @@ private void applyRolePermissions(Role role) {
     }
 
     // --- HÀM XỬ LÝ CHUNG CHO TẤT CẢ MENU ---
+    public void setActivePetMenu() {
+        setActive(menuPet);
+    }
+
     @FXML
     public void onMenu(MouseEvent event) {
         Node source = (Node) event.getSource();
@@ -275,7 +289,10 @@ private void applyRolePermissions(Role role) {
                         }
                         break;
                     case "pet":
-                        mainController.loadView("PetManagement.fxml");
+                        if (mainController != null) {
+                            mainController.showPetManagement(null);
+                            return;
+                        }
                         mainController.getTopbarController().setTitle("Thú Cưng", "Quản lý hồ sơ thú cưng");
                         break;
                     case "inventory":

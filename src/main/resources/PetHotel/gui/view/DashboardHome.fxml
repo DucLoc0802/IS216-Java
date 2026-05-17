@@ -4,138 +4,94 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
-
-<!--
-  dashboard-home.fxml — Trang chủ Dashboard
-  Load vào ScrollPane#contentArea của Dashboard.fxml
-  Controller: DashboardHomeController
--->
 
 <VBox spacing="20" styleClass="main-content" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="PetHotel.gui.controller.DashboardHomeController">
 
-    <!-- ── STAT CARDS ──────────────────────────────────────── -->
-    <VBox spacing="10">
-        <HBox alignment="CENTER_LEFT" spacing="8">
+    <VBox spacing="12" styleClass="content-panel dashboard-panel dashboard-overview-panel">
+        <HBox alignment="CENTER_LEFT" spacing="8" styleClass="dashboard-panel-header">
             <Region styleClass="section-header-line" />
             <Label styleClass="section-header" text="Tổng Quan Hôm Nay" />
         </HBox>
 
-        <HBox spacing="14">
-            <!-- Booking -->
-            <VBox styleClass="stat-card stat-card-brown" HBox.hgrow="ALWAYS">
-                <HBox alignment="CENTER_LEFT" spacing="12">
-                    <Label styleClass="stat-icon" text="" />
-                    <VBox spacing="2">
-                        <Label styleClass="stat-label" text="Tổng Booking" />
-                        <Label fx:id="statBookingTotal" styleClass="stat-value" text="—" />
-                    </VBox>
-                    <Region HBox.hgrow="ALWAYS" />
-                    <VBox alignment="CENTER_RIGHT">
-                        <Label fx:id="statBookingDelta" styleClass="stat-delta stat-delta-up" text="" />
-                        <Label styleClass="stat-delta-desc" text="so với hôm qua" />
-                    </VBox>
-                </HBox>
-                <Label styleClass="stat-sublabel" text="Booking hôm nay" />
+        <GridPane hgap="10" vgap="10" styleClass="dashboard-stat-grid dashboard-stat-strip">
+            <columnConstraints>
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="16.666" />
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="16.666" />
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="16.666" />
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="16.666" />
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="16.666" />
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="16.666" />
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints minHeight="88" prefHeight="88" vgrow="ALWAYS" />
+            </rowConstraints>
+
+            <VBox alignment="CENTER_LEFT" minHeight="88" prefHeight="88" maxWidth="Infinity" spacing="4" styleClass="dashboard-stat-card dashboard-stat-compact dashboard-stat-brown" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                <Label styleClass="dashboard-stat-title" text="Tổng Booking" />
+                <Label fx:id="statBookingTotal" styleClass="dashboard-stat-value" text="0" />
+                <Label styleClass="dashboard-stat-subtitle" text="Booking trong ngày" />
             </VBox>
 
-            <!-- Rooms -->
-            <VBox styleClass="stat-card stat-card-green" HBox.hgrow="ALWAYS">
-                <HBox alignment="CENTER_LEFT" spacing="12">
-                    <Label styleClass="stat-icon" text="" />
-                    <VBox spacing="2">
-                        <Label styleClass="stat-label" text="Phòng Đang Dùng" />
-                        <Label fx:id="statRoomOccupied" styleClass="stat-value" text="—" />
-                    </VBox>
-                    <Region HBox.hgrow="ALWAYS" />
-                    <VBox alignment="CENTER_RIGHT">
-                        <Label fx:id="statRoomPct" styleClass="stat-delta" text="" />
-                        <Label styleClass="stat-delta-desc" text="công suất" />
-                    </VBox>
-                </HBox>
-                <Label styleClass="stat-sublabel" text="Phòng đang có thú cưng" />
+            <VBox alignment="CENTER_LEFT" minHeight="88" prefHeight="88" maxWidth="Infinity" spacing="4" styleClass="dashboard-stat-card dashboard-stat-compact dashboard-stat-green" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                <Label styleClass="dashboard-stat-title" text="Phòng Đang Dùng" />
+                <Label fx:id="statRoomOccupied" styleClass="dashboard-stat-value" text="0/30" />
+                <Label styleClass="dashboard-stat-subtitle" text="Phòng có thú cưng" />
             </VBox>
 
-            <!-- Revenue -->
-            <VBox styleClass="stat-card stat-card-amber" HBox.hgrow="ALWAYS">
-                <HBox alignment="CENTER_LEFT" spacing="12">
-                    <Label styleClass="stat-icon" text="" />
-                    <VBox spacing="2">
-                        <Label styleClass="stat-label" text="Doanh Thu Hôm Nay" />
-                        <Label fx:id="statRevenue" styleClass="stat-value" text="—" />
-                    </VBox>
-                    <Region HBox.hgrow="ALWAYS" />
-                    <VBox alignment="CENTER_RIGHT">
-                        <Label fx:id="statRevenueDelta" styleClass="stat-delta stat-delta-up" text="" />
-                        <Label styleClass="stat-delta-desc" text="so với hôm qua" />
-                    </VBox>
-                </HBox>
-                <Label styleClass="stat-sublabel" text="Tổng doanh thu ngày" />
+            <VBox alignment="CENTER_LEFT" minHeight="88" prefHeight="88" maxWidth="Infinity" spacing="4" styleClass="dashboard-stat-card dashboard-stat-compact dashboard-stat-amber" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                <Label styleClass="dashboard-stat-title" text="Doanh Thu" />
+                <Label fx:id="statRevenue" styleClass="dashboard-stat-value" text="0 VNĐ" />
+                <Label styleClass="dashboard-stat-subtitle" text="Doanh thu trong ngày" />
             </VBox>
 
-            <!-- Low stock -->
-            <VBox styleClass="stat-card stat-card-red" HBox.hgrow="ALWAYS">
-                <HBox alignment="CENTER_LEFT" spacing="12">
-                    <Label styleClass="stat-icon" text="" />
-                    <VBox spacing="2">
-                        <Label styleClass="stat-label" text="Cảnh Báo Tồn Kho" />
-                        <Label fx:id="statLowStock" styleClass="stat-value" text="—" />
-                    </VBox>
-                    <Region HBox.hgrow="ALWAYS" />
-                    <VBox alignment="CENTER_RIGHT">
-                        <Label styleClass="stat-delta stat-delta-warn" text="Cần nhập" />
-                        <Label styleClass="stat-delta-desc" text="ngay hôm nay" />
-                    </VBox>
-                </HBox>
-                <Label styleClass="stat-sublabel" text="Sản phẩm tồn kho thấp" />
+            <VBox alignment="CENTER_LEFT" minHeight="88" prefHeight="88" maxWidth="Infinity" spacing="4" styleClass="dashboard-stat-card dashboard-stat-compact dashboard-stat-red" GridPane.columnIndex="3" GridPane.rowIndex="0">
+                <Label styleClass="dashboard-stat-title" text="Tồn Kho Thấp" />
+                <Label fx:id="statLowStock" styleClass="dashboard-stat-value" text="—" />
+                <Label styleClass="dashboard-stat-subtitle" text="Sản phẩm cần kiểm tra" />
             </VBox>
 
-            <!-- Grooming -->
-            <VBox styleClass="stat-card stat-card-purple" HBox.hgrow="ALWAYS">
-                <HBox alignment="CENTER_LEFT" spacing="12">
-                    <Label styleClass="stat-icon" text="" />
-                    <VBox spacing="2">
-                        <Label styleClass="stat-label" text="Grooming Chờ" />
-                        <Label fx:id="statGroomingPending" styleClass="stat-value" text="—" />
-                    </VBox>
-                    <Region HBox.hgrow="ALWAYS" />
-                    <VBox alignment="CENTER_RIGHT">
-                        <Label fx:id="statGroomingToday" styleClass="stat-delta" text="" />
-                        <Label styleClass="stat-delta-desc" text="hôm nay" />
-                    </VBox>
-                </HBox>
-                <Label styleClass="stat-sublabel" text="Lịch grooming chưa xong" />
+            <VBox alignment="CENTER_LEFT" minHeight="88" prefHeight="88" maxWidth="Infinity" spacing="4" styleClass="dashboard-stat-card dashboard-stat-compact dashboard-stat-blue" GridPane.columnIndex="4" GridPane.rowIndex="0">
+                <Label styleClass="dashboard-stat-title" text="Cần Nhập" />
+                <Label fx:id="statRestockNeeded" styleClass="dashboard-stat-value" text="—" />
+                <Label styleClass="dashboard-stat-subtitle" text="Vật tư cần bổ sung" />
             </VBox>
-        </HBox>
+
+            <VBox alignment="CENTER_LEFT" minHeight="88" prefHeight="88" maxWidth="Infinity" spacing="4" styleClass="dashboard-stat-card dashboard-stat-compact dashboard-stat-purple" GridPane.columnIndex="5" GridPane.rowIndex="0">
+                <Label styleClass="dashboard-stat-title" text="Grooming Chờ" />
+                <Label fx:id="statGroomingPending" styleClass="dashboard-stat-value" text="—" />
+                <Label styleClass="dashboard-stat-subtitle" text="Lịch chưa hoàn tất" />
+            </VBox>
+        </GridPane>
     </VBox>
 
-    <!-- ── QUICK ACTIONS ───────────────────────────────────── -->
     <VBox spacing="10">
         <HBox alignment="CENTER_LEFT" spacing="8">
             <Region styleClass="section-header-line" />
             <Label styleClass="section-header" text="Quick Actions" />
         </HBox>
-        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="action-toolbar">
-            <Button onAction="#onQuickCreateBooking" styleClass="action-btn action-btn-primary" text="Tạo Booking" />
-            <Button onAction="#onQuickCheckin" styleClass="action-btn action-btn-success" text="Check-in" />
-            <Button onAction="#onQuickCheckout" styleClass="action-btn action-btn-outline" text="Check-out" />
-            <Button onAction="#onQuickCreateInvoice" styleClass="action-btn action-btn-amber" text="Hóa Đơn" />
-            <Button onAction="#onQuickAddCustomer" styleClass="action-btn action-btn-outline" text="Khách Hàng" />
-            <Button onAction="#onQuickCheckRoom" styleClass="action-btn action-btn-outline" text="Kiểm Phòng" />
+        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="action-toolbar dashboard-action-row">
+            <Button onAction="#onQuickCreateBooking" styleClass="action-btn action-btn-primary dashboard-action-btn" text="Tạo Booking" />
+            <Button onAction="#onQuickCheckin" styleClass="action-btn action-btn-success dashboard-action-btn" text="Check-in" />
+            <Button onAction="#onQuickCheckout" styleClass="action-btn action-btn-outline dashboard-action-btn" text="Check-out" />
+            <Button onAction="#onQuickCreateInvoice" styleClass="action-btn action-btn-amber dashboard-action-btn" text="Hóa Đơn" />
+            <Button onAction="#onQuickAddCustomer" styleClass="action-btn action-btn-outline dashboard-action-btn" text="Khách Hàng" />
+            <Button onAction="#onQuickCheckRoom" styleClass="action-btn action-btn-outline dashboard-action-btn" text="Kiểm Phòng" />
         </HBox>
     </VBox>
 
-    <!-- ── TWO-COLUMN LAYOUT ───────────────────────────────── -->
-    <HBox spacing="18">
+    <HBox spacing="18" styleClass="dashboard-bottom-layout">
 
-        <!-- LEFT: Today's Booking table -->
-        <VBox spacing="12" styleClass="content-panel" HBox.hgrow="ALWAYS">
-            <HBox alignment="CENTER_LEFT">
+        <VBox spacing="12" styleClass="dashboard-booking-card" HBox.hgrow="ALWAYS">
+            <HBox alignment="CENTER_LEFT" styleClass="dashboard-card-header">
                 <HBox alignment="CENTER_LEFT" spacing="8">
                     <Region styleClass="section-header-line" />
-                    <Label styleClass="panel-title" text="Booking Hôm Nay" />
+                    <Label styleClass="dashboard-card-title" text="Booking Hôm Nay" />
                 </HBox>
                 <Region HBox.hgrow="ALWAYS" />
                 <Button onAction="#onViewAllBooking" styleClass="panel-link-btn" text="Xem tất cả →" />
@@ -151,63 +107,59 @@
                     <TableColumn fx:id="colBkStatus" prefWidth="100" text="Status" />
                 </columns>
                 <placeholder>
-                    <Label styleClass="table-empty" text="Chưa có booking hôm nay" />
+                    <Label styleClass="dashboard-empty-message" text="Chưa có booking hôm nay" />
                 </placeholder>
             </TableView>
         </VBox>
 
-        <!-- RIGHT column -->
-        <VBox minWidth="290" prefWidth="310" spacing="14">
+        <VBox minWidth="290" prefWidth="310" spacing="14" styleClass="dashboard-side-column">
 
-            <!-- Room snapshot -->
-            <VBox spacing="10" styleClass="content-panel">
-                <HBox alignment="CENTER_LEFT" spacing="8">
+            <VBox spacing="10" styleClass="dashboard-side-card">
+                <HBox alignment="CENTER_LEFT" spacing="8" styleClass="dashboard-card-header">
                     <Region styleClass="section-header-line" />
-                    <Label styleClass="panel-title" text="Trạng Thái Phòng" />
+                    <Label styleClass="dashboard-card-title" text="Trạng Thái Phòng" />
                 </HBox>
                 <HBox spacing="8">
-                    <VBox alignment="CENTER" spacing="4" styleClass="room-stat-box room-stat-occupied" HBox.hgrow="ALWAYS">
-                        <Label fx:id="roomOccupied" styleClass="room-stat-num" text="—" />
-                        <Label styleClass="room-stat-label" text="Đang dùng" />
+                    <VBox alignment="CENTER" spacing="4" styleClass="dashboard-room-occupied" HBox.hgrow="ALWAYS">
+                        <Label fx:id="roomOccupied" styleClass="dashboard-room-num" text="—" />
+                        <Label styleClass="dashboard-room-label" text="Đang dùng" />
                     </VBox>
-                    <VBox alignment="CENTER" spacing="4" styleClass="room-stat-box room-stat-available" HBox.hgrow="ALWAYS">
-                        <Label fx:id="roomAvailable" styleClass="room-stat-num" text="—" />
-                        <Label styleClass="room-stat-label" text="Trống" />
+                    <VBox alignment="CENTER" spacing="4" styleClass="dashboard-room-available" HBox.hgrow="ALWAYS">
+                        <Label fx:id="roomAvailable" styleClass="dashboard-room-num" text="—" />
+                        <Label styleClass="dashboard-room-label" text="Trống" />
                     </VBox>
-                    <VBox alignment="CENTER" spacing="4" styleClass="room-stat-box room-stat-cleaning" HBox.hgrow="ALWAYS">
-                        <Label fx:id="roomCleaning" styleClass="room-stat-num" text="—" />
-                        <Label styleClass="room-stat-label" text="Đang dọn" />
+                    <VBox alignment="CENTER" spacing="4" styleClass="dashboard-room-cleaning" HBox.hgrow="ALWAYS">
+                        <Label fx:id="roomCleaning" styleClass="dashboard-room-num" text="—" />
+                        <Label styleClass="dashboard-room-label" text="Đang dọn" />
                     </VBox>
                 </HBox>
             </VBox>
 
-            <!-- Grooming today -->
-            <VBox spacing="10" styleClass="content-panel" VBox.vgrow="ALWAYS">
-                <HBox alignment="CENTER_LEFT">
+            <VBox spacing="10" styleClass="dashboard-side-card" VBox.vgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" styleClass="dashboard-card-header">
                     <HBox alignment="CENTER_LEFT" spacing="8">
                         <Region styleClass="section-header-line" />
-                        <Label styleClass="panel-title" text="Grooming Hôm Nay" />
+                        <Label styleClass="dashboard-card-title" text="Grooming Hôm Nay" />
                     </HBox>
                     <Region HBox.hgrow="ALWAYS" />
                     <Button onAction="#onViewAllGrooming" styleClass="panel-link-btn" text="Xem →" />
                 </HBox>
-                <VBox fx:id="groomingList" spacing="8">
-                    <!-- Populated by DashboardHomeController -->
+                <VBox fx:id="groomingList" alignment="CENTER_LEFT" spacing="8">
+                    <Label styleClass="dashboard-empty-message" text="Chưa có lịch grooming hôm nay" />
                 </VBox>
             </VBox>
 
         </VBox>
     </HBox>
 
-    <!-- ── LOW STOCK ALERT ─────────────────────────────────── -->
-    <VBox spacing="10" styleClass="content-panel alert-panel">
-        <HBox alignment="CENTER_LEFT">
-            <Label styleClass="panel-title panel-title-alert" text="Cảnh Báo Tồn Kho Thấp" />
+    <VBox spacing="10" styleClass="dashboard-alert-card">
+        <HBox alignment="CENTER_LEFT" styleClass="dashboard-card-header">
+            <Label styleClass="dashboard-alert-title" text="Cảnh Báo Tồn Kho Thấp" />
             <Region HBox.hgrow="ALWAYS" />
             <Button onAction="#onViewInventory" styleClass="panel-link-btn" text="Đi đến kho →" />
         </HBox>
-        <HBox fx:id="lowStockContainer" spacing="12">
-            <!-- Populated by DashboardHomeController -->
+        <HBox fx:id="lowStockContainer" alignment="CENTER_LEFT" spacing="12">
+            <Label styleClass="dashboard-empty-message" text="Chưa có cảnh báo tồn kho thấp" />
         </HBox>
     </VBox>
 
