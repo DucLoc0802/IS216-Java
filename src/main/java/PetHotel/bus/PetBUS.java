@@ -1,19 +1,23 @@
 package PetHotel.bus;
 
-import PetHotel.dao.CustomerDAO;
-import PetHotel.dao.PetDAO;
-import PetHotel.dao.PetHealthRecordDAO;
-import PetHotel.exception.*;
-import PetHotel.model.Pet;
-import PetHotel.model.PetHealthRecord;
-import PetHotel.util.IDGenerator;
-import PetHotel.util.Role;
-
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import PetHotel.dao.CustomerDAO;
+import PetHotel.dao.PetDAO;
+import PetHotel.dao.PetHealthRecordDAO;
+import PetHotel.exception.AuthorizationException;
+import PetHotel.exception.BusinessException;
+import PetHotel.exception.NotFoundException;
+import PetHotel.exception.ValidationException;
+import PetHotel.model.AppUser;
+import PetHotel.model.Pet;
+import PetHotel.model.PetHealthRecord;
+import PetHotel.util.IDGenerator;
+import PetHotel.util.Role;
 
 /**
  * PetBUS — Nghiệp vụ Quản Lý Thú Cưng.
@@ -117,7 +121,7 @@ public class PetBUS {
             }
 
             // 4. Sinh ID
-            String newId = IDGenerator.nextPetId();
+            String newId = petDAO.generateNextPetId();
 
             // 5. Insert
             Pet pet = new Pet(
@@ -271,7 +275,7 @@ public class PetBUS {
      * @throws NotFoundException nếu không tồn tại
      */
     public Pet getPetDetail(String petId) {
-        authBUS.requireRole(Role.RECEPTIONIST);
+        requirePetViewPermission();
 
         try {
             Pet p = petDAO.findById(petId);
@@ -297,7 +301,7 @@ public class PetBUS {
      * @return List<Pet>
      */
     public List<Pet> searchPet(String keyword) {
-        authBUS.requireRole(Role.RECEPTIONIST);
+        requirePetViewPermission();
 
         if (keyword == null || keyword.trim().isEmpty()) {
             throw new ValidationException("Từ khóa tìm kiếm không được để trống.");
@@ -321,6 +325,24 @@ public class PetBUS {
      * @param customerId mã khách hàng
      * @return List<Pet>
      */
+    public List<Pet> searchPetByBranch(String branchId, String keyword) {
+        requirePetViewPermission();
+        validateBranchId(branchId);
+
+        if (keyword == null || keyword.trim().isEmpty()) {
+            throw new ValidationException("Tu khoa tim kiem khong duoc de trong.");
+        }
+        if (keyword.trim().length() < 2) {
+            throw new ValidationException("Tu khoa phai co it nhat 2 ky tu.");
+        }
+
+        try {
+            return petDAO.searchByBranchId(branchId.trim(), keyword.trim());
+        } catch (SQLException e) {
+            throw new RuntimeException("Loi database khi tim kiem thu cung theo chi nhanh.", e);
+        }
+    }
+
     public List<Pet> getPetsByCustomer(String customerId) {
         authBUS.requireRole(Role.RECEPTIONIST);
 
@@ -333,6 +355,65 @@ public class PetBUS {
             throw e;
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi database khi lấy danh sách thú cưng.", e);
+        }
+    }
+
+    public List<Pet> getAllPets() {
+        requirePetViewPermission();
+        try {
+            return petDAO.findAll();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi database khi lấy danh sách thú cưng.", e);
+        }
+    }
+
+    public List<Pet> getPetsByBranch(String branchId) {
+        requirePetViewPermission();
+        validateBranchId(branchId);
+
+        try {
+            return petDAO.findByBranchId(branchId.trim());
+        } catch (SQLException e) {
+            throw new RuntimeException("Loi database khi lay danh sach thu cung theo chi nhanh.", e);
+        }
+    }
+
+    public PetBranchStats getPetBranchStats(String branchId) {
+        requirePetViewPermission();
+        validateBranchId(branchId);
+
+        try {
+            PetDAO.PetBranchStats stats = petDAO.getBranchStats(branchId.trim());
+            return new PetBranchStats(
+                    stats.totalPets(),
+                    stats.petsStaying(),
+                    stats.groomingToday(),
+                    stats.monitoringPets());
+        } catch (SQLException e) {
+            throw new RuntimeException("Loi database khi lay thong ke thu cung theo chi nhanh.", e);
+        }
+    }
+
+    public Pet linkOwner(String petId, String customerId) {
+        authBUS.requireRole(Role.RECEPTIONIST);
+        try {
+            Pet pet = petDAO.findById(petId);
+            if (pet == null) {
+                throw new NotFoundException("Không tìm thấy thú cưng ID: " + petId);
+            }
+            if (customerDAO.findById(customerId) == null) {
+                throw new NotFoundException("Không tìm thấy khách hàng ID: " + customerId);
+            }
+            int rows = petDAO.updateOwner(petId, customerId, null);
+            if (rows == 0) {
+                throw new NotFoundException("Không thể liên kết chủ sở hữu cho thú cưng ID: " + petId);
+            }
+            pet.setCustomerId(customerId);
+            return pet;
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi database khi liên kết chủ sở hữu.", e);
         }
     }
 
@@ -387,7 +468,7 @@ public class PetBUS {
     public PetHealthRecord addHealthRecord(String petId, String bookingId,
                                            String note, int status) {
         // 1. Quyền: PET_CARE_STAFF trở lên
-        authBUS.requireRole(Role.PET_CARE_STAFF);
+        requirePetHealthRecordPermission();
 
         // 2. Validate
         if (note == null || note.trim().isEmpty()) {
@@ -397,22 +478,25 @@ public class PetBUS {
             throw new ValidationException("Trạng thái sức khoẻ phải là 0 (có vấn đề) hoặc 1 (bình thường).");
         }
         if (bookingId == null || bookingId.trim().isEmpty()) {
-            throw new ValidationException("Booking ID không được để trống.");
+            throw new ValidationException("Mã booking không được để trống vì bảng PET_HEALTH_RECORD hiện yêu cầu booking_id.");
         }
 
         try {
+            String normalizedBookingId = bookingId.trim();
+
             // Kiểm tra pet tồn tại
             if (petDAO.findById(petId) == null) {
                 throw new NotFoundException("Không tìm thấy thú cưng ID: " + petId);
             }
 
-            // TODO: Kiểm tra bookingId tồn tại và pet thuộc booking đó
-            //       (cần BookingDAO.findById + BookingRoomPetDAO.existsByBookingAndPet)
+            if (!healthRecordDAO.bookingExists(normalizedBookingId)) {
+                throw new ValidationException("Mã booking không tồn tại.");
+            }
 
             // 4. Tạo và insert
             String newId = IDGenerator.nextHealthRecordId();
             PetHealthRecord record = new PetHealthRecord(
-                newId, petId, bookingId, note.trim(), status
+                newId, petId, normalizedBookingId, note.trim(), status
             );
             healthRecordDAO.insert(record, null);
             return record;
@@ -420,7 +504,7 @@ public class PetBUS {
         } catch (NotFoundException | ValidationException e) {
             throw e;
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi database khi ghi nhận sức khoẻ.", e);
+            throw new RuntimeException(databaseMessage("ghi nhận sức khỏe", e), e);
         }
     }
 
@@ -433,7 +517,7 @@ public class PetBUS {
      * @return List<PetHealthRecord>
      */
     public List<PetHealthRecord> getHealthRecords(String petId) {
-        authBUS.requireRole(Role.RECEPTIONIST);
+        requirePetViewPermission();
 
         try {
             if (petDAO.findById(petId) == null) {
@@ -456,7 +540,7 @@ public class PetBUS {
      * @return PetHealthRecord mới nhất, hoặc null nếu chưa có hồ sơ
      */
     public PetHealthRecord getLatestHealthRecord(String petId) {
-        authBUS.requireRole(Role.RECEPTIONIST);
+        requirePetViewPermission();
 
         try {
             if (petDAO.findById(petId) == null) {
@@ -471,6 +555,14 @@ public class PetBUS {
     }
 
     // ─────────────────────────────────────────────────────────────
+    private String databaseMessage(String action, SQLException e) {
+        String message = e.getMessage();
+        if (message != null && message.contains("Không kết nối được database")) {
+            return message;
+        }
+        return "Lỗi database khi " + action + ": " + (message == null ? "không rõ nguyên nhân." : message);
+    }
+
     // VALIDATION HELPERS
     // ─────────────────────────────────────────────────────────────
 
@@ -538,5 +630,38 @@ public class PetBUS {
         if ("male".equals(s) || "đực".equals(s) || "m".equals(s)) return "Male";
         if ("female".equals(s) || "cái".equals(s) || "f".equals(s)) return "Female";
         return sex.trim(); // giữ nguyên để validator bắt lỗi
+    }
+    private void validateBranchId(String branchId) {
+        if (branchId == null || branchId.trim().isEmpty()) {
+            throw new ValidationException("Khong xac dinh duoc chi nhanh hien tai.");
+        }
+    }
+
+    private void requirePetViewPermission() {
+        authBUS.requireLogin();
+        AppUser user = authBUS.getCurrentUser();
+        if (user != null && (user.hasRole(Role.RECEPTIONIST) || user.hasRole(Role.PET_CARE_STAFF))) {
+            return;
+        }
+        throw new AuthorizationException(
+            "Ban khong co quyen xem ho so thu cung. " +
+            "Nhan vien cham soc chi duoc xem ho so va ghi nhan suc khoe thu cung."
+        );
+    }
+
+    public record PetBranchStats(
+            int totalPets,
+            int petsStaying,
+            int groomingToday,
+            int monitoringPets) {
+    }
+
+    private void requirePetHealthRecordPermission() {
+        authBUS.requireLogin();
+        AppUser user = authBUS.getCurrentUser();
+        if (user != null && user.getRole() == Role.PET_CARE_STAFF) {
+            return;
+        }
+        throw new AuthorizationException("Chỉ nhân viên chăm sóc được ghi nhận sức khỏe thú cưng.");
     }
 }

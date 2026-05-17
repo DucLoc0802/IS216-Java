@@ -29,17 +29,143 @@ public class PetDAO {
         "       weight_kg, special_note, created_at, updated_at " +
         "FROM pet WHERE customer_id = ? ORDER BY pet_name";
 
+    private static final String SQL_FIND_ALL =
+        "SELECT pet_id, customer_id, pet_name, species, breed, sex, " +
+        "       weight_kg, special_note, created_at, updated_at " +
+        "FROM pet ORDER BY created_at DESC";
+
+    private static final String SQL_FIND_BY_BRANCH =
+        "SELECT p.pet_id, p.customer_id, p.pet_name, p.species, p.breed, p.sex, " +
+        "       p.weight_kg, p.special_note, p.created_at, p.updated_at " +
+        "FROM pet p " +
+        "WHERE (EXISTS ( " +
+        "    SELECT 1 " +
+        "    FROM booking b_owner " +
+        "    WHERE b_owner.customer_id = p.customer_id AND b_owner.branch_id = ? " +
+        ") " +
+        "OR EXISTS ( " +
+        "    SELECT 1 " +
+        "    FROM booking_room_pet brp " +
+        "    JOIN booking_room br ON brp.booking_room_id = br.booking_room_id " +
+        "    JOIN booking b ON br.booking_id = b.booking_id " +
+        "    WHERE brp.pet_id = p.pet_id AND b.branch_id = ? " +
+        ") " +
+        "OR NOT EXISTS ( " +
+        "    SELECT 1 FROM booking b_any WHERE b_any.customer_id = p.customer_id " +
+        ")) " +
+        "ORDER BY p.created_at DESC";
+
+    private static final String SQL_FIND_IDS_BY_PREFIX =
+        "SELECT pet_id FROM pet WHERE pet_id LIKE 'PET%'";
+
     /** Tìm kiếm: tên pet, loài, giống, hoặc tên chủ */
     private static final String SQL_SEARCH =
         "SELECT p.pet_id, p.customer_id, p.pet_name, p.species, p.breed, p.sex, " +
         "       p.weight_kg, p.special_note, p.created_at, p.updated_at " +
         "FROM pet p " +
         "JOIN customer c ON p.customer_id = c.customer_id " +
-        "WHERE LOWER(p.pet_name) LIKE LOWER(?) " +
+        "WHERE LOWER(p.pet_id) LIKE LOWER(?) " +
+        "   OR LOWER(p.pet_name) LIKE LOWER(?) " +
         "   OR LOWER(p.species)  LIKE LOWER(?) " +
         "   OR LOWER(p.breed)    LIKE LOWER(?) " +
         "   OR LOWER(c.full_name) LIKE LOWER(?) " +
         "ORDER BY p.pet_name";
+
+    private static final String SQL_SEARCH_BY_BRANCH =
+        "SELECT p.pet_id, p.customer_id, p.pet_name, p.species, p.breed, p.sex, " +
+        "       p.weight_kg, p.special_note, p.created_at, p.updated_at " +
+        "FROM pet p " +
+        "JOIN customer c ON p.customer_id = c.customer_id " +
+        "WHERE (EXISTS ( " +
+        "    SELECT 1 " +
+        "    FROM booking b_owner " +
+        "    WHERE b_owner.customer_id = p.customer_id AND b_owner.branch_id = ? " +
+        ") " +
+        "OR EXISTS ( " +
+        "    SELECT 1 " +
+        "    FROM booking_room_pet brp " +
+        "    JOIN booking_room br ON brp.booking_room_id = br.booking_room_id " +
+        "    JOIN booking b ON br.booking_id = b.booking_id " +
+        "    WHERE brp.pet_id = p.pet_id AND b.branch_id = ? " +
+        ") " +
+        "OR NOT EXISTS ( " +
+        "    SELECT 1 FROM booking b_any WHERE b_any.customer_id = p.customer_id " +
+        ")) " +
+        "AND (LOWER(p.pet_id) LIKE LOWER(?) " +
+        "   OR LOWER(p.pet_name) LIKE LOWER(?) " +
+        "   OR LOWER(p.species)  LIKE LOWER(?) " +
+        "   OR LOWER(p.breed)    LIKE LOWER(?) " +
+        "   OR LOWER(c.full_name) LIKE LOWER(?)) " +
+        "ORDER BY p.pet_name";
+
+    private static final String SQL_COUNT_TOTAL_BY_BRANCH =
+        "SELECT COUNT(*) " +
+        "FROM pet p " +
+        "WHERE (EXISTS ( " +
+        "    SELECT 1 " +
+        "    FROM booking b_owner " +
+        "    WHERE b_owner.customer_id = p.customer_id AND b_owner.branch_id = ? " +
+        ") " +
+        "OR EXISTS ( " +
+        "    SELECT 1 " +
+        "    FROM booking_room_pet brp " +
+        "    JOIN booking_room br ON brp.booking_room_id = br.booking_room_id " +
+        "    JOIN booking b ON br.booking_id = b.booking_id " +
+        "    WHERE brp.pet_id = p.pet_id AND b.branch_id = ? " +
+        ") " +
+        "OR NOT EXISTS ( " +
+        "    SELECT 1 FROM booking b_any WHERE b_any.customer_id = p.customer_id " +
+        "))";
+
+    private static final String SQL_COUNT_STAYING_BY_BRANCH =
+        "SELECT COUNT(DISTINCT brp.pet_id) " +
+        "FROM booking_room_pet brp " +
+        "JOIN booking_room br ON brp.booking_room_id = br.booking_room_id " +
+        "JOIN booking b ON br.booking_id = b.booking_id " +
+        "WHERE b.branch_id = ? AND b.status = 'CHECKED_IN'";
+
+    private static final String SQL_COUNT_GROOMING_TODAY_BY_BRANCH =
+        "SELECT COUNT(*) " +
+        "FROM booking_services bs " +
+        "JOIN booking b ON bs.booking_id = b.booking_id " +
+        "JOIN services s ON bs.service_id = s.service_id " +
+        "JOIN category_services cs ON s.service_category_id = cs.service_category_id " +
+        "WHERE b.branch_id = ? " +
+        "  AND bs.status <> 'CANCELLED' " +
+        "  AND bs.scheduled_at IS NOT NULL " +
+        "  AND TRUNC(CAST(bs.scheduled_at AS DATE)) = TRUNC(CURRENT_DATE) " +
+        "  AND (LOWER(s.service_name) LIKE '%groom%' " +
+        "       OR LOWER(cs.category_name) LIKE '%groom%')";
+
+    private static final String SQL_COUNT_MONITORING_BY_BRANCH =
+        "SELECT COUNT(*) " +
+        "FROM pet p " +
+        "JOIN ( " +
+        "    SELECT pet_id, status " +
+        "    FROM ( " +
+        "        SELECT phr.pet_id, phr.status, " +
+        "               ROW_NUMBER() OVER (PARTITION BY phr.pet_id " +
+        "                   ORDER BY phr.recorded_at DESC, phr.health_record_id DESC) rn " +
+        "        FROM pet_health_record phr " +
+        "    ) latest " +
+        "    WHERE rn = 1 " +
+        ") latest_health ON latest_health.pet_id = p.pet_id " +
+        "WHERE latest_health.status = 0 " +
+        "  AND (EXISTS ( " +
+        "      SELECT 1 " +
+        "      FROM booking b_owner " +
+        "      WHERE b_owner.customer_id = p.customer_id AND b_owner.branch_id = ? " +
+        "  ) " +
+        "  OR EXISTS ( " +
+        "      SELECT 1 " +
+        "      FROM booking_room_pet brp " +
+        "      JOIN booking_room br ON brp.booking_room_id = br.booking_room_id " +
+        "      JOIN booking b ON br.booking_id = b.booking_id " +
+        "      WHERE brp.pet_id = p.pet_id AND b.branch_id = ? " +
+        "  ) " +
+        "  OR NOT EXISTS ( " +
+        "      SELECT 1 FROM booking b_any WHERE b_any.customer_id = p.customer_id " +
+        "  ))";
 
     private static final String SQL_INSERT =
         "INSERT INTO pet (pet_id, customer_id, pet_name, species, breed, sex, " +
@@ -51,6 +177,9 @@ public class PetDAO {
         "SET pet_name = ?, species = ?, breed = ?, sex = ?, " +
         "    weight_kg = ?, special_note = ?, updated_at = SYSTIMESTAMP " +
         "WHERE pet_id = ?";
+
+    private static final String SQL_UPDATE_OWNER =
+        "UPDATE pet SET customer_id = ?, updated_at = SYSTIMESTAMP WHERE pet_id = ?";
 
     private static final String SQL_DELETE =
         "DELETE FROM pet WHERE pet_id = ?";
@@ -125,6 +254,29 @@ public class PetDAO {
         return list;
     }
 
+    public List<Pet> findAll() throws SQLException {
+        List<Pet> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_FIND_ALL);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) list.add(mapRow(rs));
+        }
+        return list;
+    }
+
+    public List<Pet> findByBranchId(String branchId) throws SQLException {
+        List<Pet> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_FIND_BY_BRANCH)) {
+            ps.setString(1, branchId);
+            ps.setString(2, branchId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        }
+        return list;
+    }
+
     /**
      * Tìm kiếm pet theo keyword (tên, loài, giống, tên chủ).
      *
@@ -141,11 +293,81 @@ public class PetDAO {
             ps.setString(2, pattern);
             ps.setString(3, pattern);
             ps.setString(4, pattern);
+            ps.setString(5, pattern);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(mapRow(rs));
             }
         }
         return list;
+    }
+
+    public List<Pet> searchByBranchId(String branchId, String keyword) throws SQLException {
+        String pattern = "%" + keyword.trim() + "%";
+        List<Pet> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_SEARCH_BY_BRANCH)) {
+            ps.setString(1, branchId);
+            ps.setString(2, branchId);
+            ps.setString(3, pattern);
+            ps.setString(4, pattern);
+            ps.setString(5, pattern);
+            ps.setString(6, pattern);
+            ps.setString(7, pattern);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        }
+        return list;
+    }
+
+    public PetBranchStats getBranchStats(String branchId) throws SQLException {
+        return new PetBranchStats(
+                countByBranch(SQL_COUNT_TOTAL_BY_BRANCH, branchId, 2),
+                countByBranch(SQL_COUNT_STAYING_BY_BRANCH, branchId, 1),
+                countByBranch(SQL_COUNT_GROOMING_TODAY_BY_BRANCH, branchId, 1),
+                countByBranch(SQL_COUNT_MONITORING_BY_BRANCH, branchId, 2));
+    }
+
+    private int countByBranch(String sql, String branchId, int branchParamCount) throws SQLException {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 1; i <= branchParamCount; i++) {
+                ps.setString(i, branchId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    public record PetBranchStats(
+            int totalPets,
+            int petsStaying,
+            int groomingToday,
+            int monitoringPets) {
+    }
+
+    public String generateNextPetId() throws SQLException {
+        synchronized (PetDAO.class) {
+            int max = 0;
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(SQL_FIND_IDS_BY_PREFIX);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String id = rs.getString("pet_id");
+                    if (isValidGeneratedPetId(id)) {
+                        max = Math.max(max, Integer.parseInt(id.substring(3)));
+                    }
+                }
+            }
+            return String.format("PET%03d", max + 1);
+        }
+    }
+
+    private boolean isValidGeneratedPetId(String id) {
+        if (id == null || !id.matches("^PET\\d+$")) return false;
+        int number = Integer.parseInt(id.substring(3));
+        return number < 1_000_000;
     }
 
     /**
@@ -201,6 +423,21 @@ public class PetDAO {
                 ps.setNull(5, Types.NUMERIC);
             ps.setString(6, pet.getSpecialNote());
             ps.setString(7, pet.getPetId());
+            int rows = ps.executeUpdate();
+            ps.close();
+            return rows;
+        } finally {
+            if (own) DBConnection.closeQuietly(c);
+        }
+    }
+
+    public int updateOwner(String petId, String customerId, Connection conn) throws SQLException {
+        boolean own = (conn == null);
+        Connection c = own ? DBConnection.getConnection() : conn;
+        try {
+            PreparedStatement ps = c.prepareStatement(SQL_UPDATE_OWNER);
+            ps.setString(1, customerId);
+            ps.setString(2, petId);
             int rows = ps.executeUpdate();
             ps.close();
             return rows;
