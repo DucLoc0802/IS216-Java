@@ -29,8 +29,7 @@ public class GroomingBookingController {
 
     @FXML private ComboBox<Customer> cbCustomer;
     @FXML private ComboBox<Pet> cbPet;
-    @FXML private TextField txtServiceType;
-    @FXML private Button btnSelectServiceType;
+    @FXML private ComboBox<ServiceCategory> cbServiceCategory;
     @FXML private ComboBox<PetService> cbService;
     @FXML private ComboBox<Employee> cbEmployee;
     @FXML private DatePicker dpScheduleDate;
@@ -68,6 +67,7 @@ public class GroomingBookingController {
         loadData();
 
         cbCustomer.setOnAction(e -> loadPetsByCustomer());
+        cbServiceCategory.setOnAction(e -> loadServicesByCategory());
     }
 
     private void setupComboBoxDisplay() {
@@ -100,6 +100,22 @@ public class GroomingBookingController {
             protected void updateItem(Pet item, boolean empty) {
                 super.updateItem(item, empty);
                 setText(empty || item == null ? null : item.getPetName());
+            }
+        });
+
+        cbServiceCategory.setCellFactory(param -> new ListCell<ServiceCategory>() {
+            @Override
+            protected void updateItem(ServiceCategory item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.getCategoryName());
+            }
+        });
+
+        cbServiceCategory.setButtonCell(new ListCell<ServiceCategory>() {
+            @Override
+            protected void updateItem(ServiceCategory item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.getCategoryName());
             }
         });
 
@@ -142,10 +158,10 @@ public class GroomingBookingController {
                     groomingBUS.getAllCustomersForBooking(currentUser)
             ));
 
-            // Don't load all services by default - wait for user to select service type first
-            // cbService.setItems(FXCollections.observableArrayList(
-            //        groomingBUS.getGroomingServices(currentUser)
-            // ));
+            // Load all grooming service categories
+            cbServiceCategory.setItems(FXCollections.observableArrayList(
+                    groomingBUS.getGroomingServiceCategories(currentUser)
+            ));
 
             cbEmployee.setItems(FXCollections.observableArrayList(
                     groomingBUS.getWorkingEmployeesByBranch(currentBranchId, currentUser)
@@ -170,6 +186,23 @@ public class GroomingBookingController {
             ));
         } catch (Exception e) {
             showError("Không thể tải thú cưng: " + e.getMessage());
+        }
+    }
+
+    private void loadServicesByCategory() {
+        ServiceCategory category = cbServiceCategory.getValue();
+
+        if (category == null) {
+            cbService.getItems().clear();
+            return;
+        }
+
+        try {
+            cbService.setItems(FXCollections.observableArrayList(
+                    groomingBUS.getGroomingServicesByCategory(category.getServiceCategoryId(), currentUser)
+            ));
+        } catch (Exception e) {
+            showError("Không thể tải dịch vụ grooming: " + e.getMessage());
         }
     }
 
@@ -249,45 +282,6 @@ public class GroomingBookingController {
     @FXML
     private void handleCancel() {
         closeWindow();
-    }
-
-    @FXML
-    private void handleSelectServiceType() {
-        try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/PetHotel/gui/view/GroomingServiceTypeDialog.fxml")
-            );
-            Scene scene = new Scene(loader.load());
-            GroomingServiceTypeController controller = loader.getController();
-
-            // Set callback when service type is selected
-            controller.setOnServiceTypeSelected(category -> {
-                selectedServiceCategory = category;
-                txtServiceType.setText(category.getCategoryName());
-                loadServicesByCategory(category.getServiceCategoryId());
-                cbService.getSelectionModel().clearSelection();
-            });
-
-            Stage stage = new Stage();
-            stage.setTitle("Chọn Loại Dịch Vụ Grooming");
-            stage.setScene(scene);
-            stage.initModality(Modality.WINDOW_MODAL);
-            stage.initOwner(btnSelectServiceType.getScene().getWindow());
-            stage.show();
-
-        } catch (Exception e) {
-            showError("Không thể mở dialog chọn loại dịch vụ: " + e.getMessage());
-        }
-    }
-
-    private void loadServicesByCategory(String serviceCategoryId) {
-        try {
-            cbService.setItems(FXCollections.observableArrayList(
-                    groomingBUS.getGroomingServicesByCategory(serviceCategoryId, currentUser)
-            ));
-        } catch (Exception e) {
-            showError("Không thể tải dịch vụ grooming: " + e.getMessage());
-        }
     }
 
     private void closeWindow() {

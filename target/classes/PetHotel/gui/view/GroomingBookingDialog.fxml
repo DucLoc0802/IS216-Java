@@ -33,16 +33,8 @@
                   GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
         <Label text="Loại dịch vụ:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-        <HBox spacing="8" GridPane.rowIndex="2" GridPane.columnIndex="1">
-            <TextField fx:id="txtServiceType"
-                       prefWidth="300"
-                       editable="false"
-                       promptText="Chọn loại dịch vụ grooming"/>
-            <Button fx:id="btnSelectServiceType"
-                    text="Chọn"
-                    onAction="#handleSelectServiceType"
-                    style="-fx-padding: 6px 14px; -fx-font-size: 11px;"/>
-        </HBox>
+        <ComboBox fx:id="cbServiceCategory" prefWidth="360"
+                  GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
         <Label text="Dịch vụ grooming:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
         <ComboBox fx:id="cbService" prefWidth="360"

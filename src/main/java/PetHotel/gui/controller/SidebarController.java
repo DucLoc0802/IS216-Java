@@ -39,6 +39,7 @@ public class SidebarController {
     @FXML private VBox menuPet;
     @FXML private VBox menuBooking;
     @FXML private VBox menuGrooming;
+    @FXML private VBox menuService;
     @FXML private VBox menuAssignedTasks;
     @FXML private VBox menuRoom;
     @FXML private VBox menuInvoice;
@@ -106,6 +107,7 @@ private void applyRolePermissions(Role role) {
             hideMenu(menuDashboard);
             hideMenu(menuCustomer);
             hideMenu(menuBooking);
+            hideMenu(menuService);
             hideMenu(menuRoom);
             hideMenu(menuInvoice); 
 
@@ -137,6 +139,7 @@ private void applyRolePermissions(Role role) {
             hideMenu(menuPet);
             hideMenu(menuBooking);
             hideMenu(menuGrooming);
+            hideMenu(menuService);
             hideMenu(menuInvoice);
             hideMenu(menuAssignedTasks);
             
@@ -160,6 +163,7 @@ private void applyRolePermissions(Role role) {
             hideMenu(menuPet);
             hideMenu(menuBooking);
             hideMenu(menuGrooming);
+            hideMenu(menuService);
             hideMenu(menuRoom);
             hideMenu(menuInvoice);
             hideMenu(menuAssignedTasks);
@@ -180,6 +184,7 @@ private void applyRolePermissions(Role role) {
             hideMenu(menuPet);
             hideMenu(menuBooking);
             hideMenu(menuGrooming);
+            hideMenu(menuService);
             hideMenu(menuRoom);
             hideMenu(menuInvoice);
             hideMenu(menuAssignedTasks);
@@ -272,6 +277,15 @@ private void applyRolePermissions(Role role) {
                             mainController.getTopbarController().setTitle(
                                 "Grooming",
                                 "Quản lý lịch cắt tỉa"
+                            );
+                        }
+                        break;
+                    case "service":
+                        if (currentRole == Role.RECEPTIONIST || currentRole == Role.BRANCH_MANAGER) {
+                            mainController.loadView("ServiceManagement.fxml");
+                            mainController.getTopbarController().setTitle(
+                                "Danh Sách Dịch Vụ",
+                                "Xem và tra cứu danh sách dịch vụ"
                             );
                         }
                         break;

@@ -655,4 +655,242 @@ public int countEmployeeTasksByDateAndStatus(String employeeId, String dateStr, 
 
     return 0;
 }
+
+/**
+ * Lấy tất cả dịch vụ đang hoạt động
+ */
+public List<PetService> getAllServices() throws SQLException {
+    List<PetService> list = new ArrayList<>();
+
+    String sql =
+        "SELECT s.service_id, s.service_category_id, s.service_name, " +
+        "       s.species, s.base_price, s.duration_minutes " +
+        "FROM services s " +
+        "WHERE s.is_active = 1 " +
+        "ORDER BY s.service_name";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
+
+        while (rs.next()) {
+            PetService s = new PetService();
+            s.setServiceId(rs.getString("service_id"));
+            s.setServiceCategoryId(rs.getString("service_category_id"));
+            s.setServiceName(rs.getString("service_name"));
+            s.setSpecies(rs.getString("species"));
+            s.setBasePrice(rs.getDouble("base_price"));
+            s.setDurationMinutes(rs.getInt("duration_minutes"));
+            list.add(s);
+        }
+    }
+
+    return list;
+}
+
+/**
+ * Tìm kiếm dịch vụ theo từ khóa (tên dịch vụ, loài, loại dịch vụ)
+ */
+public List<PetService> searchServices(String keyword) throws SQLException {
+    List<PetService> list = new ArrayList<>();
+
+    String sql =
+        "SELECT s.service_id, s.service_category_id, s.service_name, " +
+        "       s.species, s.base_price, s.duration_minutes " +
+        "FROM services s " +
+        "WHERE s.is_active = 1 " +
+        "  AND (LOWER(s.service_name) LIKE LOWER(?) " +
+        "       OR LOWER(s.species) LIKE LOWER(?) " +
+        "       OR LOWER(s.service_category_id) LIKE LOWER(?)) " +
+        "ORDER BY s.service_name";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        String pattern = "%" + keyword + "%";
+        ps.setString(1, pattern);
+        ps.setString(2, pattern);
+        ps.setString(3, pattern);
+
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                PetService s = new PetService();
+                s.setServiceId(rs.getString("service_id"));
+                s.setServiceCategoryId(rs.getString("service_category_id"));
+                s.setServiceName(rs.getString("service_name"));
+                s.setSpecies(rs.getString("species"));
+                s.setBasePrice(rs.getDouble("base_price"));
+                s.setDurationMinutes(rs.getInt("duration_minutes"));
+                list.add(s);
+            }
+        }
+    }
+
+    return list;
+}
+
+/**
+ * Lấy dịch vụ theo loại (category)
+ */
+public List<PetService> getServicesByCategory(String serviceCategoryId) throws SQLException {
+    List<PetService> list = new ArrayList<>();
+
+    String sql =
+        "SELECT s.service_id, s.service_category_id, s.service_name, " +
+        "       s.species, s.base_price, s.duration_minutes " +
+        "FROM services s " +
+        "WHERE s.service_category_id = ? " +
+        "  AND s.is_active = 1 " +
+        "ORDER BY s.service_name";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        ps.setString(1, serviceCategoryId);
+
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                PetService s = new PetService();
+                s.setServiceId(rs.getString("service_id"));
+                s.setServiceCategoryId(rs.getString("service_category_id"));
+                s.setServiceName(rs.getString("service_name"));
+                s.setSpecies(rs.getString("species"));
+                s.setBasePrice(rs.getDouble("base_price"));
+                s.setDurationMinutes(rs.getInt("duration_minutes"));
+                list.add(s);
+            }
+        }
+    }
+
+    return list;
+}
+
+/**
+ * Cập nhật thông tin dịch vụ
+ * @param service Dịch vụ cần cập nhật
+ * @throws SQLException nếu lỗi DB
+ */
+public void updateService(PetService service) throws SQLException {
+    String sql =
+        "UPDATE services " +
+        "SET service_name = ?, service_category_id = ?, species = ?, " +
+        "    base_price = ?, duration_minutes = ?, updated_at = SYSTIMESTAMP " +
+        "WHERE service_id = ?";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, service.getServiceName());
+        ps.setString(2, service.getServiceCategoryId());
+        ps.setString(3, service.getSpecies());
+        ps.setDouble(4, service.getBasePrice());
+        ps.setInt(5, service.getDurationMinutes());
+        ps.setString(6, service.getServiceId());
+        ps.executeUpdate();
+    }
+}
+
+/**
+ * Xóa dịch vụ (đánh dấu là không hoạt động)
+ * @param serviceId Mã dịch vụ cần xóa
+ * @throws SQLException nếu lỗi DB
+ */
+public void deleteService(String serviceId) throws SQLException {
+    String sql = "UPDATE services SET is_active = 0, updated_at = SYSTIMESTAMP WHERE service_id = ?";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, serviceId);
+        ps.executeUpdate();
+    }
+}
+
+/**
+ * Lấy thông tin chi tiết dịch vụ theo ID
+ * @param serviceId Mã dịch vụ
+ * @return Đối tượng PetService hoặc null nếu không tìm thấy
+ * @throws SQLException nếu lỗi DB
+ */
+public PetService getServiceById(String serviceId) throws SQLException {
+    String sql =
+        "SELECT s.service_id, s.service_category_id, s.service_name, " +
+        "       s.species, s.base_price, s.duration_minutes, s.is_active " +
+        "FROM services s " +
+        "WHERE s.service_id = ?";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, serviceId);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                PetService s = new PetService();
+                s.setServiceId(rs.getString("service_id"));
+                s.setServiceCategoryId(rs.getString("service_category_id"));
+                s.setServiceName(rs.getString("service_name"));
+                s.setSpecies(rs.getString("species"));
+                s.setBasePrice(rs.getDouble("base_price"));
+                s.setDurationMinutes(rs.getInt("duration_minutes"));
+                return s;
+            }
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Tạo dịch vụ mới
+ * @param serviceId Mã dịch vụ
+ * @param serviceName Tên dịch vụ
+ * @param serviceCategoryId Mã loại dịch vụ
+ * @param species Loài thú cưng
+ * @param basePrice Giá cơ bản
+ * @param durationMinutes Thời gian (phút)
+ * @throws SQLException nếu lỗi DB
+ */
+public void createService(String serviceId, String serviceName, String serviceCategoryId, 
+                         String species, double basePrice, int durationMinutes) throws SQLException {
+    String sql =
+        "INSERT INTO services (service_id, service_name, service_category_id, species, " +
+        "                      base_price, duration_minutes, is_active, created_at, updated_at) " +
+        "VALUES (?, ?, ?, ?, ?, ?, 1, SYSTIMESTAMP, SYSTIMESTAMP)";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, serviceId);
+        ps.setString(2, serviceName);
+        ps.setString(3, serviceCategoryId);
+        
+        if (species != null && !species.trim().isEmpty()) {
+            ps.setString(4, species);
+        } else {
+            ps.setNull(4, java.sql.Types.VARCHAR);
+        }
+        
+        ps.setDouble(5, basePrice);
+        ps.setInt(6, durationMinutes);
+        ps.executeUpdate();
+    }
+}
+
+/**
+ * Kiểm tra xem dịch vụ đã tồn tại theo ID
+ * @param serviceId Mã dịch vụ
+ * @return true nếu tồn tại, false nếu không
+ * @throws SQLException nếu lỗi DB
+ */
+public boolean existsServiceById(String serviceId) throws SQLException {
+    String sql = "SELECT COUNT(*) FROM services WHERE service_id = ?";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, serviceId);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        }
+    }
+
+    return false;
+}
 }

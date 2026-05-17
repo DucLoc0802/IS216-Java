@@ -78,6 +78,73 @@ public class ServiceCategoryDAO {
         return list;
     }
 
+    /**
+     * Thêm loại dịch vụ mới
+     * @param categoryId Mã loại dịch vụ (VD: SC001)
+     * @param categoryName Tên loại dịch vụ
+     * @param note Ghi chú
+     * @throws SQLException nếu lỗi DB
+     */
+    public void insert(String categoryId, String categoryName, String note) throws SQLException {
+        String sql =
+            "INSERT INTO category_services (service_category_id, category_name, note, created_at, updated_at) " +
+            "VALUES (?, ?, ?, SYSTIMESTAMP, SYSTIMESTAMP)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, categoryId);
+            ps.setString(2, categoryName);
+            if (note != null && !note.trim().isEmpty()) {
+                ps.setString(3, note);
+            } else {
+                ps.setNull(3, java.sql.Types.CLOB);
+            }
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Kiểm tra xem loại dịch vụ đã tồn tại chưa (theo tên)
+     * @param categoryName Tên loại dịch vụ
+     * @return true nếu đã tồn tại
+     * @throws SQLException nếu lỗi DB
+     */
+    public boolean existsByName(String categoryName) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM category_services WHERE UPPER(category_name) = UPPER(?)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, categoryName.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Kiểm tra xem loại dịch vụ đã tồn tại chưa (theo ID)
+     * @param categoryId Mã loại dịch vụ
+     * @return true nếu đã tồn tại
+     * @throws SQLException nếu lỗi DB
+     */
+    public boolean existsById(String categoryId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM category_services WHERE service_category_id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, categoryId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+
     // ── Helper Methods ────────────────────────────────────────────
 
     private ServiceCategory mapRow(ResultSet rs) throws SQLException {
