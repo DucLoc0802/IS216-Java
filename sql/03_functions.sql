@@ -117,34 +117,36 @@ CREATE OR REPLACE FUNCTION fn_is_order_ready_to_pay (
 )
 RETURN BOOLEAN
 IS
-    v_count_not_done_service      NUMBER;
-    v_count_not_checked_out_room  NUMBER;
+    v_not_done_service_count NUMBER;
+    v_booking_status         booking.status%TYPE;
 BEGIN
-    -- Đếm các dịch vụ chưa hoàn tất
+    -- Kiểm tra các dịch vụ trong hóa đơn đã hoàn tất/hủy chưa
     SELECT COUNT(*)
-    INTO v_count_not_done_service
+    INTO v_not_done_service_count
     FROM order_details od
     JOIN booking_services bs
-        ON od.booking_id = bs.booking_id
-       AND od.service_id = bs.service_id
+        ON od.booking_service_id = bs.booking_service_id
     WHERE od.order_id = p_order_id
       AND bs.status NOT IN ('DONE', 'CANCELLED');
 
-    -- Đếm các booking lưu trú chưa hoàn tất
-    SELECT COUNT(*)
-    INTO v_count_not_checked_out_room
-    FROM order_details od
+    -- Lấy trạng thái booking của hóa đơn
+    SELECT b.status
+    INTO v_booking_status
+    FROM orders o
     JOIN booking b
-        ON od.booking_id = b.booking_id
-    WHERE od.order_id = p_order_id
-      AND b.status NOT IN ('CHECKED_OUT', 'CANCELLED');
+        ON o.booking_id = b.booking_id
+    WHERE o.order_id = p_order_id;
 
-    IF v_count_not_done_service = 0
-       AND v_count_not_checked_out_room = 0 THEN
+    IF v_not_done_service_count = 0
+       AND v_booking_status IN ('CHECKED_OUT', 'CANCELLED') THEN
         RETURN TRUE;
     ELSE
         RETURN FALSE;
     END IF;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN FALSE;
 END;
 /
 -- 6. Tính tỷ lệ chênh lệch kiểm kê
