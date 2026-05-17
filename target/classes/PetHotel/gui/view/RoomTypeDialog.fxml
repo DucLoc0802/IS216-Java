@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="16" styleClass="dialog-content" stylesheets="@../css/style.css"
+      xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="PetHotel.gui.controller.RoomTypeController"
+      prefWidth="600" prefHeight="400">
+
+    <Label styleClass="dialog-title" text="Quản Lý Loại Phòng &amp; Giá" />
+
+    <TableView fx:id="typeTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colTypeId" text="Mã Loại" prefWidth="80"/>
+            <TableColumn fx:id="colTypeName" text="Tên Loại" prefWidth="120"/>
+            <TableColumn fx:id="colMaxPets" text="Số Thú Cưng" prefWidth="100"/>
+            <TableColumn fx:id="colMaxWeight" text="Cân Nặng Tối Đa" prefWidth="130"/>
+            <TableColumn fx:id="colPrice" text="Giá/Ngày" prefWidth="120"/>
+            <TableColumn fx:id="colActive" text="Trạng Thái" prefWidth="100"/>
+        </columns>
+        <placeholder>
+            <Label text="Không có loại phòng nào" />
+        </placeholder>
+    </TableView>
+
+    <HBox alignment="CENTER_RIGHT" spacing="10">
+        <Button onAction="#onClose" text="Đóng"
+                styleClass="action-btn action-btn-outline"/>
+    </HBox>
+
+</VBox>

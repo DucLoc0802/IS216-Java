@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Pagination?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  customer-management.fxml — Quản Lý Khách Hàng
+  Controller: PetHotel.gui.controller.CustomerController
+-->
+
+<VBox spacing="18" styleClass="main-content" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="PetHotel.gui.controller.CustomerController">
+
+    <HBox alignment="CENTER_LEFT" spacing="8">
+        <Region styleClass="section-header-line" />
+        <Label styleClass="section-header" text="Quản Lý Khách Hàng" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Button onAction="#onAddCustomer" styleClass="action-btn action-btn-primary" text="+ Thêm Khách Hàng" />
+    </HBox>
+
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
+        <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
+            <Label styleClass="search-icon" text="🔍" />
+            <TextField fx:id="searchField" onAction="#onSearch" promptText="Tìm theo tên, SĐT, email..." styleClass="search-input" HBox.hgrow="ALWAYS" />
+        </HBox>
+        <Button onAction="#onSearch" style="-fx-padding: 7 16 7 16;" styleClass="action-btn action-btn-primary" text="Tìm" />
+        <Button onAction="#onClearFilter" style="-fx-padding: 7 14 7 14;" styleClass="action-btn action-btn-outline" text="Xóa lọc" />
+    </HBox>
+
+    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="action-toolbar">
+        <Button fx:id="btnEdit" disable="true" onAction="#onEdit" styleClass="action-btn action-btn-outline" text="✏ Sửa" />
+        <Button fx:id="btnDelete" disable="true" onAction="#onDelete" styleClass="action-btn action-btn-danger" text="🗑 Xóa" />
+        <Button fx:id="btnPets" disable="true" onAction="#onViewPets" styleClass="action-btn action-btn-outline" text="🐾 Thú Cưng" />
+        <Button fx:id="btnHistory" disable="true" onAction="#onViewHistory" styleClass="action-btn action-btn-outline" text="📋 Lịch Sử DV" />
+    </HBox>
+
+    <VBox spacing="12" styleClass="content-panel" VBox.vgrow="ALWAYS">
+        <TableView fx:id="customerTable" onMouseClicked="#onTableClick" styleClass="data-table" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colId" prefWidth="80" text="Mã KH" />
+                <TableColumn fx:id="colName" prefWidth="160" text="Họ Tên" />
+                <TableColumn fx:id="colPhone" prefWidth="120" text="SĐT" />
+                <TableColumn fx:id="colEmail" prefWidth="180" text="Email" />
+                <TableColumn fx:id="colPetCount" prefWidth="90" text="Thú Cưng" />
+                <TableColumn fx:id="colJoined" prefWidth="120" text="Ngày Tham Gia" />
+                <TableColumn fx:id="colActions" prefWidth="120" resizable="false" text="Thao Tác" />
+            </columns>
+            <placeholder>
+                <Label styleClass="table-empty" text="Chưa có khách hàng nào" />
+            </placeholder>
+        </TableView>
+        
+        <HBox alignment="CENTER_RIGHT">
+            <Pagination fx:id="pagination" maxPageIndicatorCount="5" pageCount="1" />
+        </HBox>
+    </VBox>
+
+</VBox>

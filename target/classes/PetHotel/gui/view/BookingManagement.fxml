@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Pagination?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  booking-management.fxml — Quản Lý Booking
+  Controller: PetHotel.gui.controller.BookingController
+-->
+
+<VBox spacing="18" styleClass="main-content" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="PetHotel.gui.controller.BookingController">
+
+    <HBox alignment="CENTER_LEFT" spacing="8">
+        <Region styleClass="section-header-line" />
+        <Label styleClass="section-header" text="Quản Lý Booking" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Button onAction="#onCreateBooking" styleClass="action-btn action-btn-primary" text="+ Tạo Booking" />
+        <Button onAction="#onCheckin" styleClass="action-btn action-btn-success" text="✔ Check-in" />
+        <Button onAction="#onCheckout" styleClass="action-btn action-btn-outline" text="↩ Check-out" />
+        <Button onAction="#onCheckRoom" styleClass="action-btn action-btn-outline" text="🏠 Kiểm Phòng" />
+    </HBox>
+
+    <HBox spacing="0" style="-fx-padding: 6 10 6 10;" styleClass="content-panel">
+        <ToggleButton fx:id="tabAll" selected="true" styleClass="tab-btn" text="Tất Cả" />
+        <ToggleButton fx:id="tabPending" styleClass="tab-btn" text="Chờ Xác Nhận" />
+        <ToggleButton fx:id="tabCheckedIn" styleClass="tab-btn" text="Đang Ở" />
+        <ToggleButton fx:id="tabCheckout" styleClass="tab-btn" text="Check-out" />
+        <ToggleButton fx:id="tabCancelled" styleClass="tab-btn" text="Đã Hủy" />
+    </HBox>
+
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
+        <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
+            <Label styleClass="search-icon" text="🔍" />
+            <TextField fx:id="searchField" promptText="Tìm theo mã booking, tên KH, thú cưng..." styleClass="search-input" HBox.hgrow="ALWAYS" />
+        </HBox>
+        <VBox spacing="3">
+            <Label styleClass="filter-label" text="Ngày Check-in" />
+            <DatePicker fx:id="filterDateFrom" prefWidth="140" styleClass="filter-combo" />
+        </VBox>
+        <VBox spacing="3">
+            <Label styleClass="filter-label" text="Ngày Check-out" />
+            <DatePicker fx:id="filterDateTo" prefWidth="140" styleClass="filter-combo" />
+        </VBox>
+        <Button onAction="#onFilter" style="-fx-padding: 7 16 7 16;" styleClass="action-btn action-btn-primary" text="Lọc" />
+    </HBox>
+
+    <VBox spacing="12" styleClass="content-panel" VBox.vgrow="ALWAYS">
+        <TableView fx:id="bookingTable" onMouseClicked="#onTableClick" styleClass="data-table" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colBkId" prefWidth="80" text="Mã BK" />
+                <TableColumn fx:id="colBkPet" prefWidth="120" text="Thú Cưng" />
+                <TableColumn fx:id="colBkOwner" prefWidth="130" text="Chủ" />
+                <TableColumn fx:id="colBkRoom" prefWidth="80" text="Phòng" />
+                <TableColumn fx:id="colBkFrom" prefWidth="100" text="Check-in" />
+                <TableColumn fx:id="colBkTo" prefWidth="100" text="Check-out" />
+                <TableColumn fx:id="colBkNote" prefWidth="160" text="Ghi Chú" />
+                <TableColumn fx:id="colBkStatus" prefWidth="110" text="Trạng Thái" />
+                <TableColumn fx:id="colBkActions" prefWidth="120" resizable="false" text="Thao Tác" />
+            </columns>
+            <placeholder>
+                <Label styleClass="table-empty" text="Không có booking nào" />
+            </placeholder>
+        </TableView>
+        
+        <HBox alignment="CENTER_RIGHT">
+            <Pagination fx:id="pagination" maxPageIndicatorCount="5" pageCount="1" />
+        </HBox>
+    </VBox>
+</VBox>

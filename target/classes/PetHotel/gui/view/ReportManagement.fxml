@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
+
+<VBox spacing="20" styleClass="main-content"
+      stylesheets="@../css/style.css"
+      xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="PetHotel.gui.controller.ReportController">
+
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <HBox alignment="CENTER_LEFT" spacing="8">
+            <Region styleClass="section-header-line"/>
+            <VBox spacing="2">
+                <Label text="Báo Cáo &amp; Thống Kê" styleClass="section-header"/>
+                <Label text="Tổng quan kinh doanh · Phân tích dữ liệu · Xuất báo cáo"
+                       style="-fx-font-size:11px; -fx-text-fill:-ph-text-muted;"/>
+            </VBox>
+        </HBox>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="⬇ Xuất Báo Cáo" styleClass="action-btn action-btn-outline"
+                onAction="#onExportReport"/>
+        <Button text="⚙ Báo Cáo Định Kỳ" styleClass="action-btn action-btn-amber"
+                onAction="#onScheduleReport"/>
+    </HBox>
+
+    <HBox styleClass="report-period-selector" alignment="CENTER_LEFT" spacing="14">
+        <Label text="Kỳ:" styleClass="filter-label"/>
+        <HBox spacing="4"
+              style="-fx-background-color:#FAF5F0; -fx-background-radius:7px; -fx-padding:3;">
+            <Button fx:id="btnPeriodToday"  text="Hôm Nay"  styleClass="period-btn"
+                    onAction="#onPeriodToday"/>
+            <Button fx:id="btnPeriodWeek"   text="Tuần Này" styleClass="period-btn"
+                    onAction="#onPeriodWeek"/>
+            <Button fx:id="btnPeriodMonth"  text="Tháng Này" styleClass="period-btn period-btn-active"
+                    onAction="#onPeriodMonth"/>
+            <Button fx:id="btnPeriodQuarter" text="Quý Này" styleClass="period-btn"
+                    onAction="#onPeriodQuarter"/>
+            <Button fx:id="btnPeriodYear"   text="Năm Nay"  styleClass="period-btn"
+                    onAction="#onPeriodYear"/>
+            <Button fx:id="btnPeriodCustom" text="Tùy Chọn" styleClass="period-btn"
+                    onAction="#onPeriodCustom"/>
+        </HBox>
+
+        <HBox fx:id="customDateRow" alignment="CENTER_LEFT" spacing="8"
+              visible="false" managed="false">
+            <Label text="Từ:" styleClass="filter-label"/>
+            <DatePicker fx:id="dateFrom" styleClass="filter-combo" prefWidth="140"/>
+            <Label text="Đến:" styleClass="filter-label"/>
+            <DatePicker fx:id="dateTo"   styleClass="filter-combo" prefWidth="140"/>
+            <Button text="Áp dụng" styleClass="action-btn action-btn-primary"
+                    onAction="#onApplyCustomPeriod" style="-fx-padding:6 14 6 14;"/>
+        </HBox>
+
+        <Region HBox.hgrow="ALWAYS"/>
+
+        <Label text="Chi nhánh:" styleClass="filter-label"/>
+        <ComboBox fx:id="filterBranch" styleClass="filter-combo" prefWidth="160"
+                  promptText="Tất cả chi nhánh"/>
+        <Button text="Cập Nhật" styleClass="action-btn action-btn-primary"
+                onAction="#onRefreshReport" style="-fx-padding:7 16 7 16;"/>
+    </HBox>
+
+    <VBox spacing="10">
+        <HBox alignment="CENTER_LEFT" spacing="8">
+            <Region styleClass="section-header-line"/>
+            <Label text="Tổng Quan KPI" styleClass="section-header"/>
+            <Label fx:id="kpiPeriodLabel" text="— Tháng 5/2026"
+                   style="-fx-font-size:12px; -fx-text-fill:-ph-text-muted; -fx-padding:2 0 0 4;"/>
+        </HBox>
+        <HBox spacing="14">
+            <VBox styleClass="stat-card stat-card-amber" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="💰" styleClass="stat-icon"/>
+                    <VBox spacing="2">
+                        <Label text="Tổng Doanh Thu" styleClass="stat-label"/>
+                        <Label fx:id="kpiRevenue" text="—" styleClass="stat-value"/>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <VBox alignment="CENTER_RIGHT">
+                        <Label fx:id="kpiRevenueDelta" text="" styleClass="stat-delta stat-delta-up"/>
+                        <Label text="so kỳ trước" styleClass="stat-delta-desc"/>
+                    </VBox>
+                </HBox>
+                <Label text="Doanh thu trong kỳ" styleClass="stat-sublabel"/>
+            </VBox>
+
+            <VBox styleClass="stat-card stat-card-brown" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="📅" styleClass="stat-icon"/>
+                    <VBox spacing="2">
+                        <Label text="Tổng Booking" styleClass="stat-label"/>
+                        <Label fx:id="kpiBooking" text="—" styleClass="stat-value"/>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <VBox alignment="CENTER_RIGHT">
+                        <Label fx:id="kpiBookingDelta" text="" styleClass="stat-delta stat-delta-up"/>
+                        <Label text="so kỳ trước" styleClass="stat-delta-desc"/>
+                    </VBox>
+                </HBox>
+                <Label text="Số lượt đặt phòng" styleClass="stat-sublabel"/>
+            </VBox>
+
+            <VBox styleClass="stat-card stat-card-green" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="🏠" styleClass="stat-icon"/>
+                    <VBox spacing="2">
+                        <Label text="Công Suất Phòng" styleClass="stat-label"/>
+                        <Label fx:id="kpiOccupancy" text="—" styleClass="stat-value"/>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <VBox alignment="CENTER_RIGHT">
+                        <Label fx:id="kpiOccupancyDelta" text="" styleClass="stat-delta stat-delta-up"/>
+                        <Label text="so kỳ trước" styleClass="stat-delta-desc"/>
+                    </VBox>
+                </HBox>
+                <Label text="Trung bình trong kỳ" styleClass="stat-sublabel"/>
+            </VBox>
+
+            <VBox styleClass="stat-card stat-card-purple" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="✂️" styleClass="stat-icon"/>
+                    <VBox spacing="2">
+                        <Label text="Dịch Vụ Grooming" styleClass="stat-label"/>
+                        <Label fx:id="kpiGrooming" text="—" styleClass="stat-value"/>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <VBox alignment="CENTER_RIGHT">
+                        <Label fx:id="kpiGroomingDelta" text="" styleClass="stat-delta stat-delta-up"/>
+                        <Label text="so kỳ trước" styleClass="stat-delta-desc"/>
+                    </VBox>
+                </HBox>
+                <Label text="Lượt grooming trong kỳ" styleClass="stat-sublabel"/>
+            </VBox>
+
+            <VBox styleClass="stat-card stat-card-blue" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="👤" styleClass="stat-icon"/>
+                    <VBox spacing="2">
+                        <Label text="Khách Hàng Mới" styleClass="stat-label"/>
+                        <Label fx:id="kpiNewCustomers" text="—" styleClass="stat-value"/>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <VBox alignment="CENTER_RIGHT">
+                        <Label fx:id="kpiCustDelta" text="" styleClass="stat-delta stat-delta-up"/>
+                        <Label text="so kỳ trước" styleClass="stat-delta-desc"/>
+                    </VBox>
+                </HBox>
+                <Label text="Khách đăng ký mới" styleClass="stat-sublabel"/>
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <HBox spacing="18">
+        <VBox styleClass="content-panel" HBox.hgrow="ALWAYS" spacing="12">
+            <HBox alignment="CENTER_LEFT">
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Region styleClass="section-header-line"/>
+                    <Label text="Doanh Thu Theo Thời Gian" styleClass="panel-title"/>
+                </HBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <ComboBox fx:id="revenueChartGroupBy" styleClass="filter-combo" prefWidth="120"
+                          promptText="Theo ngày">
+                    <items>
+                        <FXCollections fx:factory="observableArrayList">
+                            <String fx:value="Theo ngày"/>
+                            <String fx:value="Theo tuần"/>
+                            <String fx:value="Theo tháng"/>
+                        </FXCollections>
+                    </items>
+                </ComboBox>
+            </HBox>
+            <VBox fx:id="revenueChartArea" styleClass="chart-placeholder"
+                  prefHeight="220" alignment="CENTER" spacing="10">
+                <Label text="📈" styleClass="chart-placeholder-icon"/>
+                <Label text="Biểu đồ doanh thu&#10;sẽ hiển thị tại đây"
+                       styleClass="chart-placeholder-label" textAlignment="CENTER"/>
+                <Label text="(Bind AreaChart từ ReportController)"
+                       style="-fx-font-size:10px; -fx-text-fill:-ph-text-muted;"/>
+            </VBox>
+        </VBox>
+
+        <VBox styleClass="content-panel" prefWidth="380" minWidth="340" spacing="12">
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <Region styleClass="section-header-line"/>
+                <Label text="Công Suất Phòng" styleClass="panel-title"/>
+            </HBox>
+            <VBox fx:id="occupancyChartArea" styleClass="chart-placeholder"
+                  prefHeight="220" alignment="CENTER" spacing="10">
+                <Label text="🏠" styleClass="chart-placeholder-icon"/>
+                <Label text="Biểu đồ công suất phòng&#10;sẽ hiển thị tại đây"
+                       styleClass="chart-placeholder-label" textAlignment="CENTER"/>
+                <Label text="(Bind BarChart từ ReportController)"
+                       style="-fx-font-size:10px; -fx-text-fill:-ph-text-muted;"/>
+            </VBox>
+        </VBox>
+    </HBox>
+
+    <HBox spacing="18">
+
+        <VBox styleClass="content-panel" HBox.hgrow="ALWAYS" spacing="12">
+            <HBox alignment="CENTER_LEFT">
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Region styleClass="section-header-line"/>
+                    <Label text="Sản Phẩm Bán Chạy" styleClass="panel-title"/>
+                </HBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Xem thêm →" styleClass="panel-link-btn" onAction="#onViewProductReport"/>
+            </HBox>
+
+            <TableView fx:id="topProductTable" styleClass="data-table" prefHeight="240">
+                <columns>
+                    <TableColumn fx:id="colRank"        text="#"             prefWidth="40"  resizable="false"/>
+                    <TableColumn fx:id="colProdName"    text="Tên Sản Phẩm" prefWidth="200"/>
+                    <TableColumn fx:id="colProdCat"     text="Danh Mục"     prefWidth="120"/>
+                    <TableColumn fx:id="colProdSold"    text="Đã Bán"       prefWidth="90"/>
+                    <TableColumn fx:id="colProdRevenue" text="Doanh Thu"    prefWidth="120"/>
+                </columns>
+                <placeholder>
+                    <Label text="Chưa có dữ liệu" styleClass="table-empty"/>
+                </placeholder>
+            </TableView>
+        </VBox>
+
+        <VBox prefWidth="370" minWidth="340" spacing="14">
+
+            <VBox styleClass="content-panel" spacing="12">
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Region styleClass="section-header-line"/>
+                    <Label text="Thống Kê Tồn Kho" styleClass="panel-title"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="Xem chi tiết →" styleClass="panel-link-btn"
+                            onAction="#onViewInventoryReport"/>
+                </HBox>
+                <HBox spacing="8">
+                    <VBox styleClass="room-stat-box room-stat-available" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="3">
+                        <Label fx:id="invStatOk"       text="—" styleClass="room-stat-num"/>
+                        <Label text="Đủ Hàng"      styleClass="room-stat-label"/>
+                    </VBox>
+                    <VBox styleClass="room-stat-box room-stat-cleaning" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="3">
+                        <Label fx:id="invStatLow"      text="—" styleClass="room-stat-num"/>
+                        <Label text="Tồn Thấp"     styleClass="room-stat-label"/>
+                    </VBox>
+                    <VBox styleClass="room-stat-box room-stat-occupied" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="3">
+                        <Label fx:id="invStatCritical" text="—" styleClass="room-stat-num"/>
+                        <Label text="Nguy Hiểm"    styleClass="room-stat-label"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+
+            <VBox styleClass="content-panel" spacing="12" VBox.vgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Region styleClass="section-header-line"/>
+                    <Label text="Báo Cáo Định Kỳ &amp; Gần Đây" styleClass="panel-title"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="+ Thêm lịch" styleClass="panel-link-btn"
+                            onAction="#onScheduleReport"/>
+                </HBox>
+
+                <ScrollPane fitToWidth="true" prefHeight="190"
+                            style="-fx-background:transparent; -fx-background-color:transparent;">
+                    <VBox fx:id="reportTaskList" spacing="8">
+
+                        <HBox styleClass="report-task-item" alignment="CENTER_LEFT" spacing="12">
+                            <Label text="📊" style="-fx-font-size:18px;"/>
+                            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                                <Label text="Báo Cáo Doanh Thu Tháng 4" styleClass="report-task-name"/>
+                                <Label text="Tạo lúc: 01/05/2026  ·  Toàn chuỗi" styleClass="report-task-meta"/>
+                            </VBox>
+                            <Button text="⬇" styleClass="action-btn action-btn-outline"
+                                    onAction="#onDownloadReport"
+                                    style="-fx-padding:5 10 5 10;"/>
+                        </HBox>
+
+                        <HBox styleClass="report-task-item" alignment="CENTER_LEFT" spacing="12">
+                            <Label text="📋" style="-fx-font-size:18px;"/>
+                            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                                <Label text="Thống Kê Booking Tuần 17" styleClass="report-task-name"/>
+                                <Label text="Tạo lúc: 28/04/2026  ·  Chi nhánh Q.1" styleClass="report-task-meta"/>
+                            </VBox>
+                            <Button text="⬇" styleClass="action-btn action-btn-outline"
+                                    onAction="#onDownloadReport"
+                                    style="-fx-padding:5 10 5 10;"/>
+                        </HBox>
+
+                        <HBox styleClass="report-task-item" alignment="CENTER_LEFT" spacing="12">
+                            <Label text="🏠" style="-fx-font-size:18px;"/>
+                            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                                <Label text="Công Suất Phòng Quý 1" styleClass="report-task-name"/>
+                                <Label text="Tự động  ·  01/04/2026  ·  Toàn chuỗi" styleClass="report-task-meta"/>
+                            </VBox>
+                            <Button text="⬇" styleClass="action-btn action-btn-outline"
+                                    onAction="#onDownloadReport"
+                                    style="-fx-padding:5 10 5 10;"/>
+                        </HBox>
+
+                        <HBox styleClass="report-task-item" alignment="CENTER_LEFT" spacing="12">
+                            <Label text="🌐" style="-fx-font-size:18px;"/>
+                            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                                <Label text="Báo Cáo Toàn Chuỗi — CEO Q1" styleClass="report-task-name"/>
+                                <Label text="Tự động  ·  01/04/2026  ·  Dành cho CEO" styleClass="report-task-meta"/>
+                            </VBox>
+                            <Button text="⬇" styleClass="action-btn action-btn-outline"
+                                    onAction="#onDownloadReport"
+                                    style="-fx-padding:5 10 5 10;"/>
+                        </HBox>
+
+                    </VBox>
+                </ScrollPane>
+            </VBox>
+
+        </VBox>
+    </HBox>
+
+</VBox>

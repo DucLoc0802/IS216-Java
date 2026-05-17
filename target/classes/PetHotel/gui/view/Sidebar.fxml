@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  sidebar.fxml — Sidebar navigation (dùng chung cho toàn hệ thống)
+  Include vào Dashboard.fxml bằng: <fx:include source="sidebar.fxml"/>
+  Controller: SidebarController (hoặc inject qua DashboardController)
+-->
+
+<VBox fx:id="sidebarRoot" minWidth="240" prefWidth="240" styleClass="sidebar" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="PetHotel.gui.controller.SidebarController">
+
+    <!-- Brand -->
+    <VBox alignment="CENTER" spacing="4" styleClass="sidebar-brand">
+        <Label styleClass="brand-icon" text="🐾" />
+        <Label styleClass="brand-name" text="PET HOTEL" />
+        <Label styleClass="brand-sub" text="Management System" />
+    </VBox>
+
+    <!-- User Profile -->
+    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="sidebar-profile">
+        <Label fx:id="avatarLabel" styleClass="avatar-circle" text="A" />
+        <VBox spacing="2">
+            <Label fx:id="usernameLabel" styleClass="profile-name" text="Nguyễn Văn A" />
+            <Label fx:id="roleLabel" styleClass="profile-role" text="Admin Hệ Thống" />
+        </VBox>
+    </HBox>
+
+    <Separator styleClass="sidebar-divider" />
+
+    <!-- Navigation -->
+    <ScrollPane fitToWidth="true" styleClass="sidebar-scroll" VBox.vgrow="ALWAYS">
+        <VBox fx:id="menuContainer" spacing="2" styleClass="menu-container">
+
+            <!-- Dashboard -->
+            <VBox fx:id="menuDashboard" onMouseClicked="#onMenu" styleClass="menu-item menu-item-active" userData="dashboard">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="⊞" />
+                    <Label styleClass="menu-label" text="Dashboard" />
+                </HBox>
+            </VBox>
+
+            <!-- ── Nghiệp vụ ─────────────────────────────── -->
+            <VBox styleClass="menu-group">
+                <Label styleClass="menu-group-title" text="QUẢN LÝ NGHIỆP VỤ" />
+            </VBox>
+
+            <VBox fx:id="menuCustomer" onMouseClicked="#onMenu" styleClass="menu-item" userData="customer">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="👤" />
+                    <Label styleClass="menu-label" text="Khách Hàng" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="badgeCustomer" managed="false" styleClass="menu-badge" text="" visible="false" />
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="menuPet" onMouseClicked="#onMenu" styleClass="menu-item" userData="pet">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="🐶" />
+                    <Label styleClass="menu-label" text="Thú Cưng" />
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="menuBooking" onMouseClicked="#onMenu" styleClass="menu-item" userData="booking">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="📅" />
+                    <Label styleClass="menu-label" text="Booking" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="badgeBooking" styleClass="menu-badge menu-badge-warning" text="5" />
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="menuGrooming" onMouseClicked="#onMenu" styleClass="menu-item" userData="grooming">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="✂️" />
+                    <Label styleClass="menu-label" text="Grooming" />
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="menuRoom" onMouseClicked="#onMenu" styleClass="menu-item" userData="room">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="🏠" />
+                    <Label styleClass="menu-label" text="Phòng" />
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="menuInvoice" onMouseClicked="#onMenu" styleClass="menu-item" userData="invoice">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="🧾" />
+                    <Label styleClass="menu-label" text="Hóa Đơn" />
+                </HBox>
+            </VBox>
+
+            <!-- ── Kho & Sản phẩm ───────────────────────── -->
+            <VBox styleClass="menu-group">
+                <Label styleClass="menu-group-title" text="KHO &amp; SẢN PHẨM" />
+            </VBox>
+
+            <VBox fx:id="menuProduct" onMouseClicked="#onMenu" styleClass="menu-item" userData="product">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="📦" />
+                    <Label styleClass="menu-label" text="Sản Phẩm" />
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="menuInventory" onMouseClicked="#onMenu" styleClass="menu-item" userData="inventory">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="🏭" />
+                    <Label styleClass="menu-label" text="Kho Hàng" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="badgeInventory" styleClass="menu-badge menu-badge-danger" text="!" />
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="menuSupplier" onMouseClicked="#onMenu" styleClass="menu-item" userData="supplier">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="🏢" />
+                    <Label styleClass="menu-label" text="Nhà Cung Cấp" />
+                </HBox>
+            </VBox>
+
+            <!-- ── Quản trị ──────────────────────────────── -->
+            <VBox styleClass="menu-group">
+                <Label styleClass="menu-group-title" text="QUẢN TRỊ HỆ THỐNG" />
+            </VBox>
+
+            <VBox fx:id="menuStaff" onMouseClicked="#onMenu" styleClass="menu-item" userData="employee">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="👥" />
+                    <Label styleClass="menu-label" text="Nhân Viên" />
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="menuAccount" onMouseClicked="#onMenu" styleClass="menu-item" userData="account">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="🔐" />
+                    <Label styleClass="menu-label" text="Tài Khoản" />
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="menuReport" onMouseClicked="#onMenu" styleClass="menu-item" userData="report">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="📊" />
+                    <Label styleClass="menu-label" text="Báo Cáo" />
+                </HBox>
+            </VBox>
+
+        </VBox>
+    </ScrollPane>
+
+    <!-- Footer -->
+    <VBox styleClass="sidebar-footer">
+        <Separator styleClass="sidebar-divider" />
+        <HBox alignment="CENTER_LEFT" onMouseClicked="#onChangePassword" spacing="12" styleClass="menu-item">
+            <Label styleClass="menu-icon" text="🔑" />
+            <Label styleClass="menu-label" text="Đổi Mật Khẩu" />
+        </HBox>
+        <HBox alignment="CENTER_LEFT" onMouseClicked="#onLogout" spacing="12" styleClass="menu-item menu-item-logout">
+            <Label styleClass="menu-icon" text="🚪" />
+            <Label styleClass="menu-label" text="Đăng Xuất" />
+        </HBox>
+    </VBox>
+
+</VBox>
