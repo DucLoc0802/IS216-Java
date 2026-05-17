@@ -13,7 +13,7 @@ public class DBConnection {
 
     // Chuỗi URL kết nối Oracle dùng SID (orcldb là SID)
     private static final String URL = "jdbc:oracle:thin:@" + HOST + ":" + PORT + ":" + SERVICE_NAME;
-    public static Connection getConnection() {
+    public static Connection getConnection() throws SQLException {
         try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
         } catch (ClassNotFoundException e) {

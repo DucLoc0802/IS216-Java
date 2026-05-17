@@ -79,6 +79,7 @@
         <TableView fx:id="roomTable" styleClass="data-table" VBox.vgrow="ALWAYS">
             <columns>
                 <TableColumn fx:id="colRoomId" prefWidth="90" text="Mã Phòng" />
+                <TableColumn fx:id="colRoomNumber" prefWidth="90" text="Số Phòng" />
                 <TableColumn fx:id="colRoomType" prefWidth="130" text="Loại" />
                 <TableColumn fx:id="colRoomFloor" prefWidth="70" text="Tầng" />
                 <TableColumn fx:id="colRoomPrice" prefWidth="110" text="Giá/Ngày" />
