@@ -1,4 +1,10 @@
 --Nếu mà ae muốn drop bảng--
+drop table goods_receipt_detail CASCADE CONSTRAINTS PURGE;
+drop table stock_audit_detail CASCADE CONSTRAINTS PURGE;
+drop table stock_audit CASCADE CONSTRAINTS PURGE;
+drop table goods_receipt CASCADE CONSTRAINTS PURGE;
+drop table material_waste CASCADE CONSTRAINTS PURGE;
+drop table service_product_standard CASCADE CONSTRAINTS PURGE;
 DROP TABLE pet_health_record CASCADE CONSTRAINTS PURGE;
 DROP TABLE payments CASCADE CONSTRAINTS PURGE;
 DROP TABLE order_details CASCADE CONSTRAINTS PURGE;
@@ -19,4 +25,4 @@ DROP TABLE branch CASCADE CONSTRAINTS PURGE;
 DROP TABLE customer CASCADE CONSTRAINTS PURGE;
 DROP TABLE booking_room_pet CASCADE CONSTRAINTS PURGE;
 DROP TABLE booking_room CASCADE CONSTRAINTS PURGE;
-DROP TABLE service_product_standard CASCADE CONSTRAINTS PURGE;
+

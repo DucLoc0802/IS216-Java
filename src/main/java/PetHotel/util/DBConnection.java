@@ -7,13 +7,13 @@ import java.sql.SQLException;
 public class DBConnection {
     private static final String HOST = "localhost";
     private static final String PORT = "1521";
-    private static final String SERVICE_NAME = "freepdb1";
-    private static final String USER = "pet_hotel";
-    private static final String PASS = "123456";
+    private static final String SERVICE_NAME = "orcldb"; 
+    private static final String USER = "pethotel"; 
+    private static final String PASS = "admin";
 
-    private static final String URL = "jdbc:oracle:thin:@//" + HOST + ":" + PORT + "/" + SERVICE_NAME;
-
-    public static Connection getConnection() throws SQLException {
+    // Chuỗi URL kết nối Oracle dùng SID (orcldb là SID)
+    private static final String URL = "jdbc:oracle:thin:@" + HOST + ":" + PORT + ":" + SERVICE_NAME;
+    public static Connection getConnection() {
         try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
         } catch (ClassNotFoundException e) {

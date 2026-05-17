@@ -9,7 +9,7 @@
 --   4. pet_no_overlap                           -- Trigger ngăn thú cưng bị trùng thời gian lưu trú
 --   5. add_pet_same_room                        -- Trigger kiểm tra điều kiện khi thêm thú cưng vào phòng đã có sẵn thú cưng
 --   6. trg_payment_time_valid                   -- Trigger kiểm tra thời điểm thanh toán hợp lệ
---   7. trg_bks_inventory_sync                   -- Trigger đồng bộ tồn kho khi thêm hoặc cập nhật dịch vụ
+--   7. trg_bks_inventory_sync                   -- Trigger đồng bộ tồn kho - chưa triển khai đầy đủ
 --   8. trg_validate_pet_room_weight             -- Trigger kiểm tra tải trọng thú cưng khi phân vào phòng
 --   9. trg_payment_logic_sync                   -- Trigger đồng bộ trạng thái hóa đơn khi có thay đổi thanh toán
 --  10. trg_prevent_manual_paid_status           -- Trigger ngăn cập nhật thủ công hóa đơn sang PAID khi chưa đủ điều kiện
@@ -424,58 +424,19 @@ END;
 CREATE OR REPLACE TRIGGER trg_sync_order_totals
 AFTER INSERT OR UPDATE OR DELETE ON order_details
 FOR EACH ROW
-DECLARE
-    v_booking_id      order_details.booking_id%TYPE;
-    v_deposit_amount  booking.deposit_amount%TYPE;
 BEGIN
-    -- Xác định booking_id liên quan
-    v_booking_id := NVL(:NEW.booking_id, :OLD.booking_id);
-
-    -- Lấy tiền cọc của booking, nếu NULL thì xem như 0
-    BEGIN
-        SELECT NVL(b.deposit_amount, 0)
-        INTO v_deposit_amount
-        FROM booking b
-        WHERE b.booking_id = v_booking_id;
-    EXCEPTION
-        WHEN NO_DATA_FOUND THEN
-            v_deposit_amount := 0;
-    END;
-
-    -- Thêm chi tiết hóa đơn mới
     IF INSERTING THEN
-        UPDATE orders
-        SET subtotal    = subtotal + :NEW.line_total,
-            grand_total = subtotal + :NEW.line_total + v_deposit_amount
-        WHERE order_id = :NEW.order_id;
+        sp_recalculate_order_totals(:NEW.order_id);
 
-    -- Xóa chi tiết hóa đơn
     ELSIF DELETING THEN
-        UPDATE orders
-        SET subtotal    = subtotal - :OLD.line_total,
-            grand_total = subtotal - :OLD.line_total + v_deposit_amount
-        WHERE order_id = :OLD.order_id;
+        sp_recalculate_order_totals(:OLD.order_id);
 
-    -- Cập nhật chi tiết hóa đơn
     ELSIF UPDATING THEN
-        -- Đổi sang hóa đơn khác
         IF :OLD.order_id <> :NEW.order_id THEN
-            UPDATE orders
-            SET subtotal    = subtotal - :OLD.line_total,
-                grand_total = subtotal - :OLD.line_total + v_deposit_amount
-            WHERE order_id = :OLD.order_id;
-
-            UPDATE orders
-            SET subtotal    = subtotal + :NEW.line_total,
-                grand_total = subtotal + :NEW.line_total + v_deposit_amount
-            WHERE order_id = :NEW.order_id;
-
-        -- Cập nhật trên cùng một hóa đơn
+            sp_recalculate_order_totals(:OLD.order_id);
+            sp_recalculate_order_totals(:NEW.order_id);
         ELSE
-            UPDATE orders
-            SET subtotal    = subtotal + (:NEW.line_total - :OLD.line_total),
-                grand_total = subtotal + (:NEW.line_total - :OLD.line_total) + v_deposit_amount
-            WHERE order_id = :NEW.order_id;
+            sp_recalculate_order_totals(:NEW.order_id);
         END IF;
     END IF;
 END;
