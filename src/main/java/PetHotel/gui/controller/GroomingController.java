@@ -10,6 +10,7 @@ import PetHotel.dao.EmployeeDAO;
 import PetHotel.exception.ValidationException;
 import PetHotel.model.AppUser;
 import PetHotel.model.BookingService;
+import PetHotel.util.Role;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -47,7 +48,8 @@ public class GroomingController {
     @FXML private ComboBox<String> filterStaff;
     @FXML private ComboBox<String> filterGroomStatus;
     @FXML private TableView<GroomingRow> groomingTable;
-    
+    @FXML private Button btnCreateGrooming;
+    @FXML private Button btnAssignGroomingStaff;
     @FXML private TableColumn<GroomingRow, String> colGrId;
     @FXML private TableColumn<GroomingRow, String> colGrTime;
     @FXML private TableColumn<GroomingRow, String> colGrPet;
@@ -68,20 +70,23 @@ public class GroomingController {
     @FXML
     public void initialize() {
         currentUser = SessionManager.getInstance().getCurrentUser();
-        
+
         if (currentUser == null) {
             showAlert(Alert.AlertType.ERROR, "Lỗi", "Chưa đăng nhập");
             return;
         }
 
-        // Set up table columns
+        setupRoleUI();
+
+        if (btnAssignGroomingStaff != null) {
+            btnAssignGroomingStaff.setOnAction(e -> onOpenStaffAssignment());
+        }
+
         setupTableColumns();
-        
-        // Set current date
+
         selectedDate.setValue(LocalDate.now());
         selectedDate.setOnAction(e -> loadGroomingSchedule());
 
-        // Setup filter status dropdown
         ObservableList<String> statusList = FXCollections.observableArrayList(
             "Tất cả", "PENDING", "SCHEDULED", "IN_PROGRESS", "DONE", "CANCELLED"
         );
@@ -89,14 +94,39 @@ public class GroomingController {
         filterGroomStatus.setValue("Tất cả");
         filterGroomStatus.setOnAction(e -> loadGroomingSchedule());
 
-        // Setup filter staff dropdown
         loadStaffList();
-
-        // Load initial data
         loadGroomingSchedule();
         loadStaffWorkload();
     }
 
+    // Mở màn hình phân công nhân viên grooming
+    @FXML
+    private void onOpenStaffAssignment() {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/PetHotel/gui/view/GroomingStaffAssignment.fxml")
+            );
+
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.setTitle("Phân công nhân viên Grooming");
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+
+            loadGroomingSchedule();
+            loadStaffWorkload();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(
+                    Alert.AlertType.ERROR,
+                    "Lỗi",
+                    "Không thể mở màn hình phân công nhân viên: " + e.getMessage()
+            );
+        }
+    }
     /**
      * Thiết lập các cột trong bảng
      */
@@ -306,6 +336,32 @@ public class GroomingController {
         alert.showAndWait();
     }
 
+    // Thiết lập UI theo role người dùng
+    private void setupRoleUI() {
+        System.out.println("DEBUG role = " + currentUser.getRole());
+        System.out.println("DEBUG btnCreateGrooming = " + btnCreateGrooming);
+        System.out.println("DEBUG btnAssignGroomingStaff = " + btnAssignGroomingStaff);
+
+        boolean canCreateGrooming =
+                currentUser.hasRole(Role.RECEPTIONIST);
+
+        boolean canAssignStaff =
+                currentUser.hasRole(Role.BRANCH_MANAGER);
+
+        if (btnCreateGrooming != null) {
+            btnCreateGrooming.setVisible(canCreateGrooming);
+            btnCreateGrooming.setManaged(canCreateGrooming);
+        }
+
+        if (btnAssignGroomingStaff != null) {
+            btnAssignGroomingStaff.setVisible(canAssignStaff);
+            btnAssignGroomingStaff.setManaged(canAssignStaff);
+        }
+
+        if (colGrAction != null && currentUser.hasRole(Role.PET_CARE_STAFF)) {
+            colGrAction.setVisible(false);
+        }
+    }
     /**
      * Inner class: GroomingRow — Dữ liệu hiển thị trong bảng
      */

@@ -18,7 +18,14 @@
         <Region styleClass="section-header-line" />
         <Label styleClass="section-header" text="Quản Lý Lịch Grooming" />
         <Region HBox.hgrow="ALWAYS" />
-        <Button onAction="#onCreateGrooming" styleClass="action-btn action-btn-primary" text="Đặt Lịch Grooming" />
+        <Button onAction="#onCreateGrooming" 
+                fx:id="btnCreateGrooming"
+                styleClass="action-btn action-btn-primary" 
+                text="Đặt Lịch Grooming" />
+        <Button fx:id="btnAssignGroomingStaff"
+            text="Phân Công Nhân Viên"
+            onAction="#onOpenStaffAssignment"
+            styleClass="action-btn action-btn-primary"/>
     </HBox>
 
     <!-- Date navigator -->

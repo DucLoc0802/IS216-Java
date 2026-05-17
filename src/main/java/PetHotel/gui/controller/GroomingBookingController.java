@@ -10,20 +10,27 @@ import PetHotel.model.Customer;
 import PetHotel.model.Employee;
 import PetHotel.model.Pet;
 import PetHotel.model.PetService;
+import PetHotel.model.ServiceCategory;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class GroomingBookingController {
 
     @FXML private ComboBox<Customer> cbCustomer;
     @FXML private ComboBox<Pet> cbPet;
+    @FXML private TextField txtServiceType;
+    @FXML private Button btnSelectServiceType;
     @FXML private ComboBox<PetService> cbService;
     @FXML private ComboBox<Employee> cbEmployee;
     @FXML private DatePicker dpScheduleDate;
@@ -32,6 +39,7 @@ public class GroomingBookingController {
 
     private AppUser currentUser;
     private final GroomingBUS groomingBUS = new GroomingBUS();
+    private ServiceCategory selectedServiceCategory;
 
     private String currentBranchId = "BR001";
     private Runnable onSuccess;
@@ -134,9 +142,10 @@ public class GroomingBookingController {
                     groomingBUS.getAllCustomersForBooking(currentUser)
             ));
 
-            cbService.setItems(FXCollections.observableArrayList(
-                    groomingBUS.getGroomingServices(currentUser)
-            ));
+            // Don't load all services by default - wait for user to select service type first
+            // cbService.setItems(FXCollections.observableArrayList(
+            //        groomingBUS.getGroomingServices(currentUser)
+            // ));
 
             cbEmployee.setItems(FXCollections.observableArrayList(
                     groomingBUS.getWorkingEmployeesByBranch(currentBranchId, currentUser)
@@ -240,6 +249,45 @@ public class GroomingBookingController {
     @FXML
     private void handleCancel() {
         closeWindow();
+    }
+
+    @FXML
+    private void handleSelectServiceType() {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/PetHotel/gui/view/GroomingServiceTypeDialog.fxml")
+            );
+            Scene scene = new Scene(loader.load());
+            GroomingServiceTypeController controller = loader.getController();
+
+            // Set callback when service type is selected
+            controller.setOnServiceTypeSelected(category -> {
+                selectedServiceCategory = category;
+                txtServiceType.setText(category.getCategoryName());
+                loadServicesByCategory(category.getServiceCategoryId());
+                cbService.getSelectionModel().clearSelection();
+            });
+
+            Stage stage = new Stage();
+            stage.setTitle("Chọn Loại Dịch Vụ Grooming");
+            stage.setScene(scene);
+            stage.initModality(Modality.WINDOW_MODAL);
+            stage.initOwner(btnSelectServiceType.getScene().getWindow());
+            stage.show();
+
+        } catch (Exception e) {
+            showError("Không thể mở dialog chọn loại dịch vụ: " + e.getMessage());
+        }
+    }
+
+    private void loadServicesByCategory(String serviceCategoryId) {
+        try {
+            cbService.setItems(FXCollections.observableArrayList(
+                    groomingBUS.getGroomingServicesByCategory(serviceCategoryId, currentUser)
+            ));
+        } catch (Exception e) {
+            showError("Không thể tải dịch vụ grooming: " + e.getMessage());
+        }
     }
 
     private void closeWindow() {

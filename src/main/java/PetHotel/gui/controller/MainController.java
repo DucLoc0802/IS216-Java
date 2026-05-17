@@ -1,13 +1,12 @@
 package PetHotel.gui.controller;
 
-import java.io.IOException;
-
 import PetHotel.bus.AuthBUS;
 import PetHotel.model.AppUser;
 import PetHotel.util.Role;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
 import javafx.scene.layout.StackPane;
 
 public class MainController {
@@ -57,17 +56,28 @@ public class MainController {
     // Hàm "Thay ruột" huyền thoại
     public void loadView(String fxmlFileName) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/PetHotel/gui/view/" + fxmlFileName));
+            System.out.println("Đang tải view: " + fxmlFileName);
+
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/PetHotel/gui/view/" + fxmlFileName)
+            );
+
             Node view = loader.load();
-            
-            // Xóa nội dung cũ
+
             contentArea.getChildren().clear();
-            // Đắp nội dung mới vào
             contentArea.getChildren().add(view);
-            
-        } catch (IOException e) {
+
+            System.out.println("Tải view thành công: " + fxmlFileName);
+
+        } catch (Exception e) {
             System.err.println("Lỗi không tải được file: " + fxmlFileName);
             e.printStackTrace();
+
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Lỗi tải giao diện");
+            alert.setHeaderText("Không thể mở " + fxmlFileName);
+            alert.setContentText(e.getMessage());
+            alert.showAndWait();
         }
     }
     

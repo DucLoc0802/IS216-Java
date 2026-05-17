@@ -82,6 +82,13 @@
                 </HBox>
             </VBox>
 
+            <VBox fx:id="menuAssignedTasks" onMouseClicked="#onMenu" styleClass="menu-item" userData="assigned-tasks">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="✅" />
+                    <Label styleClass="menu-label" text="Công Việc Được Phân Công" />
+                </HBox>
+            </VBox>
+
             <VBox fx:id="menuRoom" onMouseClicked="#onMenu" styleClass="menu-item" userData="room">
                 <HBox alignment="CENTER_LEFT" spacing="12">
                     <Label styleClass="menu-icon" text="🏠" />
