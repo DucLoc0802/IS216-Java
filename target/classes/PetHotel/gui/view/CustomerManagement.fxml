@@ -21,12 +21,12 @@
         <Region styleClass="section-header-line" />
         <Label styleClass="section-header" text="Quản Lý Khách Hàng" />
         <Region HBox.hgrow="ALWAYS" />
-        <Button onAction="#onAddCustomer" styleClass="action-btn action-btn-primary" text="+ Thêm Khách Hàng" />
+        <Button onAction="#onAddCustomer" styleClass="action-btn action-btn-primary" text="Thêm Khách Hàng" />
     </HBox>
 
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
         <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
-            <Label styleClass="search-icon" text="🔍" />
+            <Label styleClass="search-icon" text="" />
             <TextField fx:id="searchField" onAction="#onSearch" promptText="Tìm theo tên, SĐT, email..." styleClass="search-input" HBox.hgrow="ALWAYS" />
         </HBox>
         <Button onAction="#onSearch" style="-fx-padding: 7 16 7 16;" styleClass="action-btn action-btn-primary" text="Tìm" />
@@ -34,10 +34,10 @@
     </HBox>
 
     <HBox alignment="CENTER_LEFT" spacing="10" styleClass="action-toolbar">
-        <Button fx:id="btnEdit" disable="true" onAction="#onEdit" styleClass="action-btn action-btn-outline" text="✏ Sửa" />
-        <Button fx:id="btnDelete" disable="true" onAction="#onDelete" styleClass="action-btn action-btn-danger" text="🗑 Xóa" />
-        <Button fx:id="btnPets" disable="true" onAction="#onViewPets" styleClass="action-btn action-btn-outline" text="🐾 Thú Cưng" />
-        <Button fx:id="btnHistory" disable="true" onAction="#onViewHistory" styleClass="action-btn action-btn-outline" text="📋 Lịch Sử DV" />
+        <Button fx:id="btnEdit" disable="true" onAction="#onEdit" styleClass="action-btn action-btn-outline" text="Sửa" />
+        <Button fx:id="btnDelete" disable="true" onAction="#onDelete" styleClass="action-btn action-btn-danger" text="Xóa" />
+        <Button fx:id="btnPets" disable="true" onAction="#onViewPets" styleClass="action-btn action-btn-outline" text="Thú Cưng" />
+        <Button fx:id="btnHistory" disable="true" onAction="#onViewHistory" styleClass="action-btn action-btn-outline" text="Lịch Sử DV" />
     </HBox>
 
     <VBox spacing="12" styleClass="content-panel" VBox.vgrow="ALWAYS">

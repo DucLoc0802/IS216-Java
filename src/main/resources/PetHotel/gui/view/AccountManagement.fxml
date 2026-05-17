@@ -46,13 +46,13 @@
             </VBox>
         </HBox>
         <Region HBox.hgrow="ALWAYS" />
-        <Label styleClass="status-badge status-admin" text="🔐 ADMIN ONLY" />
+        <Label styleClass="status-badge status-admin" text="ADMIN ONLY" />
     </HBox>
 
     <HBox spacing="14">
         <VBox styleClass="stat-card stat-card-blue" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label styleClass="stat-icon" text="👥" />
+                <Label styleClass="stat-icon" text="" />
                 <VBox spacing="2">
                     <Label styleClass="stat-label" text="Tổng Tài Khoản" />
                     <Label fx:id="statTotalAccounts" styleClass="stat-value" text="—" />
@@ -63,7 +63,7 @@
 
         <VBox styleClass="stat-card stat-card-green" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label styleClass="stat-icon" text="✅" />
+                <Label styleClass="stat-icon" text="" />
                 <VBox spacing="2">
                     <Label styleClass="stat-label" text="Đang Hoạt Động" />
                     <Label fx:id="statActiveAccounts" styleClass="stat-value" text="—" />
@@ -74,7 +74,7 @@
 
         <VBox styleClass="stat-card stat-card-red" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label styleClass="stat-icon" text="🔒" />
+                <Label styleClass="stat-icon" text="" />
                 <VBox spacing="2">
                     <Label styleClass="stat-label" text="Đã Khóa" />
                     <Label fx:id="statLockedAccounts" styleClass="stat-value" text="—" />
@@ -85,7 +85,7 @@
 
         <VBox styleClass="stat-card stat-card-purple" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label styleClass="stat-icon" text="🛡️" />
+                <Label styleClass="stat-icon" text="" />
                 <VBox spacing="2">
                     <Label styleClass="stat-label" text="Tài Khoản Admin" />
                     <Label fx:id="statAdminAccounts" styleClass="stat-value" text="—" />
@@ -105,12 +105,12 @@
                     <Label styleClass="panel-title" text="Danh Sách Tài Khoản" />
                 </HBox>
                 <Region HBox.hgrow="ALWAYS" />
-                <Button onAction="#onCreateAccount" styleClass="action-btn action-btn-primary" text="+ Tạo Tài Khoản" />
+                <Button onAction="#onCreateAccount" styleClass="action-btn action-btn-primary" text="Tạo Tài Khoản" />
             </HBox>
 
             <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
                 <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
-                    <Label styleClass="search-icon" text="🔍" />
+                    <Label styleClass="search-icon" text="" />
                     <TextField fx:id="searchAccount" onAction="#onSearch" promptText="Tìm theo tên, username, email..." styleClass="search-input" HBox.hgrow="ALWAYS" />
                 </HBox>
 
@@ -153,10 +153,10 @@
             </HBox>
 
             <HBox alignment="CENTER_LEFT" spacing="10" styleClass="action-toolbar">
-                <Button fx:id="btnLock" disable="true" onAction="#onLockSelected" styleClass="action-btn action-btn-danger" text="🔒 Khóa" />
-                <Button fx:id="btnUnlock" disable="true" onAction="#onUnlockSelected" styleClass="action-btn action-btn-success" text="🔓 Mở Khóa" />
-                <Button fx:id="btnResetPwd" disable="true" onAction="#onResetPassword" styleClass="action-btn action-btn-amber" text="🔑 Đặt Lại MK" />
-                <Button fx:id="btnPermission" disable="true" onAction="#onManagePermission" styleClass="action-btn action-btn-outline" text="🛡 Phân Quyền" />
+                <Button fx:id="btnLock" disable="true" onAction="#onLockSelected" styleClass="action-btn action-btn-danger" text="Khóa" />
+                <Button fx:id="btnUnlock" disable="true" onAction="#onUnlockSelected" styleClass="action-btn action-btn-success" text="Mở Khóa" />
+                <Button fx:id="btnResetPwd" disable="true" onAction="#onResetPassword" styleClass="action-btn action-btn-amber" text="Đặt Lại MK" />
+                <Button fx:id="btnPermission" disable="true" onAction="#onManagePermission" styleClass="action-btn action-btn-outline" text="Phân Quyền" />
                 <Region HBox.hgrow="ALWAYS" />
                 <Label fx:id="selectionInfo" style="-fx-text-fill: -ph-text-muted; -fx-font-size: 11px;" text="" />
             </HBox>
@@ -176,7 +176,7 @@
                 </columns>
                 <placeholder>
                     <VBox alignment="CENTER" spacing="8">
-                        <Label style="-fx-font-size: 28px;" text="🔍" />
+                        <Label style="-fx-font-size: 28px;" text="" />
                         <Label styleClass="table-empty" text="Không tìm thấy tài khoản nào" />
                     </VBox>
                 </placeholder>
@@ -244,14 +244,14 @@
                     <Separator style="-fx-background-color: -ph-border;" />
                     <Label styleClass="form-label" text="Thao Tác Nhanh" />
                     <HBox alignment="CENTER_LEFT" spacing="8">
-                        <Button fx:id="btnDetailEdit" disable="true" onAction="#onEditAccount" styleClass="action-btn action-btn-outline" text="✏ Sửa" />
-                        <Button fx:id="btnDetailLock" disable="true" onAction="#onLockSingle" styleClass="action-btn action-btn-danger" text="🔒 Khóa" />
-                        <Button fx:id="btnDetailReset" disable="true" onAction="#onResetSinglePwd" styleClass="action-btn action-btn-amber" text="🔑 Đặt MK" />
+                        <Button fx:id="btnDetailEdit" disable="true" onAction="#onEditAccount" styleClass="action-btn action-btn-outline" text="Sửa" />
+                        <Button fx:id="btnDetailLock" disable="true" onAction="#onLockSingle" styleClass="action-btn action-btn-danger" text="Khóa" />
+                        <Button fx:id="btnDetailReset" disable="true" onAction="#onResetSinglePwd" styleClass="action-btn action-btn-amber" text="Đặt MK" />
                     </HBox>
                 </VBox>
 
                 <VBox fx:id="noSelectionHint" alignment="CENTER" spacing="8" style="-fx-padding: 20 0 10 0;">
-                    <Label style="-fx-font-size: 26px;" text="👆" />
+                    <Label style="-fx-font-size: 26px;" text="" />
                     <Label maxWidth="200" style="-fx-font-size: 12px; -fx-text-fill: -ph-text-muted; -fx-text-alignment: center;" text="Chọn một tài khoản để xem chi tiết" textAlignment="CENTER" wrapText="true" />
                 </VBox>
             </VBox>
@@ -328,7 +328,7 @@
                     </items>
                 </ComboBox>
                 <Button onAction="#onFilterLog" style="-fx-padding: 6 14 6 14;" styleClass="action-btn action-btn-outline" text="Lọc" />
-                <Button onAction="#onExportLog" style="-fx-padding: 6 14 6 14;" styleClass="action-btn action-btn-outline" text="⬇ Xuất Log" />
+                <Button onAction="#onExportLog" style="-fx-padding: 6 14 6 14;" styleClass="action-btn action-btn-outline" text="Xuất Log" />
             </HBox>
         </HBox>
 

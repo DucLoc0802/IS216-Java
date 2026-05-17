@@ -7,9 +7,8 @@ package PetHotel.util;
  *   0 = CUSTOMER        - Khách hàng (tài khoản app mobile, không dùng trong hệ thống này)
  *   1 = RECEPTIONIST    - Nhân viên lễ tân
  *   2 = PET_CARE_STAFF  - Nhân viên chăm sóc thú cưng
- *   3 = WAREHOUSE_STAFF - Nhân viên quản lý kho
- *   4 = BRANCH_MANAGER  - Quản lý chi nhánh
- *   5 = CEO             - Giám đốc / Owner
+ *   3 = BRANCH_MANAGER  - Quản lý chi nhánh
+ *   4 = CEO             - Giám đốc / Owner
  *
  * NOTE: role_emp trong DB kiểu NVARCHAR2(20) nhưng CHECK chỉ chấp nhận '0'..'5'
  *       → Khi lưu/đọc dùng String value "0", "1", ... không phải tên enum.
@@ -20,12 +19,11 @@ package PetHotel.util;
  */
 public enum Role {
 
-    CUSTOMER("0"),
+    ADMIN("0"),
     RECEPTIONIST("1"),
     PET_CARE_STAFF("2"),
-    WAREHOUSE_STAFF("3"),
-    BRANCH_MANAGER("4"),
-    CEO("5");
+    BRANCH_MANAGER("3"),
+    CEO("4");
 
     /** Giá trị lưu trong cột role_emp của bảng app_user */
     private final String dbValue;
@@ -37,6 +35,27 @@ public enum Role {
     /** @return Giá trị DB ("0".."5") */
     public String getDbValue() {
         return dbValue;
+    }
+
+    /**
+     * @return Tên hiển thị bằng tiếng Việt cho role
+     */
+    public String getDisplayName() {
+        switch (this) {
+            case ADMIN:             return "Quản Trị Viên";
+            case RECEPTIONIST:      return "Lễ Tân";
+            case PET_CARE_STAFF:    return "Nhân Viên Chăm Sóc";
+            case BRANCH_MANAGER:    return "Quản Lý Chi Nhánh";
+            case CEO:               return "Giám Đốc";
+            default:                return "Unknown";
+        }
+    }
+
+    /**
+     * @return true nếu role này là cấp quản lý (BRANCH_MANAGER hoặc CEO)
+     */
+    public boolean isManagement() {
+        return this == BRANCH_MANAGER || this == CEO;
     }
 
     /**

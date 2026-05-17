@@ -33,7 +33,7 @@
             </VBox>
         </HBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="+ Thêm Thú Cưng" styleClass="action-btn action-btn-primary"
+        <Button text="Thêm Thú Cưng" styleClass="action-btn action-btn-primary"
                 onAction="#onAddPet"/>
     </HBox>
 
@@ -43,7 +43,7 @@
     <HBox spacing="14">
         <VBox styleClass="stat-card stat-card-brown" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="🐾" styleClass="stat-icon"/>
+                <Label text="" styleClass="stat-icon"/>
                 <VBox spacing="2">
                     <Label text="Tổng Thú Cưng" styleClass="stat-label"/>
                     <Label fx:id="statTotalPets" text="—" styleClass="stat-value"/>
@@ -53,7 +53,7 @@
         </VBox>
         <VBox styleClass="stat-card stat-card-green" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="✅" styleClass="stat-icon"/>
+                <Label text="" styleClass="stat-icon"/>
                 <VBox spacing="2">
                     <Label text="Đang Ở Khách Sạn" styleClass="stat-label"/>
                     <Label fx:id="statPetsStaying" text="—" styleClass="stat-value"/>
@@ -63,7 +63,7 @@
         </VBox>
         <VBox styleClass="stat-card stat-card-amber" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="✂️" styleClass="stat-icon"/>
+                <Label text="" styleClass="stat-icon"/>
                 <VBox spacing="2">
                     <Label text="Grooming Hôm Nay" styleClass="stat-label"/>
                     <Label fx:id="statPetsGrooming" text="—" styleClass="stat-value"/>
@@ -73,7 +73,7 @@
         </VBox>
         <VBox styleClass="stat-card stat-card-red" HBox.hgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="🩺" styleClass="stat-icon"/>
+                <Label text="" styleClass="stat-icon"/>
                 <VBox spacing="2">
                     <Label text="Cần Theo Dõi Sức Khoẻ" styleClass="stat-label"/>
                     <Label fx:id="statPetsMonitoring" text="—" styleClass="stat-value"/>
@@ -89,7 +89,7 @@
     <HBox styleClass="filter-bar" alignment="CENTER_LEFT" spacing="12">
         <!-- Search -->
         <HBox styleClass="search-box" alignment="CENTER_LEFT" spacing="8" HBox.hgrow="ALWAYS">
-            <Label text="🔍" styleClass="search-icon"/>
+            <Label text="" styleClass="search-icon"/>
             <TextField fx:id="searchField"
                        promptText="Tìm theo tên thú cưng, giống, chủ sở hữu..."
                        styleClass="search-input"
@@ -145,13 +145,13 @@
 
             <!-- Toolbar -->
             <HBox styleClass="action-toolbar" alignment="CENTER_LEFT">
-                <Button fx:id="btnEdit"    text="✏ Sửa Thông Tin"    styleClass="action-btn action-btn-outline"
+                <Button fx:id="btnEdit"    text="Sửa Thông Tin"    styleClass="action-btn action-btn-outline"
                         onAction="#onEditPet"        disable="true"/>
-                <Button fx:id="btnDelete"  text="🗑 Xóa"              styleClass="action-btn action-btn-danger"
+                <Button fx:id="btnDelete"  text="Xóa"              styleClass="action-btn action-btn-danger"
                         onAction="#onDeletePet"      disable="true"/>
-                <Button fx:id="btnHealth"  text="🩺 Sức Khoẻ"        styleClass="action-btn action-btn-amber"
+                <Button fx:id="btnHealth"  text="Sức Khoẻ"        styleClass="action-btn action-btn-amber"
                         onAction="#onHealthRecord"   disable="true"/>
-                <Button fx:id="btnHistory" text="📋 Lịch Sử DV"      styleClass="action-btn action-btn-outline"
+                <Button fx:id="btnHistory" text="Lịch Sử DV"      styleClass="action-btn action-btn-outline"
                         onAction="#onServiceHistory" disable="true"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Label fx:id="selectionInfo" text=""
@@ -174,7 +174,7 @@
                 </columns>
                 <placeholder>
                     <VBox alignment="CENTER" spacing="8">
-                        <Label text="🐾" style="-fx-font-size:28px;"/>
+                        <Label text="" style="-fx-font-size:28px;"/>
                         <Label text="Không tìm thấy thú cưng nào" styleClass="table-empty"/>
                     </VBox>
                 </placeholder>
@@ -200,7 +200,7 @@
 
                 <!-- Pet avatar + info -->
                 <VBox alignment="CENTER" spacing="8" style="-fx-padding: 8 0 8 0;">
-                    <Label fx:id="detailPetIcon" text="🐶" styleClass="pet-avatar"/>
+                    <Label fx:id="detailPetIcon" text="" styleClass="pet-avatar"/>
                     <Label fx:id="detailPetName" text="—" styleClass="detail-name"/>
                     <HBox alignment="CENTER" spacing="6">
                         <Label fx:id="detailPetSpecies" text="—" styleClass="detail-sub"/>
@@ -246,18 +246,18 @@
                     <Separator styleClass="detail-divider"/>
                     <Label text="Thao Tác Nhanh" styleClass="form-label"/>
                     <HBox spacing="8">
-                        <Button fx:id="btnDetailEdit"    text="✏ Sửa"      styleClass="action-btn action-btn-outline"
+                        <Button fx:id="btnDetailEdit"    text="Sửa"      styleClass="action-btn action-btn-outline"
                                 onAction="#onEditPet"        disable="true"/>
-                        <Button fx:id="btnDetailHealth"  text="🩺 Sức Khoẻ" styleClass="action-btn action-btn-amber"
+                        <Button fx:id="btnDetailHealth"  text="Sức Khoẻ" styleClass="action-btn action-btn-amber"
                                 onAction="#onHealthRecord"   disable="true"/>
-                        <Button fx:id="btnDetailHistory" text="📋 Lịch Sử"  styleClass="action-btn action-btn-outline"
+                        <Button fx:id="btnDetailHistory" text="Lịch Sử"  styleClass="action-btn action-btn-outline"
                                 onAction="#onServiceHistory" disable="true"/>
                     </HBox>
                 </VBox>
 
                 <!-- No selection hint -->
                 <VBox fx:id="noSelectionHint" styleClass="no-selection-hint" spacing="8">
-                    <Label text="🐾" style="-fx-font-size:26px;"/>
+                    <Label text="" style="-fx-font-size:26px;"/>
                     <Label text="Chọn một thú cưng để xem hồ sơ"
                            style="-fx-font-size:12px; -fx-text-fill: -ph-text-muted; -fx-text-alignment:center;"
                            wrapText="true" maxWidth="200" textAlignment="CENTER"/>

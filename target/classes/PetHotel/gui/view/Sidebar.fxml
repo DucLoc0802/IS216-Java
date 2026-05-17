@@ -23,7 +23,7 @@
     </VBox>
 
     <!-- User Profile -->
-    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="sidebar-profile">
+    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="sidebar-profile" onMouseClicked="#onViewProfile">
         <Label fx:id="avatarLabel" styleClass="avatar-circle" text="A" />
         <VBox spacing="2">
             <Label fx:id="usernameLabel" styleClass="profile-name" text="Nguyễn Văn A" />
@@ -46,7 +46,7 @@
             </VBox>
 
             <!-- ── Nghiệp vụ ─────────────────────────────── -->
-            <VBox styleClass="menu-group">
+            <VBox fx:id="groupBusiness" styleClass="menu-group">
                 <Label styleClass="menu-group-title" text="QUẢN LÝ NGHIỆP VỤ" />
             </VBox>
 
@@ -82,6 +82,20 @@
                 </HBox>
             </VBox>
 
+            <VBox fx:id="menuService" onMouseClicked="#onMenu" styleClass="menu-item" userData="service">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="💼" />
+                    <Label styleClass="menu-label" text="Dịch Vụ" />
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="menuAssignedTasks" onMouseClicked="#onMenu" styleClass="menu-item" userData="assigned-tasks">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="✅" />
+                    <Label styleClass="menu-label" text="Công Việc Được Phân Công" />
+                </HBox>
+            </VBox>
+
             <VBox fx:id="menuRoom" onMouseClicked="#onMenu" styleClass="menu-item" userData="room">
                 <HBox alignment="CENTER_LEFT" spacing="12">
                     <Label styleClass="menu-icon" text="🏠" />
@@ -97,7 +111,7 @@
             </VBox>
 
             <!-- ── Kho & Sản phẩm ───────────────────────── -->
-            <VBox styleClass="menu-group">
+            <VBox fx:id="groupInventory" styleClass="menu-group">
                 <Label styleClass="menu-group-title" text="KHO &amp; SẢN PHẨM" />
             </VBox>
 
@@ -125,7 +139,7 @@
             </VBox>
 
             <!-- ── Quản trị ──────────────────────────────── -->
-            <VBox styleClass="menu-group">
+            <VBox fx:id="groupAdmin" styleClass="menu-group">
                 <Label styleClass="menu-group-title" text="QUẢN TRỊ HỆ THỐNG" />
             </VBox>
 

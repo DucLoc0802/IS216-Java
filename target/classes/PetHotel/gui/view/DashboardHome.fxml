@@ -27,7 +27,7 @@
             <!-- Booking -->
             <VBox styleClass="stat-card stat-card-brown" HBox.hgrow="ALWAYS">
                 <HBox alignment="CENTER_LEFT" spacing="12">
-                    <Label styleClass="stat-icon" text="📅" />
+                    <Label styleClass="stat-icon" text="" />
                     <VBox spacing="2">
                         <Label styleClass="stat-label" text="Tổng Booking" />
                         <Label fx:id="statBookingTotal" styleClass="stat-value" text="—" />
@@ -44,7 +44,7 @@
             <!-- Rooms -->
             <VBox styleClass="stat-card stat-card-green" HBox.hgrow="ALWAYS">
                 <HBox alignment="CENTER_LEFT" spacing="12">
-                    <Label styleClass="stat-icon" text="🏠" />
+                    <Label styleClass="stat-icon" text="" />
                     <VBox spacing="2">
                         <Label styleClass="stat-label" text="Phòng Đang Dùng" />
                         <Label fx:id="statRoomOccupied" styleClass="stat-value" text="—" />
@@ -61,7 +61,7 @@
             <!-- Revenue -->
             <VBox styleClass="stat-card stat-card-amber" HBox.hgrow="ALWAYS">
                 <HBox alignment="CENTER_LEFT" spacing="12">
-                    <Label styleClass="stat-icon" text="💰" />
+                    <Label styleClass="stat-icon" text="" />
                     <VBox spacing="2">
                         <Label styleClass="stat-label" text="Doanh Thu Hôm Nay" />
                         <Label fx:id="statRevenue" styleClass="stat-value" text="—" />
@@ -78,7 +78,7 @@
             <!-- Low stock -->
             <VBox styleClass="stat-card stat-card-red" HBox.hgrow="ALWAYS">
                 <HBox alignment="CENTER_LEFT" spacing="12">
-                    <Label styleClass="stat-icon" text="⚠️" />
+                    <Label styleClass="stat-icon" text="" />
                     <VBox spacing="2">
                         <Label styleClass="stat-label" text="Cảnh Báo Tồn Kho" />
                         <Label fx:id="statLowStock" styleClass="stat-value" text="—" />
@@ -95,7 +95,7 @@
             <!-- Grooming -->
             <VBox styleClass="stat-card stat-card-purple" HBox.hgrow="ALWAYS">
                 <HBox alignment="CENTER_LEFT" spacing="12">
-                    <Label styleClass="stat-icon" text="✂️" />
+                    <Label styleClass="stat-icon" text="" />
                     <VBox spacing="2">
                         <Label styleClass="stat-label" text="Grooming Chờ" />
                         <Label fx:id="statGroomingPending" styleClass="stat-value" text="—" />
@@ -118,12 +118,12 @@
             <Label styleClass="section-header" text="Quick Actions" />
         </HBox>
         <HBox alignment="CENTER_LEFT" spacing="10" styleClass="action-toolbar">
-            <Button onAction="#onQuickCreateBooking" styleClass="action-btn action-btn-primary" text="+ Tạo Booking" />
-            <Button onAction="#onQuickCheckin" styleClass="action-btn action-btn-success" text="✔ Check-in" />
-            <Button onAction="#onQuickCheckout" styleClass="action-btn action-btn-outline" text="↩ Check-out" />
-            <Button onAction="#onQuickCreateInvoice" styleClass="action-btn action-btn-amber" text="+ Hóa Đơn" />
-            <Button onAction="#onQuickAddCustomer" styleClass="action-btn action-btn-outline" text="+ Khách Hàng" />
-            <Button onAction="#onQuickCheckRoom" styleClass="action-btn action-btn-outline" text="🏠 Kiểm Phòng" />
+            <Button onAction="#onQuickCreateBooking" styleClass="action-btn action-btn-primary" text="Tạo Booking" />
+            <Button onAction="#onQuickCheckin" styleClass="action-btn action-btn-success" text="Check-in" />
+            <Button onAction="#onQuickCheckout" styleClass="action-btn action-btn-outline" text="Check-out" />
+            <Button onAction="#onQuickCreateInvoice" styleClass="action-btn action-btn-amber" text="Hóa Đơn" />
+            <Button onAction="#onQuickAddCustomer" styleClass="action-btn action-btn-outline" text="Khách Hàng" />
+            <Button onAction="#onQuickCheckRoom" styleClass="action-btn action-btn-outline" text="Kiểm Phòng" />
         </HBox>
     </VBox>
 
@@ -202,7 +202,7 @@
     <!-- ── LOW STOCK ALERT ─────────────────────────────────── -->
     <VBox spacing="10" styleClass="content-panel alert-panel">
         <HBox alignment="CENTER_LEFT">
-            <Label styleClass="panel-title panel-title-alert" text="⚠️  Cảnh Báo Tồn Kho Thấp" />
+            <Label styleClass="panel-title panel-title-alert" text="Cảnh Báo Tồn Kho Thấp" />
             <Region HBox.hgrow="ALWAYS" />
             <Button onAction="#onViewInventory" styleClass="panel-link-btn" text="Đi đến kho →" />
         </HBox>

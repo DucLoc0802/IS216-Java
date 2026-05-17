@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  AddServiceDialog.fxml — Dialog thêm dịch vụ mới
+  Controller: PetHotel.gui.controller.AddServiceController
+  
+  Dành cho vai trò: Quản lý chi nhánh (BRANCH_MANAGER)
+-->
+
+<VBox spacing="16" styleClass="dialog-content" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="PetHotel.gui.controller.AddServiceController">
+
+    <!-- Tiêu đề dialog -->
+    <Label styleClass="dialog-title" text="Thêm Dịch Vụ Mới" />
+
+    <!-- Form nhập liệu -->
+    <VBox spacing="12">
+
+        <!-- Tên dịch vụ -->
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Tên Dịch Vụ *" />
+            <TextField fx:id="txtServiceName" maxWidth="Infinity" promptText="VD: Tắm chó, Cắt lông mèo..." styleClass="form-input" />
+            <Label fx:id="lblServiceNameError" styleClass="error-message" text="" />
+        </VBox>
+
+        <!-- Loại dịch vụ (Category) -->
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Loại Dịch Vụ *" />
+            <ComboBox fx:id="cmbCategory" maxWidth="Infinity" styleClass="form-input" />
+            <Label fx:id="lblCategoryError" styleClass="error-message" text="" />
+        </VBox>
+
+        <!-- Loài (Species) -->
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Loài Thú Cưng" />
+            <TextField fx:id="txtSpecies" maxWidth="Infinity" promptText="VD: Chó, Mèo, Chim..." styleClass="form-input" />
+            <Label fx:id="lblSpeciesError" styleClass="error-message" text="" />
+        </VBox>
+
+        <!-- Giá dịch vụ -->
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Giá Cơ Bản (VNĐ) *" />
+            <TextField fx:id="txtPrice" maxWidth="Infinity" promptText="VD: 150000" styleClass="form-input" />
+            <Label fx:id="lblPriceError" styleClass="error-message" text="" />
+        </VBox>
+
+        <!-- Thời gian dịch vụ -->
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Thời Gian (Phút) *" />
+            <TextField fx:id="txtDuration" maxWidth="Infinity" promptText="VD: 60" styleClass="form-input" />
+            <Label fx:id="lblDurationError" styleClass="error-message" text="" />
+        </VBox>
+
+    </VBox>
+
+    <!-- Nút thao tác -->
+    <HBox alignment="CENTER_RIGHT" spacing="12">
+        <Region HBox.hgrow="ALWAYS" />
+        <Button onAction="#handleCancel" styleClass="action-btn action-btn-outline" text="Hủy" />
+        <Button onAction="#handleSave" styleClass="action-btn action-btn-primary" text="Thêm Dịch Vụ" />
+    </HBox>
+
+    <Label styleClass="info-text" text="Thông tin được đánh dấu (*) là bắt buộc." />
+
+</VBox>

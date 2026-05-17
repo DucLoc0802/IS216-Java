@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane minWidth="760" minHeight="680"
+            prefWidth="820" prefHeight="740"
+            styleClass="ph-modal-root"
+            stylesheets="@../css/style.css"
+            xmlns="http://javafx.com/javafx/25"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="PetHotel.gui.controller.PetFormController">
+
+    <top>
+        <VBox styleClass="ph-profile-header">
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Region styleClass="section-header-line"/>
+                <Label fx:id="avatarLabel" text="PET" styleClass="ph-profile-avatar"/>
+                <VBox spacing="4">
+                    <Label fx:id="titleLabel" text="Thêm / Liên Kết Thú Cưng" styleClass="ph-profile-title"/>
+                    <Label fx:id="subtitleLabel" text="Tạo hồ sơ thú cưng và liên kết chủ sở hữu" styleClass="ph-profile-subtitle"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <ScrollPane fx:id="formScrollPane" fitToWidth="true" fitToHeight="false" hbarPolicy="NEVER" styleClass="ph-form-scroll">
+            <VBox spacing="14" minWidth="700" prefWidth="740" maxWidth="Infinity" styleClass="ph-content-card">
+                <Label fx:id="sectionTitleLabel" text="Tạo thú cưng mới" styleClass="ph-card-title"/>
+
+                <GridPane hgap="12" vgap="10" maxWidth="Infinity">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="150" prefWidth="160"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="420" prefWidth="520"/>
+                    </columnConstraints>
+
+                    <Label text="Mã thú cưng" styleClass="ph-form-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtPetId" editable="false" focusTraversable="false" GridPane.rowIndex="0" GridPane.columnIndex="1">
+                        <styleClass>
+                            <String fx:value="ph-form-input"/>
+                            <String fx:value="ph-form-readonly"/>
+                        </styleClass>
+                    </TextField>
+
+                    <Label text="Tên thú cưng *" styleClass="ph-form-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtPetName" promptText="Ví dụ: Miu, Milo..." styleClass="ph-form-input" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                    <Label text="Loài *" styleClass="ph-form-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <ComboBox fx:id="cbSpecies" styleClass="ph-form-input" GridPane.rowIndex="2" GridPane.columnIndex="1">
+                        <items>
+                            <FXCollections fx:factory="observableArrayList">
+                                <String fx:value="DOG"/>
+                                <String fx:value="CAT"/>
+                                <String fx:value="BIRD"/>
+                                <String fx:value="RABBIT"/>
+                                <String fx:value="HAMSTER"/>
+                                <String fx:value="OTHER"/>
+                            </FXCollections>
+                        </items>
+                    </ComboBox>
+
+                    <Label text="Giống" styleClass="ph-form-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtBreed" promptText="Poodle, Anh lông ngắn..." styleClass="ph-form-input" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                    <Label text="Ngày sinh" styleClass="ph-form-label" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtDob" editable="false" focusTraversable="false" text="Chưa có cột trong DB" GridPane.rowIndex="4" GridPane.columnIndex="1">
+                        <styleClass>
+                            <String fx:value="ph-form-input"/>
+                            <String fx:value="ph-form-readonly"/>
+                        </styleClass>
+                    </TextField>
+
+                    <Label text="Cân nặng" styleClass="ph-form-label" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtWeight" promptText="Ví dụ: 4.5" styleClass="ph-form-input" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+                    <Label text="Màu lông" styleClass="ph-form-label" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtColor" editable="false" focusTraversable="false" text="Chưa có cột trong DB" GridPane.rowIndex="6" GridPane.columnIndex="1">
+                        <styleClass>
+                            <String fx:value="ph-form-input"/>
+                            <String fx:value="ph-form-readonly"/>
+                        </styleClass>
+                    </TextField>
+
+                    <Label text="Giới tính" styleClass="ph-form-label" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+                    <ComboBox fx:id="cbSex" styleClass="ph-form-input" GridPane.rowIndex="7" GridPane.columnIndex="1">
+                        <items>
+                            <FXCollections fx:factory="observableArrayList">
+                                <String fx:value=""/>
+                                <String fx:value="Male"/>
+                                <String fx:value="Female"/>
+                            </FXCollections>
+                        </items>
+                    </ComboBox>
+
+                    <Label text="Chủ sở hữu *" styleClass="ph-form-label" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
+                    <ComboBox fx:id="cbOwner" styleClass="ph-form-input" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+                    <TextField fx:id="txtOwnerDisplay" editable="false" focusTraversable="false" managed="false" visible="false" GridPane.rowIndex="8" GridPane.columnIndex="1">
+                        <styleClass>
+                            <String fx:value="ph-form-input"/>
+                            <String fx:value="ph-form-readonly"/>
+                        </styleClass>
+                    </TextField>
+
+                    <Label text="SĐT chủ" styleClass="ph-form-label" GridPane.rowIndex="9" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtOwnerPhone" editable="false" focusTraversable="false" GridPane.rowIndex="9" GridPane.columnIndex="1">
+                        <styleClass>
+                            <String fx:value="ph-form-input"/>
+                            <String fx:value="ph-form-readonly"/>
+                        </styleClass>
+                    </TextField>
+
+                    <Label text="Ghi chú đặc biệt" styleClass="ph-form-label" GridPane.rowIndex="10" GridPane.columnIndex="0"/>
+                    <TextArea fx:id="txtNote" prefRowCount="3" wrapText="true" styleClass="ph-form-input" GridPane.rowIndex="10" GridPane.columnIndex="1"/>
+
+                    <Label text="Sức khỏe ban đầu" styleClass="ph-form-label" GridPane.rowIndex="11" GridPane.columnIndex="0"/>
+                    <TextArea fx:id="txtInitialHealth" prefRowCount="2" wrapText="true" promptText="Ví dụ: khỏe mạnh, dị ứng thức ăn..." styleClass="ph-form-input" GridPane.rowIndex="11" GridPane.columnIndex="1"/>
+                </GridPane>
+
+                <Label fx:id="errorLabel" text="" wrapText="true" styleClass="ph-form-error"/>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="10" styleClass="ph-form-footer">
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Hủy" onAction="#onCancel" styleClass="action-btn action-btn-outline"/>
+            <Button fx:id="btnSave" text="Lưu thú cưng" onAction="#onSave" styleClass="action-btn action-btn-primary"/>
+        </HBox>
+    </bottom>
+</BorderPane>

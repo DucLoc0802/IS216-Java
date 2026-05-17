@@ -1,0 +1,40 @@
+===== NGUYỄN VĂN MINH =====
+Nhóm chức năng: Customer + Pet
+
+| Mã UC | Use case | Ưu tiên | Role/Giao diện | Truy cập | Mốc cần hoàn thành |
+|---|---|---|---|---|---|
+| UC-CUS-01 | Tra cứu khách hàng | P1 | Lễ tân / Quản lý | Quản lý khách hàng → Tra cứu | 09/05/2026 |
+| UC-CUS-02 | Thêm khách hàng | P1 | Lễ tân | Quản lý khách hàng → Thêm khách hàng | 09/05/2026 |
+| UC-PET-01 | Tra cứu thú cưng | P1 | Lễ tân / Chăm sóc / Quản lý | Quản lý thú cưng → Tra cứu | 09/05/2026 |
+| UC-PET-02 | Thêm thú cưng | P1 | Lễ tân | Quản lý thú cưng → Thêm thú cưng | 09/05/2026 |
+| UC-CUS-03 | Xem chi tiết khách hàng | P1 | Lễ tân / Quản lý | Quản lý khách hàng → Chọn khách hàng → Xem chi tiết | 16/05/2026 |
+| UC-CUS-07 | Liên kết thú cưng của khách hàng | P1 | Lễ tân | Quản lý khách hàng → Chọn khách hàng → Thêm/Liên kết thú cưng | 16/05/2026 |
+| UC-PET-03 | Xem chi tiết thú cưng | P1 | Lễ tân / Chăm sóc / Quản lý | Quản lý thú cưng → Chọn thú cưng → Xem chi tiết | 16/05/2026 |
+| UC-PET-06 | Liên kết chủ sở hữu | P1 | Lễ tân | Quản lý thú cưng → Chọn thú cưng → Liên kết chủ sở hữu | 16/05/2026 |
+| UC-PET-07 | Ghi nhận tình trạng sức khỏe | P2 | Lễ tân / Chăm sóc | Quản lý thú cưng → Chọn thú cưng → Ghi nhận sức khỏe | 16/05/2026 |
+| UC-CUS-04 | Sửa thông tin khách hàng | P2 | Lễ tân / Quản lý | Quản lý khách hàng → Chọn khách hàng → Sửa thông tin | 23/05/2026 |
+| UC-CUS-05 | Xóa/ngưng hoạt động khách hàng | P2 | Quản lý | Quản lý khách hàng → Chọn khách hàng → Ngưng hoạt động | 23/05/2026 |
+| UC-PET-04 | Sửa thông tin thú cưng | P2 | Lễ tân / Quản lý | Quản lý thú cưng → Chọn thú cưng → Sửa thông tin | 23/05/2026 |
+| UC-PET-05 | Xóa/ngưng hoạt động thú cưng | P2 | Quản lý | Quản lý thú cưng → Chọn thú cưng → Ngưng hoạt động | 23/05/2026 |
+| UC-CUS-06 | Xem lịch sử dịch vụ khách hàng | P3 | Lễ tân / Quản lý | Quản lý khách hàng → Chọn khách hàng → Lịch sử dịch vụ | 23/05/2026 |
+| UC-PET-08 | Xem lịch sử dịch vụ thú cưng | P3 | Lễ tân / Chăm sóc / Quản lý | Quản lý thú cưng → Chọn thú cưng → Lịch sử dịch vụ | 23/05/2026 |
+
+===== PHẠM VI CODE CHO NGUYỄN VĂN MINH =====
+
+| Nhóm | Mã UC | Trạng thái ưu tiên | Ghi chú cho Codex |
+|---|---|---|---|
+| Customer | UC-CUS-01 | Bắt buộc code trước | Tra cứu khách hàng |
+| Customer | UC-CUS-02 | Bắt buộc code trước | Thêm khách hàng |
+| Pet | UC-PET-01 | Bắt buộc code trước | Tra cứu thú cưng |
+| Pet | UC-PET-02 | Bắt buộc code trước | Thêm thú cưng |
+| Customer | UC-CUS-03 | Bắt buộc code sau | Xem chi tiết khách hàng |
+| Customer | UC-CUS-07 | Bắt buộc code sau | Liên kết thú cưng của khách hàng |
+| Pet | UC-PET-03 | Bắt buộc code sau | Xem chi tiết thú cưng |
+| Pet | UC-PET-06 | Bắt buộc code sau | Liên kết chủ sở hữu |
+| Pet | UC-PET-07 | Làm nếu đủ thời gian hoặc đã có cấu trúc sẵn | Ghi nhận tình trạng sức khỏe |
+| Customer | UC-CUS-04 | Không code trong lần đầu | Sửa thông tin khách hàng |
+| Customer | UC-CUS-05 | Không code trong lần đầu | Xóa/ngưng hoạt động khách hàng |
+| Customer | UC-CUS-06 | Không code trong lần đầu | Xem lịch sử dịch vụ khách hàng |
+| Pet | UC-PET-04 | Không code trong lần đầu | Sửa thông tin thú cưng |
+| Pet | UC-PET-05 | Không code trong lần đầu | Xóa/ngưng hoạt động thú cưng |
+| Pet | UC-PET-08 | Không code trong lần đầu | Xem lịch sử dịch vụ thú cưng |
