@@ -24,7 +24,7 @@
             <Region styleClass="section-header-line"/>
             <VBox spacing="2">
                 <Label text="Quản Lý Thú Cưng" styleClass="section-header"/>
-                <Label text="Danh sách thú cưng toàn hệ thống" styleClass="ph-page-subtitle"/>
+                <Label text="Danh sách thú cưng tại chi nhánh" styleClass="ph-page-subtitle"/>
             </VBox>
         </HBox>
         <Region HBox.hgrow="ALWAYS"/>
@@ -32,46 +32,33 @@
                 onAction="#onAddPet"/>
     </HBox>
 
-    <HBox spacing="14">
-        <VBox styleClass="stat-card stat-card-brown" HBox.hgrow="ALWAYS">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="" styleClass="stat-icon"/>
-                <VBox spacing="2">
-                    <Label text="Tổng Thú Cưng" styleClass="stat-label"/>
-                    <Label fx:id="statTotalPets" text="-" styleClass="stat-value"/>
-                </VBox>
-            </HBox>
-            <Label text="Đang đăng ký trong hệ thống" styleClass="stat-sublabel"/>
+    <HBox fillHeight="true" spacing="14" styleClass="summary-card-row">
+        <VBox alignment="CENTER_LEFT" maxWidth="Infinity" minHeight="118" prefHeight="118" spacing="8"
+              styleClass="summary-card summary-card-brown" HBox.hgrow="ALWAYS">
+            <Label text="Tổng thú cưng" styleClass="summary-title"/>
+            <Label fx:id="statTotalPets" text="-" styleClass="summary-value"/>
+            <Label text="Thuộc chi nhánh hiện tại" styleClass="summary-subtitle"/>
         </VBox>
-        <VBox styleClass="stat-card stat-card-green" HBox.hgrow="ALWAYS">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="" styleClass="stat-icon"/>
-                <VBox spacing="2">
-                    <Label text="Đang Ở Khách Sạn" styleClass="stat-label"/>
-                    <Label fx:id="statPetsStaying" text="-" styleClass="stat-value"/>
-                </VBox>
-            </HBox>
-            <Label text="Check-in hiện tại" styleClass="stat-sublabel"/>
+
+        <VBox alignment="CENTER_LEFT" maxWidth="Infinity" minHeight="118" prefHeight="118" spacing="8"
+              styleClass="summary-card summary-card-green" HBox.hgrow="ALWAYS">
+            <Label text="Đang ở khách sạn" styleClass="summary-title"/>
+            <Label fx:id="statPetsStaying" text="-" styleClass="summary-value"/>
+            <Label text="Booking đã check-in" styleClass="summary-subtitle"/>
         </VBox>
-        <VBox styleClass="stat-card stat-card-amber" HBox.hgrow="ALWAYS">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="" styleClass="stat-icon"/>
-                <VBox spacing="2">
-                    <Label text="Grooming Hôm Nay" styleClass="stat-label"/>
-                    <Label fx:id="statPetsGrooming" text="-" styleClass="stat-value"/>
-                </VBox>
-            </HBox>
-            <Label text="Lịch grooming trong ngày" styleClass="stat-sublabel"/>
+
+        <VBox alignment="CENTER_LEFT" maxWidth="Infinity" minHeight="118" prefHeight="118" spacing="8"
+              styleClass="summary-card summary-card-amber" HBox.hgrow="ALWAYS">
+            <Label text="Grooming hôm nay" styleClass="summary-title"/>
+            <Label fx:id="statPetsGrooming" text="-" styleClass="summary-value"/>
+            <Label text="Lịch grooming trong ngày" styleClass="summary-subtitle"/>
         </VBox>
-        <VBox styleClass="stat-card stat-card-red" HBox.hgrow="ALWAYS">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="" styleClass="stat-icon"/>
-                <VBox spacing="2">
-                    <Label text="Cần Theo Dõi Sức Khỏe" styleClass="stat-label"/>
-                    <Label fx:id="statPetsMonitoring" text="-" styleClass="stat-value"/>
-                </VBox>
-            </HBox>
-            <Label text="Thú cưng cần chú ý" styleClass="stat-sublabel"/>
+
+        <VBox alignment="CENTER_LEFT" maxWidth="Infinity" minHeight="118" prefHeight="118" spacing="8"
+              styleClass="summary-card summary-card-red" HBox.hgrow="ALWAYS">
+            <Label text="Cần theo dõi sức khỏe" styleClass="summary-title"/>
+            <Label fx:id="statPetsMonitoring" text="-" styleClass="summary-value"/>
+            <Label text="Ghi nhận mới nhất cần chú ý" styleClass="summary-subtitle"/>
         </VBox>
     </HBox>
 
@@ -112,8 +99,12 @@
     </HBox>
 
     <VBox styleClass="content-panel" spacing="12" VBox.vgrow="ALWAYS">
-        <TableView fx:id="petTable" styleClass="data-table ph-pet-table" VBox.vgrow="ALWAYS"
-                   onMouseClicked="#onTableClick">
+        <TableView fx:id="petTable" VBox.vgrow="ALWAYS" onMouseClicked="#onTableClick">
+            <styleClass>
+                <String fx:value="data-table"/>
+                <String fx:value="management-table"/>
+                <String fx:value="ph-pet-table"/>
+            </styleClass>
             <columns>
                 <TableColumn fx:id="colPetId" text="Mã thú cưng" prefWidth="130"/>
                 <TableColumn fx:id="colPetName" text="Tên thú cưng" prefWidth="180"/>

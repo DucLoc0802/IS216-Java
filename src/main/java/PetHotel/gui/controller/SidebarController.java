@@ -95,6 +95,8 @@ private void applyRolePermissions(Role role) {
             break;
 
         case PET_CARE_STAFF:
+            showMenu(menuPet);
+            showMenu(menuGrooming);
             // 2. NHÂN VIÊN CHĂM SÓC
             // Chỉ tương tác với Thú cưng và Grooming (cập nhật trạng thái, sức khoẻ)
             hideMenu(menuDashboard);
@@ -196,6 +198,13 @@ private void applyRolePermissions(Role role) {
     }
 
     // Nhận quyền điều khiển từ MainController
+    private void showMenu(Node node) {
+        if (node != null) {
+            node.setVisible(true);
+            node.setManaged(true);
+        }
+    }
+
     public void setMainController(MainController mainController) {
         this.mainController = mainController;
     }
@@ -280,7 +289,10 @@ private void applyRolePermissions(Role role) {
                         }
                         break;
                     case "pet":
-                        // Pet khong con la menu chinh.
+                        if (mainController != null) {
+                            mainController.showPetManagement(null);
+                            return;
+                        }
                         mainController.getTopbarController().setTitle("Thú Cưng", "Quản lý hồ sơ thú cưng");
                         break;
                     case "inventory":

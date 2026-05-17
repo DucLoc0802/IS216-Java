@@ -660,6 +660,341 @@
 - `src/main/resources/PetHotel/gui/css/style.css`: them `ph-health-text-field`, can row height Customer table.
 - `docs/flow-work/NguyenVanMinh-Customer-Pet-flow-work.md`: cap nhat flow-work dot nay.
 
+## Cap nhat fix triet de HealthForm va table Customer 17/05/2026
+
+- Da thay form `Ghi Nhan Suc Khoe` duoc dung programmatic trong `PetController`/`CustomerController` bang FXML/controller rieng:
+  - FXML moi: `src/main/resources/PetHotel/gui/view/HealthRecordForm.fxml`.
+  - Controller moi: `src/main/java/PetHotel/gui/controller/HealthRecordFormController.java`.
+- Nguyen nhan form health bi trang lan dau:
+  - Form cu duoc lap truc tiep bang Java node trong controller va set scene/show ngay trong event handler.
+  - Root form khong co FXML rieng/min-pref size rieng, nen render pass dau co the chua layout day du; sau khi dong/mo lai hoac resize thi JavaFX layout lai nen moi hien.
+  - Form cu cung de logic UI/save/reload nam chung trong controller, kho bat loi initialize/render.
+- Da sua thu tu mo form dung yeu cau:
+  - `FXMLLoader` load `/PetHotel/gui/view/HealthRecordForm.fxml`.
+  - Lay `HealthRecordFormController`.
+  - Goi `controller.setPet(pet)`.
+  - Goi `controller.setOnSaved(...)`.
+  - Tao `Scene(root, 760, 660)`.
+  - Set scene vao stage.
+  - Goi `root.applyCss()`, `root.layout()`, `root.snapshot(null, null)`.
+  - Goi `stage.sizeToScene()`, `stage.centerOnScreen()`.
+  - Sau do moi `showAndWait()`.
+- Da them log bat buoc:
+  - `[HealthForm] open start`.
+  - `[HealthForm] initialized`.
+  - `[HealthForm] fxml loaded`.
+  - `[HealthForm] pet set: PETxxx`.
+  - `[HealthForm] scene set`.
+  - `[HealthForm] shown`.
+  - Catch loi co `e.printStackTrace()` va alert loi ro rang.
+- Da fix input khong nhap duoc:
+  - `HealthRecordForm.fxml` dung TextField that cho `Trieu chung bat thuong`, `Ghi chu suc khoe`, `Ma booking *`.
+  - Cac field nay `editable=true`, `disable=false`, `mouseTransparent=false`, `focusTraversable=true`.
+  - Khong co ScrollPane/Pane/Rectangle overlay len input.
+  - Focus mac dinh dat vao `Ghi chu suc khoe`, khong focus vao ma pet read-only.
+  - Khong co listener textProperty/query DB/reload form khi user dang go.
+- Logic luu health record:
+  - `HealthRecordFormController.onSave()` chi validate khi bam `Luu ghi nhan`.
+  - Neu booking rong bao: `Bang PET_HEALTH_RECORD hien yeu cau ma booking. Vui long nhap ma booking hop le.`
+  - Goi `PetBUS.addHealthRecord(...)`.
+  - `PetBUS` tao ID moi va `PetHealthRecordDAO.insert(...)` thuc hien INSERT moi.
+  - Khong update/xoa/ghi de record cu.
+  - Pet Detail van lay latest health record de hien thi suc khoe gan nhat.
+- Da chuyen bang Customer/Pet sang style chung:
+  - Them CSS class `management-table`.
+  - `PetManagement.fxml` va `CustomerManagement.fxml` cung dung `data-table management-table ph-pet-table`.
+  - Customer table van them `ph-customer-table` de tinh chinh rieng.
+  - Header ro hon, row compact, grid line nhe, cell/header can trai dong nhat.
+  - Row height set 36 trong controller va CSS.
+  - Cot Customer giu dung 6 cot: `Ma KH`, `Ho Ten`, `SDT`, `Email`, `Thu Cung`, `Ngay Tham Gia`.
+  - Da bo cot `Thao Tac`; double-click row van mo `Ho So Khach Hang`.
+- Da kiem tra CSS radius:
+  - Khong con `-fx-border-radius`/`-fx-background-radius` dang so tran hoac token sai.
+- Build kiem tra: `mvn clean compile` thanh cong. Maven co warning deprecated API cua JavaFX resize policy va warning dependency model OpenJFX, khong chan build.
+
+## File sua/tao trong dot 17/05/2026
+
+- Tao moi: `src/main/resources/PetHotel/gui/view/HealthRecordForm.fxml`.
+- Tao moi: `src/main/java/PetHotel/gui/controller/HealthRecordFormController.java`.
+- Sua: `src/main/java/PetHotel/gui/controller/PetController.java`.
+- Sua: `src/main/java/PetHotel/gui/controller/CustomerController.java`.
+- Sua: `src/main/resources/PetHotel/gui/view/PetManagement.fxml`.
+- Sua: `src/main/resources/PetHotel/gui/view/CustomerManagement.fxml`.
+- Sua: `src/main/resources/PetHotel/gui/css/style.css`.
+- Sua: `docs/flow-work/NguyenVanMinh-Customer-Pet-flow-work.md`.
+
+## Cap nhat menu Thu Cung cho Nhan Vien Cham Soc 17/05/2026
+
+- Da xac nhan role `Nhan Vien Cham Soc` dang map bang `Role.PET_CARE_STAFF`, gia tri DB `role_emp = 2`.
+- Da sua sidebar cho role cham soc:
+  - `SidebarController.applyRolePermissions(...)` goi `showMenu(menuPet)` va `showMenu(menuGrooming)` cho role `PET_CARE_STAFF`.
+  - Cac menu khac nhu Customer, Booking, Room, Invoice, Kho, Admin van bi an voi role nay.
+  - `menuPet` van nam trong nhom `QUAN LY NGHIEP VU`, dung node co san trong `Sidebar.fxml`.
+- Da sua action menu `pet`:
+  - Khi bam `Thu Cung`, `SidebarController.onMenu(...)` goi `MainController.showPetManagement(null)`.
+  - `MainController.showPetManagement(...)` load `src/main/resources/PetHotel/gui/view/PetManagement.fxml`.
+  - Controller duoc dung lai la `PetController`.
+  - Topbar duoc set ve `Thu Cung` / `Danh sach thu cung toan he thong`.
+  - Sidebar active dung menu `Thu Cung`.
+- Da cap nhat luong vao man hinh dau cho role cham soc:
+  - `MainController.initialize()` neu user hien tai la `PET_CARE_STAFF` thi mo thang man hinh `PetManagement.fxml`, khong de mac dinh Dashboard bi an.
+- Da gioi han thao tac tren man hinh Thu Cung cho role cham soc:
+  - `PetController.applyRolePermissions()` an/disable nut `Them Thu Cung` khi session la `Role.PET_CARE_STAFF`.
+  - Nhan vien cham soc van xem danh sach pet, tim/loc pet, double-click de mo chi tiet pet.
+  - Nut/flow `Ghi Nhan Suc Khoe` trong chi tiet pet van duoc giu.
+  - Man hinh PetManagement chi hien cac cot: `Ma thu cung`, `Ten thu cung`, `Loai / Giong`, `Chu so huu`, `Suc khoe`.
+  - Khong co cot `Trang thai`, khong co cot `Thao tac`, khong hien nut `Them Thu Cung` cho role cham soc.
+- Form `Ghi Nhan Suc Khoe` tiep tuc dung `HealthRecordForm.fxml`/`HealthRecordFormController`, da fix tu dot truoc:
+  - Mo lan dau khong bi trang.
+  - Nhap duoc Trieu chung, Ghi chu, Ma booking.
+  - Luu bang INSERT health record moi, khong ghi de record cu.
+  - Sau khi luu reload Pet Detail va danh sach pet.
+- Build kiem tra: `mvn clean compile` thanh cong. Maven chi co warning OpenJFX/deprecated API, khong co loi compile.
+
+## File sua trong dot menu Thu Cung role cham soc 17/05/2026
+
+- `src/main/java/PetHotel/gui/controller/SidebarController.java`: hien `menuPet` cho role `PET_CARE_STAFF`, menu `pet` load `PetManagement`.
+- `src/main/java/PetHotel/gui/controller/MainController.java`: role cham soc vao thang man hinh Pet, cap nhat topbar Pet.
+- `src/main/java/PetHotel/gui/controller/PetController.java`: an/disable `Them Thu Cung` cho role cham soc.
+- `docs/flow-work/NguyenVanMinh-Customer-Pet-flow-work.md`: cap nhat flow-work dot nay.
+
+## Cap nhat sua quyen xem Pet cho Nhan Vien Cham Soc 17/05/2026
+
+- Loi hien tai:
+  - Khi role `Nhan Vien Cham Soc` bam menu `Thu Cung`, man hinh bao `Khong tai duoc danh sach thu cung`.
+  - Nguyen nhan nam trong `src/main/java/PetHotel/bus/PetBUS.java`:
+    - `getAllPets()` dang goi `authBUS.requireRole(Role.RECEPTIONIST)`.
+    - `searchPet()` dang goi `authBUS.requireRole(Role.RECEPTIONIST)`.
+    - `getPetDetail()` dang goi `authBUS.requireRole(Role.RECEPTIONIST)`.
+    - `getHealthRecords()` va `getLatestHealthRecord()` cung yeu cau `RECEPTIONIST`.
+- Da sua permission check:
+  - Them helper `requirePetViewPermission()` trong `PetBUS`.
+  - Helper cho phep user co role:
+    - `Role.RECEPTIONIST`.
+    - `Role.PET_CARE_STAFF`.
+    - Cac role quan ly/admin van pass theo logic `AppUser.hasRole(...)` hien co.
+  - Ap dung helper cho:
+    - `getAllPets()`.
+    - `searchPet(...)`.
+    - `getPetDetail(...)`.
+    - `getHealthRecords(...)`.
+    - `getLatestHealthRecord(...)`.
+- Khong mo rong quyen quan ly Pet:
+  - `createPet(...)` van yeu cau `RECEPTIONIST`.
+  - `updatePet(...)` van yeu cau `RECEPTIONIST`.
+  - `linkOwner(...)` van yeu cau `RECEPTIONIST`.
+  - `deletePet(...)` van yeu cau `BRANCH_MANAGER`.
+  - `getPetServiceHistory(...)` van giu theo quyen `RECEPTIONIST`.
+- Khong mo quyen Customer management cho role cham soc:
+  - `PetController.loadPetsAsync(...)` khong goi `CustomerBUS.getAllCustomers()` nua vi ham nay dung quyen Customer/Receptionist.
+  - Man hinh Pet chi lay ten chu so huu bang `CustomerDAO.findAll()` de render cot `Chu so huu`.
+  - Sidebar van an menu `Khach Hang` voi role `PET_CARE_STAFF`.
+- Role mapping da kiem tra:
+  - `Role.PET_CARE_STAFF` map DB `role_emp = 2`.
+  - `Role.RECEPTIONIST` map DB `role_emp = 1`.
+  - `Role.BRANCH_MANAGER` map DB `role_emp = 3`.
+- Role `Nhan Vien Cham Soc` hien duoc:
+  - Xem danh sach thu cung.
+  - Tim kiem thu cung.
+  - Double-click mo chi tiet thu cung.
+  - Xem suc khoe gan nhat.
+  - Ghi nhan suc khoe thu cung bang INSERT health record moi.
+- Role `Nhan Vien Cham Soc` khong duoc:
+  - Them thu cung.
+  - Sua thong tin pet.
+  - Xoa pet.
+  - Doi chu so huu.
+  - Quan ly khach hang.
+- Da them guard trong `PetController.onAddPet(...)`:
+  - Neu action them pet bi goi voi role `PET_CARE_STAFF` thi hien thong bao gioi han quyen.
+  - Khong roi xuong loi `Yeu cau quyen: RECEPTIONIST`.
+- Kiem tra:
+  - Static check role Le tan: van pass `requirePetViewPermission()` qua `Role.RECEPTIONIST`, cac flow them pet tu Customer Detail khong bi doi quyen.
+  - Static check role Nhan vien cham soc: pass `requirePetViewPermission()` qua `Role.PET_CARE_STAFF`, `btnAddPet` da bi an/disable.
+  - Static check role Quan ly: van pass theo `AppUser.hasRole(...)`, khong mat quyen xem Pet.
+  - Build: `mvn clean compile` thanh cong. Chi co warning OpenJFX/deprecated API, khong co loi compile.
+
+## File sua trong dot sua quyen Pet role cham soc 17/05/2026
+
+- `src/main/java/PetHotel/bus/PetBUS.java`: tach quyen view Pet/health-read khoi quyen Receptionist, cho `PET_CARE_STAFF` xem danh sach/detail/search/latest health.
+- `src/main/java/PetHotel/gui/controller/PetController.java`: lay owner name bang `CustomerDAO.findAll()` trong man hinh Pet, tranh goi `CustomerBUS.getAllCustomers()` voi role cham soc.
+- `docs/flow-work/NguyenVanMinh-Customer-Pet-flow-work.md`: cap nhat flow-work dot nay.
+
+## Cap nhat phan quyen Ghi Nhan Suc Khoe 17/05/2026
+
+- Yeu cau nghiep vu moi:
+  - Chi `Nhan Vien Cham Soc` duoc thao tac va luu `Ghi Nhan Suc Khoe`.
+  - `Le Tan` va `Quan Ly Chi Nhanh` chi duoc xem ho so thu cung va suc khoe gan nhat.
+- Role mapping da kiem tra:
+  - `role_emp = 2` -> `Role.PET_CARE_STAFF`.
+  - `role_emp = 1` -> `Role.RECEPTIONIST`.
+  - `role_emp = 3` -> `Role.BRANCH_MANAGER`.
+- Da sua BUS:
+  - `PetBUS.addHealthRecord(...)` khong dung `authBUS.requireRole(Role.PET_CARE_STAFF)` nua vi `AppUser.hasRole(...)` cho manager pass quyen nhan vien.
+  - Them `requirePetHealthRecordPermission()` check exact `user.getRole() == Role.PET_CARE_STAFF`.
+  - Neu khong dung role thi throw: `Chi nhan vien cham soc duoc ghi nhan suc khoe thu cung.`
+  - Logic luu health record van la INSERT moi qua `PetHealthRecordDAO.insert(...)`, khong update/xoa record cu.
+- Da sua UI Pet Detail:
+  - `PetController.openPetDetail(...)` chi hien nut `Ghi nhan suc khoe` khi `SessionManager.hasRole(Role.PET_CARE_STAFF)`.
+  - Voi Le tan/Quan ly, nut health bi hidden/managed false/disable.
+  - `PetController.openHealthForm(...)` co guard, neu bi goi truc tiep bang role khong hop le thi thong bao `Chi nhan vien cham soc duoc ghi nhan suc khoe thu cung.`
+- Da sua UI Pet Detail trong Customer flow:
+  - `CustomerController.openPetDetailDialog(...)` cung an/disable nut `Ghi nhan suc khoe` voi role khong phai `PET_CARE_STAFF`.
+  - `CustomerController.openCustomerPetHealthForm(...)` co guard tuong tu, tranh mo form health nham role.
+- Da sua form Health:
+  - `HealthRecordForm.fxml` them `fx:id="btnSave"` cho nut `Luu ghi nhan`.
+  - `HealthRecordFormController` them check role exact qua `SessionManager.hasRole(Role.PET_CARE_STAFF)`.
+  - Neu khong phai nhan vien cham soc:
+    - Disable `ComboBox Tinh trang`.
+    - Disable cac input `Trieu chung`, `Ghi chu`, `Ma booking`.
+    - Disable nut `Luu ghi nhan`.
+    - Neu co goi save truc tiep thi bao loi ro.
+  - Neu la nhan vien cham soc:
+    - `ComboBox Tinh trang` enabled.
+    - `Trieu chung`, `Ghi chu`, `Ma booking` editable/enabled.
+    - `Luu ghi nhan` enabled.
+    - Read-only chi gom `Ma thu cung`, `Ten thu cung`, `Ngay ghi nhan`, `Nguoi ghi nhan`.
+- Nguoi ghi nhan:
+  - Form Health tiep tuc lay tu `SessionManager.getInstance().getUserId()`, tuc employee_id dang dang nhap, vi du `EMP_CS01`.
+- Kiem tra:
+  - Static check role Nhan vien cham soc: thay nut health, mo form edit, save di qua `PetBUS.addHealthRecord(...)`.
+  - Static check role Le tan/Quan ly: chi xem detail, khong thay nut health; neu goi save truc tiep van bi BUS/controller chan.
+  - Build: `mvn clean compile` thanh cong. Chi co warning OpenJFX/deprecated API, khong co loi compile.
+
+## File sua trong dot phan quyen Health 17/05/2026
+
+- `src/main/java/PetHotel/bus/PetBUS.java`: them check exact role cho `addHealthRecord(...)`.
+- `src/main/java/PetHotel/gui/controller/PetController.java`: an/guard nut `Ghi nhan suc khoe` trong Pet Detail.
+- `src/main/java/PetHotel/gui/controller/CustomerController.java`: an/guard nut `Ghi nhan suc khoe` trong Pet Detail mo tu Customer.
+- `src/main/java/PetHotel/gui/controller/HealthRecordFormController.java`: disable form/save voi role khong hop le, guard save.
+- `src/main/resources/PetHotel/gui/view/HealthRecordForm.fxml`: them `fx:id="btnSave"`.
+- `docs/flow-work/NguyenVanMinh-Customer-Pet-flow-work.md`: cap nhat flow-work dot nay.
+
+## Cap nhat fix input HealthForm cho Nhan Vien Cham Soc 17/05/2026
+
+- Van de:
+  - Role `Nhan Vien Cham Soc` mo duoc form `Ghi Nhan Suc Khoe` nhung khong nhap duoc `Trieu chung`, `Ghi chu`, `Ma booking`.
+- Nguyen nhan trong code:
+  - Cac field nhap khong bi CSS/overlay chan.
+  - Rui ro nam o `HealthRecordFormController.applyRolePermissions()`:
+    - Mode edit/view-only duoc ap dung ngay trong `initialize()`.
+    - Neu role context chua duoc doc dung tai thoi diem initialize, controller co the set `disable=true` cho 3 input va nut save.
+    - Chua co log field-state nen kho xac dinh field bi disable/editable/mouseTransparent o buoc nao.
+- Da sua FXML:
+  - `HealthRecordForm.fxml` them `fx:id` cho parent:
+    - `rootPane`.
+    - `formContainer`.
+    - `formGrid`.
+  - Ep parent input khong chan event:
+    - `disable="false"`.
+    - `mouseTransparent="false"`.
+  - Ep field can nhap:
+    - `txtSymptom`: `editable="true"`, `disable="false"`, `mouseTransparent="false"`, `focusTraversable="true"`.
+    - `txtNote`: `editable="true"`, `disable="false"`, `mouseTransparent="false"`, `focusTraversable="true"`.
+    - `txtBookingId`: `editable="true"`, `disable="false"`, `mouseTransparent="false"`, `focusTraversable="true"`.
+  - `cbStatus` cung duoc set `disable="false"`, `mouseTransparent="false"`, `focusTraversable="true"`.
+- Da sua controller:
+  - `HealthRecordFormController.setPet(...)` goi lai `applyRolePermissions()` sau khi pet/context da duoc truyen vao.
+  - `canRecordHealth()` check exact role hien tai:
+    - `SessionManager.getInstance().getCurrentUser().getRole() == Role.PET_CARE_STAFF`.
+  - Voi role `PET_CARE_STAFF`, `configureEditableInput(...)` ep:
+    - `setEditable(true)`.
+    - `setDisable(false)`.
+    - `setMouseTransparent(false)`.
+    - `setFocusTraversable(true)`.
+  - Parent form luon duoc ep interactive bang `keepFormParentsInteractive()`:
+    - root/content/grid khong bi disable.
+    - root/content/grid khong mouseTransparent.
+  - Focus mac dinh van dat vao `txtNote` bang `Platform.runLater(...)`, khong focus vao ma pet read-only.
+- Da them debug log bat buoc:
+  - `[HealthForm] initialize role = ...`
+  - `[HealthForm] setPet role = ...`
+  - `[HealthForm] symptom disable=..., editable=..., mouseTransparent=...`
+  - `[HealthForm] note disable=..., editable=..., mouseTransparent=...`
+  - `[HealthForm] booking disable=..., editable=..., mouseTransparent=...`
+  - `[HealthForm] save disable=...`
+  - Khi role la `PET_CARE_STAFF`, expected log:
+    - `disable=false`
+    - `editable=true`
+    - `mouseTransparent=false`
+    - `save disable=false`
+- Da kiem tra logic typing:
+  - Khong co listener `textProperty()` tren `txtSymptom`, `txtNote`, `txtBookingId`.
+  - Khong query DB khi dang go.
+  - Khong reload form khi dang go.
+  - Save chi chay trong `onSave()`.
+- CSS:
+  - `ph-health-text-field` chi set height.
+  - `ph-form-input` chi set mau/border/padding.
+  - Cac field edit khong dung class `ph-form-readonly`.
+- Build: `mvn clean compile` thanh cong. Chi co warning OpenJFX/deprecated API, khong co loi compile.
+
+## File sua trong dot fix input HealthForm 17/05/2026
+
+- `src/main/java/PetHotel/gui/controller/HealthRecordFormController.java`: ep field edit cho role cham soc, them parent interactive guard, log field-state.
+- `src/main/resources/PetHotel/gui/view/HealthRecordForm.fxml`: them fx:id parent, set disable/mouseTransparent/focusTraversable ro cho input.
+- `docs/flow-work/NguyenVanMinh-Customer-Pet-flow-work.md`: cap nhat flow-work dot nay.
+
+## Cap nhat chi sua 2 o nhap HealthForm 17/05/2026
+
+- Pham vi sua lan nay chi gom 2 o:
+  - `Trieu chung bat thuong`.
+  - `Ghi chu suc khoe`.
+- Da doi trong `HealthRecordForm.fxml`:
+  - `txtSymptom` tu `TextField` sang `TextArea`.
+  - `txtNote` tu `TextField` sang `TextArea`.
+  - Hai field deu set:
+    - `editable="true"`.
+    - `disable="false"`.
+    - `mouseTransparent="false"`.
+    - `focusTraversable="true"`.
+    - `wrapText="true"`.
+  - Hai field dung style `ph-form-input` + `ph-health-text-area`, khong dung `ph-form-readonly`.
+- Da sua trong `HealthRecordFormController.java`:
+  - `txtSymptom` va `txtNote` doi kieu sang `TextArea`.
+  - Helper edit/log doi sang `TextInputControl` de hai o TextArea va booking TextField cung duoc ep editable dung cach.
+  - Khong them listener `textProperty`, khong reload/query khi dang go.
+- Build kiem tra: `mvn clean compile` thanh cong. Chi co warning OpenJFX/deprecated API, khong co loi compile.
+
+## Cap nhat rollback 2 o HealthForm ve TextField thuan 17/05/2026
+
+- Tiep tuc loi: sau khi doi sang `TextArea`, 2 o `Trieu chung bat thuong` va `Ghi chu suc khoe` van khong nhap duoc tren may test.
+- Chi sua dung 2 o nay:
+  - `txtSymptom`: doi lai tu `TextArea` ve `TextField` thuan.
+  - `txtNote`: doi lai tu `TextArea` ve `TextField` thuan.
+- Ly do:
+  - Loai bo hoan toan skin/scroll-pane noi bo cua JavaFX `TextArea` va CSS `.ph-health-text-area`.
+  - Hai o hien dung class `ph-form-input` + `ph-health-text-field`, giong `txtBookingId` dang nhap duoc.
+- Trang thai 2 field sau sua:
+  - `editable="true"`.
+  - `disable="false"`.
+  - `mouseTransparent="false"`.
+  - `focusTraversable="true"`.
+- Controller:
+  - `HealthRecordFormController` doi `txtSymptom` va `txtNote` ve `TextField`.
+  - Van dung helper `TextInputControl`, khong them listener/reload/query khi go.
+- Build kiem tra: `mvn clean compile` thanh cong. Chi co warning OpenJFX/deprecated API, khong co loi compile.
+
+## Cap nhat cursor/input cho 2 o HealthForm 17/05/2026
+
+- Van de tiep theo: hover vao `Trieu chung bat thuong` va `Ghi chu suc khoe` van hien cursor mac dinh, khong hien dau nhay nhap lieu.
+- Chi sua 2 field nay:
+  - `txtSymptom`.
+  - `txtNote`.
+- Da sua FXML:
+  - Them `cursor="TEXT"`.
+  - Them `pickOnBounds="true"`.
+  - Them style class rieng `ph-health-edit-field`.
+- Da sua CSS:
+  - Them `.ph-health-edit-field { -fx-cursor: text; -fx-opacity: 1; }`.
+- Da sua controller:
+  - `ensureEditable(...)` va `configureEditableInput(...)` ep `setCursor(Cursor.TEXT)` va `setPickOnBounds(true)`.
+  - Them `setupTextEntryField(...)` cho rieng `txtSymptom`/`txtNote`.
+  - Khi mouse entered/pressed/clicked vao 2 o nay, controller ep cursor TEXT va `requestFocus()`.
+  - Khong consume mouse/key event.
+  - Log field-state in them `cursor=...`.
+- Build kiem tra: `mvn clean compile` thanh cong. Chi co warning OpenJFX/deprecated API, khong co loi compile.
+
 ## Goi y commit message
 
 `feat(customer-pet): implement auto-generated CUS and PET ids`
@@ -672,3 +1007,19 @@
 - `src/main/java/PetHotel/dao/PetDAO.java`
 - `src/main/java/PetHotel/bus/CustomerBUS.java`
 - `src/main/java/PetHotel/bus/PetBUS.java`
+
+## Cap nhat HealthRecord input/DB connection 17/05/2026
+
+- Nguyen nhan input runtime: `HealthRecordFormController` co nhieu lop cau hinh quyen chong nhau; view-only dang dung `setDisable(!editable)` nen field co the mat hit-test/cursor. Da thay bang `editMode` ro rang va view-only chi dung `editable=false`, khong disable field/parent.
+- Da them hit-test log trong `HealthRecordFormController`:
+  - `[HealthHitTest] moved target = ...`
+  - `[HealthHitTest] clicked target = ...`
+  - `[HealthHitTest] entered txtSymptom`
+  - `[HealthHitTest] entered txtNote`
+- `HealthRecordForm.fxml`: `txtSymptom` va `txtNote` co `disable=false`, `focusTraversable=true`, `pickOnBounds=true`, va style `ph-form-input` + `ph-health-text-field` + `ph-health-edit-field`.
+- `PetController` va `CustomerController`: mo form theo dung thu tu load FXML -> setPet -> setEditMode -> setOnSaved -> tao Scene/Stage -> show. Nhan vien cham soc edit, le tan/quan ly view-only.
+- `DBConnection.getConnection()` khong con return null; loi ket noi Oracle duoc nem thanh `SQLException` voi thong diep ro URL/user va huong kiem tra service/JDBC/username/password.
+- `PetHealthRecordDAO.insert()` dung try-with-resources, kiem tra connection null/closed va them `bookingExists(...)`.
+- `PetBUS.addHealthRecord(...)` validate `booking_id` ton tai truoc khi insert; neu sai bao `Ma booking khong ton tai.`
+- Build kiem tra: `mvn clean compile` thanh cong. Chi con warning OpenJFX/deprecated API, khong co loi compile.
+- Test connection rieng sau build: Oracle driver load duoc nhung listener tra `ORA-12518`, vi vay chua the test INSERT that tren DB local trong phien nay.

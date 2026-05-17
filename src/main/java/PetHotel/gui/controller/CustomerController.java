@@ -9,7 +9,9 @@ import PetHotel.dao.PetHealthRecordDAO;
 import PetHotel.model.Customer;
 import PetHotel.model.Pet;
 import PetHotel.model.PetHealthRecord;
+import PetHotel.util.Role;
 
+import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -110,7 +112,7 @@ public class CustomerController {
 
     private void setupTableColumns() {
         customerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        customerTable.setFixedCellSize(38);
+        customerTable.setFixedCellSize(36);
         colId.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getCustomerId()));
         colName.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getFullName()));
         colPhone.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getPhone()));
@@ -241,7 +243,7 @@ public class CustomerController {
                 tabContent.getChildren().add(petTabPane);
             }
             titleLabel.setText("Quản Lý Thú Cưng");
-            subtitleLabel.setText("Danh sách thú cưng toàn hệ thống");
+            subtitleLabel.setText("Danh sách thú cưng tại chi nhánh");
             btnAddCustomer.setVisible(false);
             btnAddCustomer.setManaged(false);
             customerTabPane.setVisible(false);
@@ -638,10 +640,13 @@ public class CustomerController {
         HBox.setHgrow(columns.getChildren().get(1), Priority.ALWAYS);
 
         Button edit = secondaryButton("Sửa thông tin");
-        Button health = primaryButton("Ghi nhận sức khỏe");
+        Button health = primaryButton(isPetCareStaff() ? "Ghi nhận sức khỏe" : "Xem ghi nhận");
         Button close = secondaryButton("Đóng");
         edit.setDisable(true);
         edit.setTooltip(new Tooltip("Chưa triển khai form sửa trong đợt này"));
+        if (!isPetCareStaff()) {
+            health.setTooltip(new Tooltip("Mở ghi nhận sức khỏe ở chế độ chỉ xem."));
+        }
         close.setOnAction(e -> stage.close());
         health.setOnAction(e -> {
             stage.close();
@@ -660,56 +665,56 @@ public class CustomerController {
     }
 
     private void openCustomerPetHealthForm(Pet pet, Runnable afterChanged) {
-        Stage stage = modalStage("Ghi Nhận Sức Khỏe");
-        Label error = errorLabel();
-        TextField petId = readOnlyField(pet.getPetId());
-        TextField petName = readOnlyField(pet.getPetName());
-        javafx.scene.control.ComboBox<String> status = new javafx.scene.control.ComboBox<>(FXCollections.observableArrayList("Bình thường", "Cần theo dõi", "Bất thường"));
-        status.getStyleClass().add("ph-form-input");
-        status.setValue("Bình thường");
-        TextField symptom = healthField("Nhập triệu chứng nếu có");
-        TextField note = healthField("Nhập ghi chú sức khỏe");
-        TextField recordedAt = readOnlyField(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-        TextField recorder = readOnlyField(SessionManager.getInstance().getUserId() == null ? "Nhân viên" : SessionManager.getInstance().getUserId());
-        TextField bookingId = formField();
-        bookingId.setPromptText("Nhập mã booking hợp lệ");
-        Label bookingHint = new Label("Bảng PET_HEALTH_RECORD hiện yêu cầu booking_id. Vui lòng nhập mã booking hợp lệ.");
-        bookingHint.getStyleClass().add("ph-card-hint");
-        bookingHint.setWrapText(true);
-        VBox bookingBox = new VBox(4, bookingId, bookingHint);
-
-        GridPane grid = formGrid();
-        addRow(grid, 0, "Mã thú cưng", petId);
-        addRow(grid, 1, "Tên thú cưng", petName);
-        addRow(grid, 2, "Tình trạng tổng quát", status);
-        addRow(grid, 3, "Triệu chứng bất thường", symptom);
-        addRow(grid, 4, "Ghi chú sức khỏe", note);
-        addRow(grid, 5, "Ngày ghi nhận", recordedAt);
-        addRow(grid, 6, "Người ghi nhận", recorder);
-        addRow(grid, 7, "Mã booking *", bookingBox);
-
-        Button save = primaryButton("Lưu ghi nhận");
-        Button cancel = secondaryButton("Hủy");
-        cancel.setOnAction(e -> stage.close());
-        save.setOnAction(e -> {
-            try {
-                validateHealthForm(status.getValue(), symptom.getText(), note.getText(), bookingId.getText());
-                int value = healthStatusValue(status.getValue());
-                String fullNote = buildHealthNote(status.getValue(), symptom.getText(), note.getText(), recorder.getText());
-                petBUS.addHealthRecord(pet.getPetId(), bookingId.getText(), fullNote, value);
+        System.out.println("[HealthForm] open start");
+        String fxmlPath = "/PetHotel/gui/view/HealthRecordForm.fxml";
+        try {
+            URL fxmlUrl = getClass().getResource(fxmlPath);
+            if (fxmlUrl == null) {
+                throw new IllegalStateException("Không tìm thấy HealthRecordForm.fxml trong /PetHotel/gui/view/");
+            }
+            FXMLLoader loader = new FXMLLoader(fxmlUrl);
+            Parent root = loader.load();
+            System.out.println("[HealthForm] fxml loaded");
+            HealthRecordFormController controller = loader.getController();
+            controller.setPet(pet);
+            Role role = SessionManager.getInstance().getCurrentUser() == null
+                    ? null
+                    : SessionManager.getInstance().getCurrentUser().getRole();
+            boolean editMode = role == Role.PET_CARE_STAFF;
+            controller.setEditMode(editMode);
+            controller.setOnSaved(() -> {
                 if (afterChanged != null) afterChanged.run();
-                stage.close();
+            });
+
+            Stage stage = modalStage(editMode ? "Ghi Nhận Sức Khỏe" : "Xem Ghi Nhận Sức Khỏe");
+            prepareHealthFormStage(stage, root);
+            stage.setOnShown(e -> System.out.println("[HealthForm] shown"));
+            stage.showAndWait();
+            if (controller.isSaved()) {
                 Pet refreshed = petDAO.findById(pet.getPetId());
                 openPetDetailDialog(refreshed != null ? refreshed : pet, afterChanged);
-            } catch (Exception ex) {
-                error.setText(ex.getMessage());
             }
-        });
+        } catch (Exception e) {
+            e.printStackTrace();
+            showError("Không mở được form ghi nhận sức khỏe", e);
+        }
+    }
 
-        stage.setScene(new Scene(formShell("Ghi Nhận Sức Khỏe", "Cập nhật tình trạng sức khỏe gần nhất", "HR", grid, error, save, cancel), 620, 720));
-        addStylesheet(stage);
-        Platform.runLater(status::requestFocus);
-        stage.showAndWait();
+    private void prepareHealthFormStage(Stage stage, Parent root) {
+        if (root instanceof Region region) {
+            region.setMinSize(720, 620);
+            region.setPrefSize(760, 660);
+        }
+        Scene scene = new Scene(root, 760, 660);
+        stage.setScene(scene);
+        System.out.println("[HealthForm] scene set");
+        stage.setMinWidth(720);
+        stage.setMinHeight(620);
+        root.applyCss();
+        root.layout();
+        root.snapshot(null, null);
+        stage.sizeToScene();
+        stage.centerOnScreen();
     }
 
     private PetHealthRecord latestHealthRecord(String petId) {
@@ -975,6 +980,14 @@ public class CustomerController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.showAndWait();
+    }
+
+    private boolean isPetCareStaff() {
+        return SessionManager.getInstance().hasRole(Role.PET_CARE_STAFF);
+    }
+
+    private void showCareStaffLimitedMessage() {
+        showInfo("Không đủ quyền", "Chỉ nhân viên chăm sóc được ghi nhận sức khỏe thú cưng.");
     }
 
     private void showError(String title, Exception e) {

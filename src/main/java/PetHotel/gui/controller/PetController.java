@@ -5,10 +5,13 @@ import PetHotel.bus.CustomerBUS;
 import PetHotel.bus.PetBUS;
 import PetHotel.dao.CustomerDAO;
 import PetHotel.dao.PetHealthRecordDAO;
+import PetHotel.model.AppUser;
 import PetHotel.model.Customer;
 import PetHotel.model.Pet;
 import PetHotel.model.PetHealthRecord;
+import PetHotel.util.Role;
 
+import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -82,6 +85,7 @@ public class PetController {
     private boolean dataLoaded;
     private boolean needsPetRefresh = true;
     private boolean loadingPets;
+    private PetBUS.PetBranchStats currentStats = new PetBUS.PetBranchStats(0, 0, 0, 0);
 
     @FXML
     public void initialize() {
@@ -89,6 +93,7 @@ public class PetController {
         petBUS = new PetBUS(authBUS);
         customerBUS = new CustomerBUS(authBUS);
         setupTableColumns();
+        applyRolePermissions();
         petTable.setItems(pets);
         petTable.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             selectedPet = newVal;
@@ -99,12 +104,23 @@ public class PetController {
 
     private void setupTableColumns() {
         petTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        petTable.setFixedCellSize(38);
+        petTable.setFixedCellSize(36);
         colPetId.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getPetId()));
         colPetName.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getPetName()));
         colPetSpecies.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getSpecies() + " / " + valueOrDash(d.getValue().getBreed())));
         colPetOwner.setCellValueFactory(d -> new SimpleStringProperty(ownerNameByCustomerId.getOrDefault(d.getValue().getCustomerId(), "Chưa liên kết")));
         colPetHealth.setCellValueFactory(d -> new SimpleStringProperty(healthTableLabel(d.getValue().getPetId())));
+    }
+
+    private void applyRolePermissions() {
+        if (SessionManager.getInstance().hasRole(Role.PET_CARE_STAFF) && btnAddPet != null) {
+            btnAddPet.setVisible(false);
+            btnAddPet.setManaged(false);
+            btnAddPet.setDisable(true);
+        }
+        if (btnHealth != null) {
+            btnHealth.setText(isPetCareStaff() ? "Ghi nhận sức khỏe" : "Xem ghi nhận");
+        }
     }
 
     private void setActionButtonsEnabled(boolean enabled) {
@@ -113,7 +129,10 @@ public class PetController {
             btnHistory.setDisable(true);
             btnHistory.setTooltip(new Tooltip("Chưa triển khai"));
         }
-        if (btnHealth != null) btnHealth.setDisable(!enabled);
+        if (btnHealth != null) {
+            btnHealth.setDisable(!enabled);
+            btnHealth.setText(isPetCareStaff() ? "Ghi nhận sức khỏe" : "Xem ghi nhận");
+        }
         if (selectionInfo != null) {
             selectionInfo.setText(enabled ? "1 thú cưng được chọn - double-click để xem chi tiết" : "");
         }
@@ -151,27 +170,66 @@ public class PetController {
         }
     }
 
+    private String currentBranchId() {
+        String branchId = SessionManager.getInstance().getBranchId();
+        if (branchId != null && !branchId.isBlank()) {
+            return branchId.trim();
+        }
+
+        AppUser currentUser = SessionManager.getInstance().getCurrentUser();
+        if (currentUser != null
+                && currentUser.getEmployee() != null
+                && currentUser.getEmployee().getBranchId() != null
+                && !currentUser.getEmployee().getBranchId().isBlank()) {
+            return currentUser.getEmployee().getBranchId().trim();
+        }
+
+        return null;
+    }
+
     private void loadPetsAsync(String petIdToSelect, boolean forceDatabase) {
         if (loadingPets) return;
         if (!forceDatabase && dataLoaded && !needsPetRefresh) {
             updateSummary(petIdToSelect);
             return;
         }
+        String branchId = currentBranchId();
+        if (branchId == null || branchId.isBlank()) {
+            ownerNameByCustomerId.clear();
+            latestHealthByPetId.clear();
+            pets.clear();
+            currentStats = new PetBUS.PetBranchStats(0, 0, 0, 0);
+            dataLoaded = true;
+            needsPetRefresh = false;
+            updateSummary(petIdToSelect);
+            pageInfo.setText("Chưa xác định chi nhánh hiện tại");
+            return;
+        }
         long start = System.currentTimeMillis();
-        System.out.println("[PetTab] load data start");
+        System.out.println("[PetTab] load data start branch=" + branchId);
         loadingPets = true;
         pageInfo.setText("Đang tải danh sách thú cưng...");
 
         Task<PetLoadResult> task = new Task<>() {
             @Override
             protected PetLoadResult call() throws Exception {
-                List<Pet> loadedPets = petBUS.getAllPets();
+                List<Pet> loadedPets = petBUS.getPetsByBranch(branchId);
                 Map<String, String> owners = new HashMap<>();
-                for (Customer customer : customerBUS.getAllCustomers()) {
-                    owners.put(customer.getCustomerId(), customer.getFullName());
+                for (Pet pet : loadedPets) {
+                    Customer customer = customerDAO.findById(pet.getCustomerId());
+                    if (customer != null) {
+                        owners.put(customer.getCustomerId(), customer.getFullName());
+                    }
                 }
-                Map<String, PetHealthRecord> latest = petHealthRecordDAO.findLatestByAllPetIds();
-                return new PetLoadResult(loadedPets, owners, latest);
+                Map<String, PetHealthRecord> latest = new HashMap<>();
+                for (Pet pet : loadedPets) {
+                    PetHealthRecord record = petHealthRecordDAO.findLatestByPetId(pet.getPetId());
+                    if (record != null) {
+                        latest.put(pet.getPetId(), record);
+                    }
+                }
+                PetBUS.PetBranchStats stats = petBUS.getPetBranchStats(branchId);
+                return new PetLoadResult(loadedPets, owners, latest, stats);
             }
         };
 
@@ -182,6 +240,7 @@ public class PetController {
             latestHealthByPetId.clear();
             latestHealthByPetId.putAll(result.latestHealth());
             pets.setAll(result.pets());
+            currentStats = result.stats();
             dataLoaded = true;
             needsPetRefresh = false;
             loadingPets = false;
@@ -202,10 +261,10 @@ public class PetController {
 
     private void updateSummary(String petIdToSelect) {
         petTable.refresh();
-        statTotalPets.setText(String.valueOf(pets.size()));
-        statPetsStaying.setText("0");
-        statPetsGrooming.setText("0");
-        statPetsMonitoring.setText(String.valueOf(countMonitoringPets()));
+        statTotalPets.setText(String.valueOf(currentStats.totalPets()));
+        statPetsStaying.setText(String.valueOf(currentStats.petsStaying()));
+        statPetsGrooming.setText(String.valueOf(currentStats.groomingToday()));
+        statPetsMonitoring.setText(String.valueOf(currentStats.monitoringPets()));
         pagination.setPageCount(1);
         pageInfo.setText("Hiển thị " + pets.size() + " / " + pets.size() + " thú cưng");
         if (petIdToSelect != null) {
@@ -231,8 +290,27 @@ public class PetController {
             return;
         }
         try {
-            List<Pet> result = petBUS.searchPet(keyword);
+            String branchId = currentBranchId();
+            if (branchId == null || branchId.isBlank()) {
+                pageInfo.setText("Chưa xác định chi nhánh hiện tại");
+                return;
+            }
+            List<Pet> result = petBUS.searchPetByBranch(branchId, keyword);
             pets.setAll(result);
+            ownerNameByCustomerId.clear();
+            latestHealthByPetId.clear();
+            for (Pet pet : result) {
+                Customer customer = customerDAO.findById(pet.getCustomerId());
+                if (customer != null) {
+                    ownerNameByCustomerId.put(customer.getCustomerId(), customer.getFullName());
+                }
+                PetHealthRecord record = petHealthRecordDAO.findLatestByPetId(pet.getPetId());
+                if (record != null) {
+                    latestHealthByPetId.put(pet.getPetId(), record);
+                }
+            }
+            currentStats = petBUS.getPetBranchStats(branchId);
+            updateSummary(null);
             pageInfo.setText("Hiển thị " + result.size() + " / " + result.size() + " thú cưng");
             if (result.isEmpty()) showInfo("Không có kết quả", "Không tìm thấy thú cưng phù hợp.");
         } catch (Exception e) {
@@ -241,7 +319,13 @@ public class PetController {
     }
 
     @FXML public void onClearFilter() { searchField.clear(); filterSpecies.setValue(null); filterHealth.setValue(null); loadPetsAsync(null, true); }
-    @FXML public void onAddPet(ActionEvent event) { openPetForm(); }
+    @FXML public void onAddPet(ActionEvent event) {
+        if (isPetCareStaff()) {
+            showCareStaffLimitedMessage();
+            return;
+        }
+        openPetForm();
+    }
     @FXML public void onDeletePet(ActionEvent event) { showInfo("Ngoài phạm vi", "UC-PET-05 chưa triển khai trong lần này."); }
     @FXML public void onServiceHistory(ActionEvent event) { showInfo("Ngoài phạm vi", "UC-PET-08 chưa triển khai trong lần này."); }
     @FXML public void onHealthRecord(ActionEvent event) { if (selectedPet != null) openHealthForm(selectedPet); }
@@ -344,9 +428,12 @@ public class PetController {
         HBox.setHgrow(columns.getChildren().get(0), Priority.ALWAYS);
         HBox.setHgrow(columns.getChildren().get(1), Priority.ALWAYS);
 
-        Button health = primaryButton("Ghi nhận sức khỏe");
+        Button health = primaryButton(isPetCareStaff() ? "Ghi nhận sức khỏe" : "Xem ghi nhận");
         Button history = secondaryButton("Lịch sử dịch vụ");
         Button close = secondaryButton("Đóng");
+        if (!isPetCareStaff()) {
+            health.setTooltip(new Tooltip("Mở ghi nhận sức khỏe ở chế độ chỉ xem."));
+        }
         history.setDisable(true);
         history.setTooltip(new Tooltip("Chưa triển khai"));
         close.setOnAction(e -> stage.close());
@@ -367,56 +454,56 @@ public class PetController {
     }
 
     private void openHealthForm(Pet pet) {
-        Stage stage = modalStage("Ghi Nhận Sức Khỏe");
-        Label error = errorLabel();
-        TextField petId = readOnlyField(pet.getPetId());
-        TextField petName = readOnlyField(pet.getPetName());
-        ComboBox<String> status = new ComboBox<>(FXCollections.observableArrayList("Bình thường", "Cần theo dõi", "Bất thường"));
-        status.getStyleClass().add("ph-form-input");
-        status.setValue("Bình thường");
-        TextField symptom = healthField("Nhập triệu chứng nếu có");
-        TextField note = healthField("Nhập ghi chú sức khỏe");
-        TextField recordedAt = readOnlyField(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-        TextField recorder = readOnlyField(SessionManager.getInstance().getUserId() == null ? "Nhân viên" : SessionManager.getInstance().getUserId());
-        TextField bookingId = formField();
-        bookingId.setPromptText("Nhập mã booking hợp lệ");
-        Label bookingHint = new Label("Bảng PET_HEALTH_RECORD hiện yêu cầu booking_id. Vui lòng nhập mã booking hợp lệ.");
-        bookingHint.getStyleClass().add("ph-card-hint");
-        bookingHint.setWrapText(true);
-        VBox bookingBox = new VBox(4, bookingId, bookingHint);
-
-        GridPane grid = formGrid();
-        addRow(grid, 0, "Mã thú cưng", petId);
-        addRow(grid, 1, "Tên thú cưng", petName);
-        addRow(grid, 2, "Tình trạng tổng quát", status);
-        addRow(grid, 3, "Triệu chứng bất thường", symptom);
-        addRow(grid, 4, "Ghi chú sức khỏe", note);
-        addRow(grid, 5, "Ngày ghi nhận", recordedAt);
-        addRow(grid, 6, "Người ghi nhận", recorder);
-        addRow(grid, 7, "Mã booking *", bookingBox);
-
-        Button save = primaryButton("Lưu ghi nhận");
-        Button cancel = secondaryButton("Hủy");
-        cancel.setOnAction(e -> stage.close());
-        save.setOnAction(e -> {
-            try {
-                validateHealthForm(status.getValue(), symptom.getText(), note.getText(), bookingId.getText());
-                int value = healthStatusValue(status.getValue());
-                String fullNote = buildHealthNote(status.getValue(), symptom.getText(), note.getText(), recorder.getText());
-                petBUS.addHealthRecord(pet.getPetId(), bookingId.getText(), fullNote, value);
+        System.out.println("[HealthForm] open start");
+        String fxmlPath = "/PetHotel/gui/view/HealthRecordForm.fxml";
+        try {
+            URL fxmlUrl = getClass().getResource(fxmlPath);
+            if (fxmlUrl == null) {
+                throw new IllegalStateException("Không tìm thấy HealthRecordForm.fxml trong /PetHotel/gui/view/");
+            }
+            FXMLLoader loader = new FXMLLoader(fxmlUrl);
+            Parent root = loader.load();
+            System.out.println("[HealthForm] fxml loaded");
+            HealthRecordFormController controller = loader.getController();
+            controller.setPet(pet);
+            Role role = SessionManager.getInstance().getCurrentUser() == null
+                    ? null
+                    : SessionManager.getInstance().getCurrentUser().getRole();
+            boolean editMode = role == Role.PET_CARE_STAFF;
+            controller.setEditMode(editMode);
+            controller.setOnSaved(() -> {
                 markNeedsRefresh();
                 reloadPetsFromDatabase(pet.getPetId());
-                stage.close();
-                openPetDetail(petBUS.getPetDetail(pet.getPetId()));
-            } catch (Exception ex) {
-                error.setText(ex.getMessage());
-            }
-        });
+            });
 
-        stage.setScene(new Scene(formShell("Ghi Nhận Sức Khỏe", "Cập nhật tình trạng sức khỏe gần nhất", "HR", grid, error, save, cancel), 620, 720));
-        addStylesheet(stage);
-        Platform.runLater(status::requestFocus);
-        stage.showAndWait();
+            Stage stage = modalStage(editMode ? "Ghi Nhận Sức Khỏe" : "Xem Ghi Nhận Sức Khỏe");
+            prepareHealthFormStage(stage, root);
+            stage.setOnShown(e -> System.out.println("[HealthForm] shown"));
+            stage.showAndWait();
+            if (controller.isSaved()) {
+                openPetDetail(petBUS.getPetDetail(pet.getPetId()));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showError("Không mở được form ghi nhận sức khỏe", e);
+        }
+    }
+
+    private void prepareHealthFormStage(Stage stage, Parent root) {
+        if (root instanceof Region region) {
+            region.setMinSize(720, 620);
+            region.setPrefSize(760, 660);
+        }
+        Scene scene = new Scene(root, 760, 660);
+        stage.setScene(scene);
+        System.out.println("[HealthForm] scene set");
+        stage.setMinWidth(720);
+        stage.setMinHeight(620);
+        root.applyCss();
+        root.layout();
+        root.snapshot(null, null);
+        stage.sizeToScene();
+        stage.centerOnScreen();
     }
 
     private VBox formShell(String title, String subtitle, String avatar, GridPane grid, Label error, Button save, Button cancel) {
@@ -641,6 +728,14 @@ public class PetController {
         alert.showAndWait();
     }
 
+    private boolean isPetCareStaff() {
+        return SessionManager.getInstance().hasRole(Role.PET_CARE_STAFF);
+    }
+
+    private void showCareStaffLimitedMessage() {
+        showInfo("Không đủ quyền", "Chỉ nhân viên chăm sóc được ghi nhận sức khỏe thú cưng.");
+    }
+
     private void showError(String title, Exception e) {
         Alert alert = new Alert(Alert.AlertType.ERROR, e.getMessage(), ButtonType.OK);
         alert.setTitle(title);
@@ -651,6 +746,7 @@ public class PetController {
     private record PetLoadResult(
             List<Pet> pets,
             Map<String, String> ownerNames,
-            Map<String, PetHealthRecord> latestHealth) {
+            Map<String, PetHealthRecord> latestHealth,
+            PetBUS.PetBranchStats stats) {
     }
 }

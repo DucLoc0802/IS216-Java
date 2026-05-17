@@ -1903,6 +1903,11 @@
     -fx-max-height: 38px;
 }
 
+.ph-health-edit-field {
+    -fx-cursor: text;
+    -fx-opacity: 1;
+}
+
 .ph-form-readonly {
     -fx-background-color: #F7EDE3;
     -fx-text-fill: -ph-brown-dark;
@@ -2035,6 +2040,60 @@
     -fx-padding: 0 8 0 8;
 }
 
+.management-table {
+    -fx-background-color: white;
+    -fx-background-radius: 10px;
+    -fx-border-color: -ph-border;
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-table-cell-border-color: #F2E7DD;
+}
+
+.management-table .column-header-background {
+    -fx-background-color: #F7EFE7;
+    -fx-background-radius: 10px 10px 0px 0px;
+    -fx-border-color: transparent transparent -ph-border transparent;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.management-table .column-header {
+    -fx-background-color: transparent;
+    -fx-size: 38px;
+    -fx-border-color: transparent #EDE0D4 transparent transparent;
+    -fx-border-width: 0 1px 0 0;
+}
+
+.management-table .column-header .label {
+    -fx-alignment: center-left;
+    -fx-padding: 0 10px 0 10px;
+    -fx-text-fill: -ph-dark;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.management-table .table-row-cell {
+    -fx-cell-size: 36px;
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #F2E7DD transparent;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.management-table .table-row-cell:hover {
+    -fx-background-color: #FDF8F5;
+}
+
+.management-table .table-row-cell:selected {
+    -fx-background-color: #FDF2EA;
+}
+
+.management-table .table-cell {
+    -fx-alignment: center-left;
+    -fx-padding: 5px 10px 5px 10px;
+    -fx-border-color: transparent #F3E7DD transparent transparent;
+    -fx-border-width: 0 1px 0 0;
+    -fx-font-size: 12px;
+}
+
 .ph-pet-table .table-cell {
     -fx-alignment: center-left;
 }
@@ -2051,4 +2110,306 @@
 
 .ph-customer-table .table-row-cell {
     -fx-cell-size: 38px;
+}
+
+.summary-card-row {
+    -fx-alignment: center-left;
+}
+
+.summary-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 8px;
+    -fx-border-color: -ph-border;
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-padding: 14 16 14 16;
+    -fx-effect: -ph-shadow-sm;
+}
+
+.summary-title {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ph-text-secondary;
+}
+
+.summary-value {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ph-dark;
+}
+
+.summary-subtitle {
+    -fx-font-size: 11px;
+    -fx-text-fill: -ph-text-muted;
+}
+
+.summary-card-brown .summary-value {
+    -fx-text-fill: -ph-brown;
+}
+
+.summary-card-green .summary-value {
+    -fx-text-fill: -ph-green;
+}
+
+.summary-card-amber .summary-value {
+    -fx-text-fill: -ph-amber;
+}
+
+.summary-card-red .summary-value {
+    -fx-text-fill: -ph-red;
+}
+
+/* Dashboard home refinements */
+.dashboard-stat-grid {
+    -fx-alignment: center;
+}
+
+.dashboard-stat-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 10px;
+    -fx-border-color: -ph-border;
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-padding: 14 16 14 16;
+    -fx-effect: -ph-shadow-sm;
+}
+
+.dashboard-stat-title {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ph-text-secondary;
+}
+
+.dashboard-stat-value {
+    -fx-font-size: 27px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ph-dark;
+}
+
+.dashboard-stat-subtitle {
+    -fx-font-size: 11px;
+    -fx-text-fill: -ph-text-muted;
+}
+
+.dashboard-stat-brown {
+    -fx-background-color: #FFF8F1;
+    -fx-border-color: #E8C9A8;
+}
+
+.dashboard-stat-green {
+    -fx-background-color: #F3FBF5;
+    -fx-border-color: #CDEFD7;
+}
+
+.dashboard-stat-amber {
+    -fx-background-color: #FFFBEB;
+    -fx-border-color: #FDE68A;
+}
+
+.dashboard-stat-red {
+    -fx-background-color: #FFF6F3;
+    -fx-border-color: #F2C7BA;
+}
+
+.dashboard-stat-blue {
+    -fx-background-color: #F4F8FF;
+    -fx-border-color: #D4E2F7;
+}
+
+.dashboard-stat-purple {
+    -fx-background-color: #F8F5FF;
+    -fx-border-color: #DDD6FE;
+}
+
+.dashboard-stat-brown .dashboard-stat-value {
+    -fx-text-fill: -ph-brown;
+}
+
+.dashboard-stat-green .dashboard-stat-value {
+    -fx-text-fill: -ph-green;
+}
+
+.dashboard-stat-amber .dashboard-stat-value {
+    -fx-text-fill: -ph-amber;
+}
+
+.dashboard-stat-red .dashboard-stat-value {
+    -fx-text-fill: -ph-red;
+}
+
+.dashboard-stat-blue .dashboard-stat-value {
+    -fx-text-fill: -ph-blue;
+}
+
+.dashboard-stat-purple .dashboard-stat-value {
+    -fx-text-fill: -ph-purple;
+}
+
+.dashboard-action-row {
+    -fx-alignment: center-left;
+}
+
+.dashboard-action-btn {
+    -fx-pref-height: 38px;
+    -fx-min-height: 38px;
+    -fx-min-width: 104px;
+}
+
+.dashboard-main-grid {
+    -fx-alignment: top-left;
+}
+
+.dashboard-panel {
+    -fx-padding: 16 18 16 18;
+}
+
+.dashboard-booking-panel {
+    -fx-min-width: 520px;
+}
+
+.dashboard-panel-header {
+    -fx-min-height: 28px;
+    -fx-alignment: center-left;
+}
+
+.dashboard-panel-title {
+    -fx-font-size: 13px;
+}
+
+.dashboard-empty-message {
+    -fx-text-fill: -ph-text-muted;
+    -fx-font-size: 12px;
+}
+
+.dashboard-low-stock-panel {
+    -fx-background-color: #FFFBF0;
+    -fx-border-color: #FDE68A;
+}
+
+.dashboard-overview-panel {
+    -fx-background-color: -ph-bg-card;
+    -fx-border-color: -ph-border;
+}
+
+.dashboard-stat-strip {
+    -fx-alignment: center-left;
+}
+
+.dashboard-stat-compact {
+    -fx-padding: 10 12 10 12;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-effect: -ph-shadow-sm;
+}
+
+.dashboard-stat-compact .dashboard-stat-title {
+    -fx-font-size: 11px;
+}
+
+.dashboard-stat-compact .dashboard-stat-value {
+    -fx-font-size: 22px;
+}
+
+.dashboard-stat-compact .dashboard-stat-subtitle {
+    -fx-font-size: 10px;
+}
+
+.dashboard-bottom-layout {
+    -fx-alignment: top-left;
+}
+
+.dashboard-booking-card,
+.dashboard-side-card,
+.dashboard-alert-card {
+    -fx-background-color: -ph-bg-card;
+    -fx-background-radius: 14px;
+    -fx-border-color: -ph-border;
+    -fx-border-radius: 14px;
+    -fx-border-width: 1px;
+    -fx-padding: 16 18 16 18;
+    -fx-effect: -ph-shadow-sm;
+}
+
+.dashboard-booking-card:hover,
+.dashboard-side-card:hover,
+.dashboard-alert-card:hover {
+    -fx-effect: -ph-shadow-md;
+}
+
+.dashboard-booking-card {
+    -fx-min-width: 520px;
+}
+
+.dashboard-side-column {
+    -fx-alignment: top-left;
+}
+
+.dashboard-card-header {
+    -fx-min-height: 28px;
+    -fx-alignment: center-left;
+}
+
+.dashboard-card-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ph-dark;
+}
+
+.dashboard-alert-card {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: -ph-border;
+}
+
+.dashboard-alert-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ph-amber;
+}
+
+.dashboard-room-occupied,
+.dashboard-room-available,
+.dashboard-room-cleaning {
+    -fx-padding: 12 6 12 6;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-cursor: hand;
+}
+
+.dashboard-room-occupied {
+    -fx-background-color: #FEF2F2;
+    -fx-border-color: #FECACA;
+}
+
+.dashboard-room-available {
+    -fx-background-color: #F0FDF4;
+    -fx-border-color: #BBF7D0;
+}
+
+.dashboard-room-cleaning {
+    -fx-background-color: #FFFBEB;
+    -fx-border-color: #FDE68A;
+}
+
+.dashboard-room-num {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+.dashboard-room-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: -ph-text-secondary;
+    -fx-font-weight: bold;
+}
+
+.dashboard-room-occupied .dashboard-room-num {
+    -fx-text-fill: -ph-red;
+}
+
+.dashboard-room-available .dashboard-room-num {
+    -fx-text-fill: -ph-green;
+}
+
+.dashboard-room-cleaning .dashboard-room-num {
+    -fx-text-fill: -ph-amber;
 }

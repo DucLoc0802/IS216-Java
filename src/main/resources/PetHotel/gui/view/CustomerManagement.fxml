@@ -55,6 +55,7 @@
                 <TableView fx:id="customerTable" onMouseClicked="#onTableClick" VBox.vgrow="ALWAYS">
                     <styleClass>
                         <String fx:value="data-table" />
+                        <String fx:value="management-table" />
                         <String fx:value="ph-pet-table" />
                         <String fx:value="ph-customer-table" />
                     </styleClass>

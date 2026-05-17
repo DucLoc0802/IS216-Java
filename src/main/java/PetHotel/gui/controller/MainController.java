@@ -3,6 +3,8 @@ package PetHotel.gui.controller;
 import java.io.IOException;
 
 import PetHotel.bus.AuthBUS;
+import PetHotel.model.AppUser;
+import PetHotel.util.Role;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -44,7 +46,12 @@ public class MainController {
         }
 
         // Vừa đăng nhập vào, load ngay trang tổng quan (dashboard-home.fxml)
-        loadView("DashboardHome.fxml"); 
+        AppUser currentUser = SessionManager.getInstance().getCurrentUser();
+        if (currentUser != null && currentUser.getRole() == Role.PET_CARE_STAFF) {
+            showPetManagement(null);
+        } else {
+            loadView("DashboardHome.fxml");
+        }
     }
 
     // Hàm "Thay ruột" huyền thoại
@@ -75,6 +82,9 @@ public class MainController {
 
             if (topbarController != null) {
                 topbarController.setTitle("ThÃº CÆ°ng", "Quáº£n lÃ½ há»“ sÆ¡ thÃº cÆ°ng");
+            }
+            if (topbarController != null) {
+                topbarController.setTitle("Thú Cưng", "Danh sách thú cưng tại chi nhánh");
             }
             if (sidebarController != null) {
                 sidebarController.setActivePetMenu();
