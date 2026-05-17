@@ -17,6 +17,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class SidebarController {
@@ -38,6 +39,8 @@ public class SidebarController {
     @FXML private VBox menuPet;
     @FXML private VBox menuBooking;
     @FXML private VBox menuGrooming;
+    @FXML private VBox menuService;
+    @FXML private VBox menuAssignedTasks;
     @FXML private VBox menuRoom;
     @FXML private VBox menuInvoice;
 
@@ -54,6 +57,7 @@ public class SidebarController {
     @FXML
     public void initialize() {
         // 1. Lấy thông tin user hiện tại đang đăng nhập
+        hideMenu(menuPet);
         AppUser currentUser = SessionManager.getInstance().getCurrentUser();
         
         if (currentUser != null) {
@@ -81,6 +85,9 @@ private void applyRolePermissions(Role role) {
             // Ẩn Dashboard
             hideMenu(menuDashboard); 
             
+            // Ẩn các menu liên quan đến nghiệp vụ không liên quan
+            hideMenu(menuAssignedTasks);
+
             // Về Kho hàng: Lễ tân chỉ được tra cứu sản phẩm, nên ẩn Nhập kho và Nhà cung cấp
             hideMenu(menuInventory);
             hideMenu(menuSupplier);
@@ -93,14 +100,17 @@ private void applyRolePermissions(Role role) {
             break;
 
         case PET_CARE_STAFF:
+            showMenu(menuPet);
+            showMenu(menuGrooming);
             // 2. NHÂN VIÊN CHĂM SÓC
             // Chỉ tương tác với Thú cưng và Grooming (cập nhật trạng thái, sức khoẻ)
             hideMenu(menuDashboard);
             hideMenu(menuCustomer);
             hideMenu(menuBooking);
+            hideMenu(menuService);
             hideMenu(menuRoom);
-            hideMenu(menuInvoice);
-            
+            hideMenu(menuInvoice); 
+
             // Ẩn hoàn toàn nhóm Kho
             hideMenu(groupInventory);
             hideMenu(menuProduct);
@@ -118,6 +128,7 @@ private void applyRolePermissions(Role role) {
             // 3. QUẢN LÝ CHI NHÁNH
             // Vận hành toàn bộ chi nhánh, quản lý nhân viên, xem báo cáo nhưng KHÔNG quản lý tài khoản hệ thống
             hideMenu(menuAccount); 
+            hideMenu(menuAssignedTasks);
             break;
 
         case ADMIN:
@@ -128,7 +139,9 @@ private void applyRolePermissions(Role role) {
             hideMenu(menuPet);
             hideMenu(menuBooking);
             hideMenu(menuGrooming);
+            hideMenu(menuService);
             hideMenu(menuInvoice);
+            hideMenu(menuAssignedTasks);
             
             // Ẩn toàn bộ nhóm Kho
             hideMenu(groupInventory);
@@ -150,8 +163,10 @@ private void applyRolePermissions(Role role) {
             hideMenu(menuPet);
             hideMenu(menuBooking);
             hideMenu(menuGrooming);
+            hideMenu(menuService);
             hideMenu(menuRoom);
             hideMenu(menuInvoice);
+            hideMenu(menuAssignedTasks);
             
             // Nhóm kho: Ẩn phần bán hàng/nhà cung cấp, chỉ giữ Inventory để xem thống kê
             hideMenu(menuProduct);
@@ -169,8 +184,10 @@ private void applyRolePermissions(Role role) {
             hideMenu(menuPet);
             hideMenu(menuBooking);
             hideMenu(menuGrooming);
+            hideMenu(menuService);
             hideMenu(menuRoom);
             hideMenu(menuInvoice);
+            hideMenu(menuAssignedTasks);
             
             hideMenu(groupInventory);
             hideMenu(menuProduct);
@@ -194,6 +211,13 @@ private void applyRolePermissions(Role role) {
     }
 
     // Nhận quyền điều khiển từ MainController
+    private void showMenu(Node node) {
+        if (node != null) {
+            node.setVisible(true);
+            node.setManaged(true);
+        }
+    }
+
     public void setMainController(MainController mainController) {
         this.mainController = mainController;
     }
@@ -204,6 +228,10 @@ private void applyRolePermissions(Role role) {
     }
 
     // --- HÀM XỬ LÝ CHUNG CHO TẤT CẢ MENU ---
+    public void setActivePetMenu() {
+        setActive(menuPet);
+    }
+
     @FXML
     public void onMenu(MouseEvent event) {
         Node source = (Node) event.getSource();
@@ -242,8 +270,33 @@ private void applyRolePermissions(Role role) {
                         mainController.getTopbarController().setTitle("Phòng", "Quản lý phòng");
                         break;
                     case "grooming":
-                        mainController.loadView("GroomingManagement.fxml");
-                        mainController.getTopbarController().setTitle("Grooming", "Quản lý lịch cắt tỉa");
+                        if (currentRole == Role.RECEPTIONIST
+                                || currentRole == Role.PET_CARE_STAFF
+                                || currentRole == Role.BRANCH_MANAGER) {
+                            mainController.loadView("GroomingManagement.fxml");
+                            mainController.getTopbarController().setTitle(
+                                "Grooming",
+                                "Quản lý lịch cắt tỉa"
+                            );
+                        }
+                        break;
+                    case "service":
+                        if (currentRole == Role.RECEPTIONIST || currentRole == Role.BRANCH_MANAGER) {
+                            mainController.loadView("ServiceManagement.fxml");
+                            mainController.getTopbarController().setTitle(
+                                "Danh Sách Dịch Vụ",
+                                "Xem và tra cứu danh sách dịch vụ"
+                            );
+                        }
+                        break;
+                    case "assigned-tasks":
+                        if (currentRole == Role.PET_CARE_STAFF || currentRole == Role.BRANCH_MANAGER) {
+                            mainController.loadView("AssignedTasks.fxml");
+                            mainController.getTopbarController().setTitle(
+                                "Công Việc Được Phân Công",
+                                "Danh sách dịch vụ cần thực hiện"
+                            );
+                        }
                         break;
                     case "invoice":
                         mainController.loadView("InvoiceManagement.fxml");
@@ -256,7 +309,7 @@ private void applyRolePermissions(Role role) {
                         }
                         break;
                     case "employee":
-                        if (currentRole == Role.ADMIN) {
+                        if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER) {
                             mainController.loadView("EmployeeManagement.fxml"); 
                             mainController.getTopbarController().setTitle("Nhân Viên", "Quản lý nhân viên");
                         }
@@ -274,7 +327,10 @@ private void applyRolePermissions(Role role) {
                         }
                         break;
                     case "pet":
-                        mainController.loadView("PetManagement.fxml");
+                        if (mainController != null) {
+                            mainController.showPetManagement(null);
+                            return;
+                        }
                         mainController.getTopbarController().setTitle("Thú Cưng", "Quản lý hồ sơ thú cưng");
                         break;
                     case "inventory":
@@ -299,8 +355,13 @@ private void applyRolePermissions(Role role) {
 
     // --- Các thao tác khác ở Footer ---
     @FXML
+    public void onViewProfile(MouseEvent event) {
+        openModal("Thông tin cá nhân", "/PetHotel/gui/view/ProfileDialog.fxml");
+    }
+
+    @FXML
     public void onChangePassword(MouseEvent event) {
-        System.out.println("Mở Form Đổi Mật Khẩu");
+        openModal("Đổi mật khẩu", "/PetHotel/gui/view/ChangePasswordDialog.fxml");
     }
 
     @FXML
@@ -358,6 +419,37 @@ private void applyRolePermissions(Role role) {
         if (item != null) {
             item.getStyleClass().add("menu-item-active");
             activeMenuItem = item;
+        }
+    }
+
+    private void openModal(String title, String resourcePath) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(resourcePath));
+            Parent root = loader.load();
+
+            Stage dialog = new Stage();
+            dialog.setTitle(title);
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.setResizable(false);
+            dialog.setScene(new Scene(root));
+            dialog.showAndWait();
+
+            AppUser currentUser = SessionManager.getInstance().getCurrentUser();
+            if (currentUser != null) {
+                Employee employee = currentUser.getEmployee();
+                String fullName = (employee != null && employee.getFullName() != null)
+                    ? employee.getFullName()
+                    : currentUser.getUserName();
+                usernameLabel.setText(fullName);
+                avatarLabel.setText(String.valueOf(fullName.charAt(0)).toUpperCase());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+            errorAlert.setTitle("Lỗi hệ thống");
+            errorAlert.setHeaderText(null);
+            errorAlert.setContentText("Không thể tải giao diện: " + title);
+            errorAlert.showAndWait();
         }
     }
 }

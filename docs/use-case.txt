@@ -1,0 +1,202 @@
+===== PHẦN CÔNG VIỆC CỦA NGUYỄN VĂN MINH =====
+
+Nhóm chức năng: Customer + Pet
+Phạm vi code: Quản lý khách hàng và quản lý thú cưng.
+
+Mục tiêu:
+- Code các chức năng liên quan đến khách hàng.
+- Code các chức năng liên quan đến thú cưng.
+- Liên kết khách hàng với thú cưng.
+- Ghi nhận tình trạng sức khỏe thú cưng.
+- Không code lan sang Auth, Account, Employee, Booking, Grooming, Inventory, Invoice, Payment, Report, Room.
+
+==================================================
+1. USE CASE CẦN CODE TRƯỚC - MỐC 09/05/2026
+==================================================
+
+UC-CUS-01 - Tra cứu khách hàng
+- Ưu tiên: P1
+- Role: Lễ tân / Quản lý
+- Truy cập: Quản lý khách hàng → Tra cứu
+- Chức năng: Tìm kiếm khách hàng theo mã, tên hoặc số điện thoại.
+
+UC-CUS-02 - Thêm khách hàng
+- Ưu tiên: P1
+- Role: Lễ tân
+- Truy cập: Quản lý khách hàng → Thêm khách hàng
+- Chức năng: Tạo hồ sơ khách hàng mới.
+
+UC-PET-01 - Tra cứu thú cưng
+- Ưu tiên: P1
+- Role: Lễ tân / Chăm sóc / Quản lý
+- Truy cập: Quản lý thú cưng → Tra cứu
+- Chức năng: Tìm kiếm thú cưng theo tên, loài hoặc chủ sở hữu.
+
+UC-PET-02 - Thêm thú cưng
+- Ưu tiên: P1
+- Role: Lễ tân
+- Truy cập: Quản lý thú cưng → Thêm thú cưng
+- Chức năng: Tạo hồ sơ thú cưng mới và liên kết với chủ sở hữu.
+
+==================================================
+2. USE CASE CẦN CODE TIẾP - MỐC 16/05/2026
+==================================================
+
+UC-CUS-03 - Xem chi tiết khách hàng
+- Ưu tiên: P1
+- Role: Lễ tân / Quản lý
+- Truy cập: Quản lý khách hàng → Chọn khách hàng → Xem chi tiết
+- Chức năng: Hiển thị đầy đủ thông tin khách hàng và danh sách thú cưng liên quan.
+
+UC-CUS-07 - Liên kết thú cưng của khách hàng
+- Ưu tiên: P1
+- Role: Lễ tân
+- Truy cập: Quản lý khách hàng → Chọn khách hàng → Thêm/Liên kết thú cưng
+- Chức năng: Gắn thú cưng với đúng khách hàng/chủ sở hữu.
+
+UC-PET-03 - Xem chi tiết thú cưng
+- Ưu tiên: P1
+- Role: Lễ tân / Chăm sóc / Quản lý
+- Truy cập: Quản lý thú cưng → Chọn thú cưng → Xem chi tiết
+- Chức năng: Hiển thị đầy đủ thông tin thú cưng và chủ sở hữu.
+
+UC-PET-06 - Liên kết chủ sở hữu
+- Ưu tiên: P1
+- Role: Lễ tân
+- Truy cập: Quản lý thú cưng → Chọn thú cưng → Liên kết chủ sở hữu
+- Chức năng: Chọn khách hàng làm chủ sở hữu của thú cưng.
+
+UC-PET-07 - Ghi nhận tình trạng sức khỏe
+- Ưu tiên: P2
+- Role: Lễ tân / Chăm sóc
+- Truy cập: Quản lý thú cưng → Chọn thú cưng → Ghi nhận sức khỏe
+- Chức năng: Ghi nhận tình trạng sức khỏe ban đầu hoặc trong quá trình lưu trú.
+
+==================================================
+3. USE CASE CHƯA CODE TRƯỚC - MỐC 23/05/2026
+==================================================
+
+UC-CUS-04 - Sửa thông tin khách hàng
+UC-CUS-05 - Xóa/ngưng hoạt động khách hàng
+UC-CUS-06 - Xem lịch sử dịch vụ khách hàng
+UC-PET-04 - Sửa thông tin thú cưng
+UC-PET-05 - Xóa/ngưng hoạt động thú cưng
+UC-PET-08 - Xem lịch sử dịch vụ thú cưng
+
+Ghi chú:
+- Các UC này không code trong lần đầu.
+- Chỉ code nếu các chức năng chính 09/05 và 16/05 đã hoàn thành hoặc project đã có sẵn cấu trúc.
+
+==================================================
+4. CÁC MÀN HÌNH CẦN CÓ
+==================================================
+
+1. Màn hình quản lý khách hàng
+- Hiển thị danh sách khách hàng.
+- Có tìm kiếm khách hàng.
+- Có nút thêm khách hàng.
+- Có nút xem chi tiết.
+- Có chức năng liên kết thú cưng.
+
+2. Màn hình thêm khách hàng
+- Nhập thông tin khách hàng.
+- Validate dữ liệu.
+- Lưu xuống database nếu project đã có DAO.
+- Sau khi lưu, khách hàng mới phải hiện trong danh sách.
+
+3. Màn hình chi tiết khách hàng
+- Hiển thị thông tin khách hàng.
+- Hiển thị danh sách thú cưng của khách hàng.
+- Có nút thêm/liên kết thú cưng.
+
+4. Màn hình quản lý thú cưng
+- Hiển thị danh sách thú cưng.
+- Có tìm kiếm thú cưng.
+- Có nút thêm thú cưng.
+- Có nút xem chi tiết.
+- Có chức năng liên kết chủ sở hữu.
+
+5. Màn hình thêm thú cưng
+- Nhập thông tin thú cưng.
+- Chọn hoặc liên kết chủ sở hữu.
+- Validate dữ liệu.
+- Lưu xuống database nếu project đã có DAO.
+- Sau khi lưu, thú cưng mới phải hiện trong danh sách.
+
+6. Màn hình chi tiết thú cưng
+- Hiển thị thông tin thú cưng.
+- Hiển thị chủ sở hữu.
+- Có nút liên kết chủ sở hữu.
+- Có nút ghi nhận sức khỏe.
+
+7. Màn hình ghi nhận tình trạng sức khỏe
+- Nhập tình trạng tổng quát.
+- Nhập triệu chứng bất thường nếu có.
+- Nhập ghi chú sức khỏe.
+- Lưu kèm thời gian ghi nhận.
+
+==================================================
+5. FILE/FOLDER CODEX NÊN TÌM TRONG PROJECT
+==================================================
+
+Codex cần tìm các file liên quan đến:
+- Customer
+- KhachHang
+- CustomerDAO
+- CustomerService
+- CustomerController
+- Customer.fxml
+- Pet
+- ThuCung
+- PetDAO
+- PetService
+- PetController
+- Pet.fxml
+- Owner
+- Health
+- HealthRecord
+
+Các thư mục cần kiểm tra:
+- src/main/java/.../model
+- src/main/java/.../dao
+- src/main/java/.../bus
+- src/main/java/.../service
+- src/main/java/.../gui/controller
+- src/main/resources/.../fxml
+- src/main/resources/.../view
+- src/main/resources/.../css
+
+==================================================
+6. YÊU CẦU CODEX KHI CODE
+==================================================
+
+- Chỉ sửa file cần thiết.
+- Ưu tiên sửa file có sẵn, hạn chế tạo file mới.
+- Không refactor lớn.
+- Không đổi package nếu không cần.
+- Không sửa module của người khác.
+- Không hard-code dữ liệu nếu đã có DAO/database.
+- Nếu chưa có database hoặc DAO thì có thể dùng dữ liệu tạm, nhưng phải ghi rõ.
+- Nếu sửa menu/sidebar để mở màn hình Customer/Pet thì chỉ sửa đúng phần điều hướng Customer/Pet.
+
+==================================================
+7. FILE FLOW-WORK CẦN TẠO
+==================================================
+
+Tạo file:
+
+docs/flow-work/NguyenVanMinh-Customer-Pet-flow-work.md
+
+Nội dung file cần ghi:
+1. Các UC đã code.
+2. Các file đã sửa.
+3. Các file đã tạo mới.
+4. Luồng hoạt động Customer.
+5. Luồng hoạt động Pet.
+6. Phần nào đang dùng database.
+7. Phần nào đang dùng dữ liệu tạm.
+8. Lỗi còn tồn tại nếu có.
+9. Gợi ý commit message cho Git.
+
+Gợi ý commit message:
+feat(customer-pet): implement customer and pet management use cases for Nguyen Van Minh

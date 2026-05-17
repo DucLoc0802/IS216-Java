@@ -22,13 +22,13 @@
             </VBox>
         </HBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="+ Thêm Nhà Cung Cấp" styleClass="action-btn action-btn-primary"
+        <Button text="Thêm Nhà Cung Cấp" styleClass="action-btn action-btn-primary"
                 onAction="#onAddSupplier"/>
     </HBox>
 
     <HBox styleClass="filter-bar" alignment="CENTER_LEFT" spacing="12">
         <HBox styleClass="search-box" alignment="CENTER_LEFT" spacing="8" HBox.hgrow="ALWAYS">
-            <Label text="🔍" styleClass="search-icon"/>
+            <Label text="" styleClass="search-icon"/>
             <TextField fx:id="searchField"
                        promptText="Tìm theo tên, mã, địa chỉ, số điện thoại..."
                        styleClass="search-input" HBox.hgrow="ALWAYS"
@@ -58,13 +58,13 @@
         <VBox styleClass="content-panel" HBox.hgrow="ALWAYS" spacing="12">
 
             <HBox styleClass="action-toolbar" alignment="CENTER_LEFT">
-                <Button fx:id="btnEdit"   text="✏ Sửa"          styleClass="action-btn action-btn-outline"
+                <Button fx:id="btnEdit"   text="Sửa"          styleClass="action-btn action-btn-outline"
                         onAction="#onEditSupplier"   disable="true"/>
-                <Button fx:id="btnDelete" text="🗑 Xóa"          styleClass="action-btn action-btn-danger"
+                <Button fx:id="btnDelete" text="Xóa"          styleClass="action-btn action-btn-danger"
                         onAction="#onDeleteSupplier" disable="true"/>
-                <Button fx:id="btnDeactivate" text="⏸ Ngưng HT" styleClass="action-btn action-btn-amber"
+                <Button fx:id="btnDeactivate" text="Ngưng HT" styleClass="action-btn action-btn-amber"
                         onAction="#onDeactivate"     disable="true"/>
-                <Button fx:id="btnHistory" text="📋 Lịch Sử Nhập" styleClass="action-btn action-btn-outline"
+                <Button fx:id="btnHistory" text="Lịch Sử Nhập" styleClass="action-btn action-btn-outline"
                         onAction="#onViewHistory"    disable="true"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Label fx:id="totalLabel" text=""
@@ -85,7 +85,7 @@
                 </columns>
                 <placeholder>
                     <VBox alignment="CENTER" spacing="8">
-                        <Label text="🏢" style="-fx-font-size:28px;"/>
+                        <Label text="" style="-fx-font-size:28px;"/>
                         <Label text="Không tìm thấy nhà cung cấp nào" styleClass="table-empty"/>
                     </VBox>
                 </placeholder>
@@ -107,7 +107,7 @@
                 </HBox>
 
                 <VBox alignment="CENTER" spacing="6" style="-fx-padding: 8 0 4 0;">
-                    <Label fx:id="detailSupIcon" text="🏢" style="-fx-font-size:34px;"/>
+                    <Label fx:id="detailSupIcon" text="" style="-fx-font-size:34px;"/>
                     <Label fx:id="detailSupName" text="—" styleClass="detail-name"
                            wrapText="true" textAlignment="CENTER" maxWidth="270"/>
                     <Label fx:id="detailSupStatus" text="—" styleClass="status-badge status-active"/>
@@ -149,14 +149,14 @@
 
                 <Separator styleClass="detail-divider"/>
                 <HBox spacing="8">
-                    <Button fx:id="btnDetailEdit"    text="✏ Sửa"    styleClass="action-btn action-btn-outline"
+                    <Button fx:id="btnDetailEdit"    text="Sửa"    styleClass="action-btn action-btn-outline"
                             onAction="#onEditSupplier" disable="true"/>
-                    <Button fx:id="btnDetailHistory" text="📋 Lịch Sử" styleClass="action-btn action-btn-outline"
+                    <Button fx:id="btnDetailHistory" text="Lịch Sử" styleClass="action-btn action-btn-outline"
                             onAction="#onViewHistory"  disable="true"/>
                 </HBox>
 
                 <VBox fx:id="noSelectionHint" styleClass="no-selection-hint" spacing="8">
-                    <Label text="🏢" style="-fx-font-size:26px;"/>
+                    <Label text="" style="-fx-font-size:26px;"/>
                     <Label text="Chọn nhà cung cấp để xem chi tiết"
                            style="-fx-font-size:12px; -fx-text-fill: -ph-text-muted; -fx-text-alignment:center;"
                            wrapText="true" maxWidth="200" textAlignment="CENTER"/>

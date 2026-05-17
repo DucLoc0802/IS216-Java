@@ -10,6 +10,7 @@ import java.util.Objects;
  *   booking_service_id  VARCHAR2(10)    PK
  *   booking_id          VARCHAR2(10)    NOT NULL, FK → booking
  *   service_id          VARCHAR2(10)    FK → services (nullable)
+ *   pet_id              VARCHAR2(10)    FK → pet (nullable)
  *   employee_id         VARCHAR2(10)    FK → employee (nullable — nhân viên thực hiện)
  *   scheduled_at        TIMESTAMP(6) WITH TIME ZONE
  *   status              NVARCHAR2(20)   CHECK IN ('PENDING','SCHEDULED','IN_PROGRESS','DONE','CANCELLED')
@@ -28,23 +29,31 @@ public class BookingService {
     private String bookingServiceId;
     private String bookingId;
     private String serviceId;      // nullable
+    private String petId;          // nullable
     private String employeeId;     // nullable
     private OffsetDateTime scheduledAt;
     private String status;
     private String note;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+    private String serviceName;
+    private String petName;
+    private String petSpecies;
+    private String customerName;
+    private String customerPhone;
+    private String customerAddress;
 
     // ── Constructors ──────────────────────────────────────────────
 
     public BookingService() {}
 
     public BookingService(String bookingServiceId, String bookingId, String serviceId,
-                          String employeeId, OffsetDateTime scheduledAt, String status,
+                          String petId, String employeeId, OffsetDateTime scheduledAt, String status,
                           String note, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
         this.bookingServiceId = bookingServiceId;
         this.bookingId        = bookingId;
         this.serviceId        = serviceId;
+        this.petId            = petId;
         this.employeeId       = employeeId;
         this.scheduledAt      = scheduledAt;
         this.status           = status;
@@ -54,7 +63,7 @@ public class BookingService {
     }
 
     // ── Getters / Setters ─────────────────────────────────────────
-
+    
     public String getBookingServiceId()                  { return bookingServiceId; }
     public void setBookingServiceId(String v)            { this.bookingServiceId = v; }
 
@@ -63,6 +72,9 @@ public class BookingService {
 
     public String getServiceId()                         { return serviceId; }
     public void setServiceId(String v)                   { this.serviceId = v; }
+
+    public String getPetId()                             { return petId; }
+    public void setPetId(String v)                       { this.petId = v; }
 
     public String getEmployeeId()                        { return employeeId; }
     public void setEmployeeId(String v)                  { this.employeeId = v; }
@@ -81,6 +93,54 @@ public class BookingService {
 
     public OffsetDateTime getUpdatedAt()                 { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime v)           { this.updatedAt = v; }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+
+    public String getPetName() {
+        return petName;
+    }
+
+    public void setPetName(String petName) {
+        this.petName = petName;
+    }
+
+    public String getPetSpecies() {
+        return petSpecies;
+    }
+
+    public void setPetSpecies(String petSpecies) {
+        this.petSpecies = petSpecies;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public String getCustomerPhone() {
+        return customerPhone;
+    }
+
+    public void setCustomerPhone(String customerPhone) {
+        this.customerPhone = customerPhone;
+    }
+
+    public String getCustomerAddress() {
+        return customerAddress;
+    }
+
+    public void setCustomerAddress(String customerAddress) {
+        this.customerAddress = customerAddress;
+    }
 
     /** @return true nếu dịch vụ chưa hoàn tất */
     public boolean isActive() {

@@ -18,14 +18,21 @@
         <Region styleClass="section-header-line" />
         <Label styleClass="section-header" text="Quản Lý Lịch Grooming" />
         <Region HBox.hgrow="ALWAYS" />
-        <Button onAction="#onCreateGrooming" styleClass="action-btn action-btn-primary" text="+ Đặt Lịch Grooming" />
+        <Button onAction="#onCreateGrooming" 
+                fx:id="btnCreateGrooming"
+                styleClass="action-btn action-btn-primary" 
+                text="Đặt Lịch Grooming" />
+        <Button fx:id="btnAssignGroomingStaff"
+            text="Phân Công Nhân Viên"
+            onAction="#onOpenStaffAssignment"
+            styleClass="action-btn action-btn-primary"/>
     </HBox>
 
     <!-- Date navigator -->
     <HBox alignment="CENTER_LEFT" spacing="14" styleClass="filter-bar">
-        <Button onAction="#onPrevDay" style="-fx-padding: 6 12 6 12;" styleClass="action-btn action-btn-outline" text="◀" />
+        <Button onAction="#onPrevDay" style="-fx-padding: 6 12 6 12;" styleClass="action-btn action-btn-outline" text="Trước" />
         <DatePicker fx:id="selectedDate" prefWidth="160" styleClass="filter-combo" />
-        <Button onAction="#onNextDay" style="-fx-padding: 6 12 6 12;" styleClass="action-btn action-btn-outline" text="▶" />
+        <Button onAction="#onNextDay" style="-fx-padding: 6 12 6 12;" styleClass="action-btn action-btn-outline" text="Sau" />
         <Button onAction="#onToday" style="-fx-padding: 6 14 6 14;" styleClass="action-btn action-btn-outline" text="Hôm Nay" />
         <Region HBox.hgrow="ALWAYS" />
         <ComboBox fx:id="filterStaff" prefWidth="170" promptText="Nhân viên thực hiện" styleClass="filter-combo" />

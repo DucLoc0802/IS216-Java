@@ -120,6 +120,19 @@ public class Booking {
 
     @Override public int hashCode() { return Objects.hash(bookingId); }
 
+    // ── Display fields (JOIN từ các bảng khác) ────────────────────
+    private String customerName;
+    private String petName;
+    private String roomNumber;
+
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String v) { this.customerName = v; }
+
+    public String getPetName() { return petName; }
+    public void setPetName(String v) { this.petName = v; }
+
+    public String getRoomNumber() { return roomNumber; }
+    public void setRoomNumber(String v) { this.roomNumber = v; }
     @Override
     public String toString() {
         return "Booking{id='" + bookingId + "', customer='" + customerId

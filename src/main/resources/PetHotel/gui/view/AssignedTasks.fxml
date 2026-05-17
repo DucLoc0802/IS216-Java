@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="PetHotel.gui.controller.AssignedTasksController"
+      spacing="16"
+      style="-fx-background-color: #fffaf5;">
+
+    <padding>
+        <Insets top="20" right="24" bottom="20" left="24"/>
+    </padding>
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="8">
+        <Label text="Công Việc Được Phân Công"
+               style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #3b2314;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblStaffName"
+               text=""
+               style="-fx-font-size: 12px; -fx-text-fill: #666666;"/>
+        <Button fx:id="btnRefresh"
+                text="Làm mới"
+                style="-fx-padding: 8px 16px;"/>
+    </HBox>
+
+    <!-- Filter Bar -->
+    <HBox spacing="12" style="-fx-padding: 12px; -fx-border-color: #e8dcc4; -fx-border-width: 1; -fx-border-radius: 4;">
+        <Label text="Lọc theo:" style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+        <DatePicker fx:id="dpFilterDate" prefWidth="150"/>
+        <ComboBox fx:id="cbFilterStatus" prefWidth="150" promptText="Trạng thái"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <TextField fx:id="txtSearch" prefWidth="200" promptText="Tìm kiếm theo tên pet, khách hàng..."/>
+    </HBox>
+
+    <!-- Statistics Bar -->
+    <HBox spacing="20" style="-fx-padding: 12px; -fx-background-color: #fef9f3; -fx-border-color: #d4a574; -fx-border-width: 1; -fx-border-radius: 4;">
+        <VBox alignment="CENTER" spacing="4">
+            <Label text="Tổng Công Việc" style="-fx-font-size: 11px; -fx-text-fill: #666666;"/>
+            <Label fx:id="lblTotalTasks" text="0" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #3b2314;"/>
+        </VBox>
+        <Separator orientation="VERTICAL"/>
+        <VBox alignment="CENTER" spacing="4">
+            <Label text="Chưa Bắt Đầu" style="-fx-font-size: 11px; -fx-text-fill: #666666;"/>
+            <Label fx:id="lblPendingTasks" text="0" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #d97706;"/>
+        </VBox>
+        <Separator orientation="VERTICAL"/>
+        <VBox alignment="CENTER" spacing="4">
+            <Label text="Đang Thực Hiện" style="-fx-font-size: 11px; -fx-text-fill: #666666;"/>
+            <Label fx:id="lblInProgressTasks" text="0" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2e5090;"/>
+        </VBox>
+        <Separator orientation="VERTICAL"/>
+        <VBox alignment="CENTER" spacing="4">
+            <Label text="Hoàn Thành" style="-fx-font-size: 11px; -fx-text-fill: #666666;"/>
+            <Label fx:id="lblCompletedTasks" text="0" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2d7c2d;"/>
+        </VBox>
+        <Region HBox.hgrow="ALWAYS"/>
+    </HBox>
+
+    <!-- Tasks Table -->
+    <VBox spacing="12" VBox.vgrow="ALWAYS">
+        <TableView fx:id="tasksTable" style="-fx-font-size: 11px;" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colTaskId" prefWidth="70" text="Mã Công Việc"/>
+                <TableColumn fx:id="colScheduleTime" prefWidth="80" text="Giờ Hẹn"/>
+                <TableColumn fx:id="colPetName" prefWidth="100" text="Thú Cưng"/>
+                <TableColumn fx:id="colCustomerName" prefWidth="130" text="Khách Hàng"/>
+                <TableColumn fx:id="colCustomerPhone" prefWidth="110" text="Điện Thoại"/>
+                <TableColumn fx:id="colServiceName" prefWidth="120" text="Dịch Vụ"/>
+                <TableColumn fx:id="colStatus" prefWidth="100" text="Trạng Thái"/>
+                <TableColumn fx:id="colAction" prefWidth="110" text="Thao Tác"/>
+            </columns>
+            <placeholder>
+                <Label text="Không có công việc được phân công"/>
+            </placeholder>
+        </TableView>
+    </VBox>
+
+    <!-- Task Details Panel -->
+    <VBox fx:id="detailsPanel"
+          spacing="12"
+          style="-fx-border-color: #d4a574; -fx-border-width: 1; -fx-border-radius: 4; -fx-padding: 14px;"
+          visible="false">
+        <Label text="Chi Tiết Công Việc"
+               style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #3b2314;"/>
+        
+        <GridPane hgap="12" vgap="10">
+            <columnConstraints>
+                <ColumnConstraints prefWidth="100"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+            </columnConstraints>
+
+            <Label text="Khách hàng:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <Label fx:id="lblDetailCustomer" text="—" GridPane.rowIndex="0" GridPane.columnIndex="1" style="-fx-font-weight: bold;"/>
+
+            <Label text="Thú cưng:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <VBox spacing="4" GridPane.rowIndex="1" GridPane.columnIndex="1">
+                <Label fx:id="lblDetailPet" text="—" style="-fx-font-weight: bold;"/>
+                <Label fx:id="lblDetailPetSpecies" text="—" style="-fx-font-size: 10px; -fx-text-fill: #666666;"/>
+            </VBox>
+
+            <Label text="Dịch vụ:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <Label fx:id="lblDetailService" text="—" GridPane.rowIndex="2" GridPane.columnIndex="1" style="-fx-font-weight: bold;"/>
+
+            <Label text="Giờ hẹn:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <Label fx:id="lblDetailTime" text="—" GridPane.rowIndex="3" GridPane.columnIndex="1" style="-fx-font-weight: bold;"/>
+
+            <Label text="Ghi chú:" GridPane.rowIndex="4" GridPane.columnIndex="0" GridPane.valignment="TOP"/>
+            <TextArea fx:id="txtDetailNote"
+                      editable="false"
+                      prefRowCount="2"
+                      wrapText="true"
+                      GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+            <Label text="Địa chỉ khách:" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.valignment="TOP"/>
+            <Label fx:id="lblDetailAddress" text="—" wrapText="true" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+        </GridPane>
+
+        <Separator/>
+
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <Button fx:id="btnStartTask"
+                    text="Bắt Đầu"
+                    style="-fx-padding: 8px 20px; -fx-font-weight: bold;"/>
+            <Button fx:id="btnCompleteTask"
+                    text="Hoàn Thành"
+                    style="-fx-padding: 8px 20px; -fx-font-weight: bold; -fx-background-color: #2d7c2d; -fx-text-fill: white;"/>
+            <Button fx:id="btnCloseDetails"
+                    text="Đóng"
+                    style="-fx-padding: 8px 16px;"/>
+            <Button fx:id="btnUpdateStatus"
+                    text="Cập Nhật Trạng Thái"
+                    style="-fx-padding: 8px 20px; -fx-font-weight: bold;"/>
+        </HBox>
+    </VBox>
+
+</VBox>

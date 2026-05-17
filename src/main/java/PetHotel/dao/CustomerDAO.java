@@ -26,13 +26,16 @@ public class CustomerDAO {
 
     /** Lấy customer theo ID */
     private static final String SQL_FIND_BY_ID =
-        "SELECT customer_id, full_name, email, phone, address, note, created_at, updated_at " +
+        "SELECT customer_id, full_name, email, cccd, phone, address, note, created_at, updated_at " +
         "FROM customer WHERE customer_id = ?";
 
     /** Lấy tất cả customer, mới nhất trước */
     private static final String SQL_FIND_ALL =
-        "SELECT customer_id, full_name, email, phone, address, note, created_at, updated_at " +
+        "SELECT customer_id, full_name, email, cccd, phone, address, note, created_at, updated_at " +
         "FROM customer ORDER BY created_at DESC";
+
+    private static final String SQL_FIND_IDS_BY_PREFIX =
+        "SELECT customer_id FROM customer WHERE customer_id LIKE 'CUS%'";
 
     /**
      * Tìm kiếm customer theo keyword (tên, SĐT, email).
@@ -40,22 +43,25 @@ public class CustomerDAO {
      * TODO: Thêm OFFSET/FETCH NEXT khi có pagination.
      */
     private static final String SQL_SEARCH =
-        "SELECT customer_id, full_name, email, phone, address, note, created_at, updated_at " +
+        "SELECT customer_id, full_name, email, cccd, phone, address, note, created_at, updated_at " +
         "FROM customer " +
-        "WHERE LOWER(full_name) LIKE LOWER(?) " +
+        "WHERE LOWER(customer_id) LIKE LOWER(?) " +
+        "   OR LOWER(full_name) LIKE LOWER(?) " +
+        "   OR phone LIKE ? " +
         "   OR phone LIKE ? " +
         "   OR LOWER(email) LIKE LOWER(?) " +
+        "   OR cccd LIKE ? " +
         "ORDER BY full_name";
 
     /** Thêm customer mới */
     private static final String SQL_INSERT =
-        "INSERT INTO customer (customer_id, full_name, email, phone, address, note, created_at, updated_at) " +
-        "VALUES (?, ?, ?, ?, ?, ?, SYSTIMESTAMP, SYSTIMESTAMP)";
+        "INSERT INTO customer (customer_id, full_name, email, cccd, phone, address, note) " +
+        "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
     /** Cập nhật thông tin customer */
     private static final String SQL_UPDATE =
         "UPDATE customer " +
-        "SET full_name = ?, email = ?, phone = ?, address = ?, note = ?, updated_at = SYSTIMESTAMP " +
+        "SET full_name = ?, email = ?, cccd = ?, phone = ?, address = ?, note = ?, updated_at = SYSTIMESTAMP " +
         "WHERE customer_id = ?";
 
     /** Xóa customer (chỉ dùng sau khi BUS đã kiểm tra ràng buộc) */
@@ -69,6 +75,10 @@ public class CustomerDAO {
     /** Kiểm tra email đã tồn tại chưa */
     private static final String SQL_EXISTS_EMAIL =
         "SELECT COUNT(*) FROM customer WHERE LOWER(email) = LOWER(?) AND customer_id != ?";
+
+    /** Kiểm tra CCCD đã tồn tại chưa */
+    private static final String SQL_EXISTS_CCCD =
+        "SELECT COUNT(*) FROM customer WHERE cccd = ? AND customer_id != ?";
 
     /** Đếm booking đang hoạt động của customer */
     private static final String SQL_COUNT_ACTIVE_BOOKINGS =
@@ -150,20 +160,47 @@ public class CustomerDAO {
      */
     public List<Customer> search(String keyword) throws SQLException {
         String pattern = "%" + keyword.trim() + "%";
+        String phoneSuffixPattern = "%" + keyword.trim();
         List<Customer> list = new ArrayList<>();
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(SQL_SEARCH)) {
 
-            ps.setString(1, pattern); // full_name
-            ps.setString(2, pattern); // phone (không cần LOWER vì phone chỉ chứa số)
-            ps.setString(3, pattern); // email
+            ps.setString(1, pattern); // customer_id
+            ps.setString(2, pattern); // full_name
+            ps.setString(3, pattern); // phone
+            ps.setString(4, phoneSuffixPattern); // 3 số cuối SĐT
+            ps.setString(5, pattern); // email
+            ps.setString(6, pattern); // cccd
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(mapRow(rs));
             }
         }
         return list;
+    }
+
+    public String generateNextCustomerId() throws SQLException {
+        synchronized (CustomerDAO.class) {
+            int max = 0;
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(SQL_FIND_IDS_BY_PREFIX);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String id = rs.getString("customer_id");
+                    if (isValidGeneratedCustomerId(id)) {
+                        max = Math.max(max, Integer.parseInt(id.substring(3)));
+                    }
+                }
+            }
+            return String.format("CUS%03d", max + 1);
+        }
+    }
+
+    private boolean isValidGeneratedCustomerId(String id) {
+        if (id == null || !id.matches("^CUS\\d+$")) return false;
+        int number = Integer.parseInt(id.substring(3));
+        return number < 1_000_000;
     }
 
     /**
@@ -182,9 +219,10 @@ public class CustomerDAO {
             ps.setString(1, customer.getCustomerId());
             ps.setString(2, customer.getFullName());
             ps.setString(3, customer.getEmail());      // có thể null
-            ps.setString(4, customer.getPhone());
-            ps.setString(5, customer.getAddress());    // có thể null
-            ps.setString(6, customer.getNote());       // có thể null (CLOB)
+            ps.setString(4, customer.getCccd());       // bắt buộc theo schema DB hiện tại
+            ps.setString(5, customer.getPhone());
+            ps.setString(6, customer.getAddress());    // có thể null
+            ps.setString(7, customer.getNote());       // có thể null (CLOB)
             ps.executeUpdate();
             ps.close();
         } finally {
@@ -207,10 +245,11 @@ public class CustomerDAO {
             PreparedStatement ps = c.prepareStatement(SQL_UPDATE);
             ps.setString(1, customer.getFullName());
             ps.setString(2, customer.getEmail());
-            ps.setString(3, customer.getPhone());
-            ps.setString(4, customer.getAddress());
-            ps.setString(5, customer.getNote());
-            ps.setString(6, customer.getCustomerId());
+            ps.setString(3, customer.getCccd());
+            ps.setString(4, customer.getPhone());
+            ps.setString(5, customer.getAddress());
+            ps.setString(6, customer.getNote());
+            ps.setString(7, customer.getCustomerId());
             int rows = ps.executeUpdate();
             ps.close();
             return rows;
@@ -277,6 +316,27 @@ public class CustomerDAO {
              PreparedStatement ps = conn.prepareStatement(SQL_EXISTS_EMAIL)) {
 
             ps.setString(1, email);
+            ps.setString(2, excludeId != null ? excludeId : "");
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
+    }
+
+    /**
+     * Kiểm tra CCCD đã tồn tại ở customer khác chưa.
+     *
+     * @param cccd      CCCD cần kiểm tra
+     * @param excludeId customer_id bỏ qua
+     * @return true nếu CCCD đã tồn tại
+     * @throws SQLException nếu lỗi DB
+     */
+    public boolean existsByCccd(String cccd, String excludeId) throws SQLException {
+        if (cccd == null || cccd.isEmpty()) return false;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_EXISTS_CCCD)) {
+
+            ps.setString(1, cccd);
             ps.setString(2, excludeId != null ? excludeId : "");
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() && rs.getInt(1) > 0;
@@ -370,6 +430,7 @@ public class CustomerDAO {
         c.setCustomerId(rs.getString("customer_id"));
         c.setFullName(rs.getString("full_name"));
         c.setEmail(rs.getString("email"));
+        c.setCccd(rs.getString("cccd"));
         c.setPhone(rs.getString("phone"));
         c.setAddress(rs.getString("address"));
 

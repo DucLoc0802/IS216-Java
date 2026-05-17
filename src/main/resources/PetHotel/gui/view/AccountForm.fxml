@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.String?>
-<?import javafx.collections.FXCollections?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
@@ -15,100 +13,65 @@
 <!--
   account-form.fxml — Form Tạo / Sửa Tài Khoản
   ─────────────────────────────────────────────────────────────────
-  Dùng như Stage (Modality.WINDOW_MODAL) hoặc embed vào StackPane overlay.
   Controller: PetHotel.gui.controller.AccountFormController
 
   Mode:
-    CREATE → fx:id="formTitle" text = "Tạo Tài Khoản Mới"
-    EDIT   → fx:id="formTitle" text = "Chỉnh Sửa Tài Khoản"
+    CREATE → title "Tạo Tài Khoản Mới"
+    EDIT   → title "Chỉnh Sửa Tài Khoản"
   ─────────────────────────────────────────────────────────────────
 -->
 
 <VBox maxWidth="480" prefWidth="480" spacing="0" style="-fx-background-color: white; -fx-background-radius: 14px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.18), 30, 0, 0, 8);" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="PetHotel.gui.controller.AccountFormController">
 
-    <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 20 24 16 24; -fx-background-color: -ph-cream; -fx-background-radius: 14px 14px 0 0; -fx-border-color: transparent transparent -ph-border transparent; -fx-border-width: 0 0 1 0;">
-        <Label style="-fx-font-size: 20px;" text="🔐" />
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="form-header">
+        <Region styleClass="form-header-icon" />
         <VBox spacing="2">
-            <Label fx:id="formTitle" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: -ph-dark;" text="Tạo Tài Khoản Mới" />
-            <Label fx:id="formSubtitle" style="-fx-font-size: 11px; -fx-text-fill: -ph-text-muted;" text="Điền đầy đủ thông tin bên dưới" />
+            <Label styleClass="form-header-title" text="Tạo Tài Khoản Mới" />
+            <Label styleClass="form-header-subtitle" text="Điền đầy đủ thông tin bên dưới" />
         </VBox>
         <Region HBox.hgrow="ALWAYS" />
-        <Button onAction="#onCancel" style="-fx-background-color: transparent; -fx-cursor: hand; -fx-font-size: 14px; -fx-text-fill: -ph-text-muted; -fx-border-color: transparent;" text="✕" />
+        <Button onAction="#onCancel" styleClass="form-close-btn" text="Đóng" />
     </HBox>
 
-    <VBox spacing="16" style="-fx-padding: 22 24 8 24;">
+    <VBox spacing="16" styleClass="form-body">
 
-        <Label styleClass="form-section-title" text="Thông Tin Cơ Bản" />
+        <Label styleClass="form-section-title" text="Thông Tin Tài Khoản" />
 
-        <HBox spacing="14">
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Họ và tên *" />
-                <TextField fx:id="txtFullName" promptText="Nguyễn Văn A" styleClass="form-field" />
-            </VBox>
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Username *" />
-                <TextField fx:id="txtUsername" promptText="admin_q1" styleClass="form-field" />
-            </VBox>
-        </HBox>
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Mã Nhân Viên *" />
+            <TextField fx:id="txtEmployeeId" promptText="EMP001" styleClass="form-field" />
+        </VBox>
 
-        <HBox spacing="14">
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Email" />
-                <TextField fx:id="txtEmail" promptText="ten@pethotel.vn" styleClass="form-field" />
-            </VBox>
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Số điện thoại" />
-                <TextField fx:id="txtPhone" promptText="09xxxxxxxx" styleClass="form-field" />
-            </VBox>
-        </HBox>
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Tên Đăng Nhập *" />
+            <TextField fx:id="txtUsername" promptText="admin_q1" styleClass="form-field" />
+        </VBox>
 
         <Separator styleClass="form-divider" />
 
         <Label styleClass="form-section-title" text="Mật Khẩu" />
 
-        <HBox spacing="14">
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Mật khẩu *" />
-                <PasswordField fx:id="txtPassword" promptText="••••••••" styleClass="form-field" />
-                <Label styleClass="form-hint" text="Tối thiểu 8 ký tự, gồm chữ và số" />
-            </VBox>
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Xác nhận mật khẩu *" />
-                <PasswordField fx:id="txtConfirmPassword" promptText="••••••••" styleClass="form-field" />
-                <Label fx:id="hintPwdMatch" style="-fx-text-fill: -ph-red;" styleClass="form-hint" text="" />
-            </VBox>
-        </HBox>
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Mật khẩu *" />
+            <PasswordField fx:id="txtPassword" promptText="••••••••" styleClass="form-field" />
+            <Label styleClass="form-hint" text="Tối thiểu 8 ký tự, gồm chữ hoa, chữ thường và số" />
+        </VBox>
 
         <Separator styleClass="form-divider" />
 
-        <Label styleClass="form-section-title" text="Vai Trò &amp; Phân Quyền" />
+        <Label styleClass="form-section-title" text="Vai Trò" />
 
-        <HBox spacing="14">
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Vai trò *" />
-                <ComboBox fx:id="cbRole" maxWidth="1.7976931348623157E308" promptText="Chọn vai trò..." styleClass="form-combo">
-                    <items>
-                        <javafx.collections.FXCollections fx:factory="observableArrayList">
-                            <String fx:value="Admin Hệ Thống" />
-                            <String fx:value="CEO" />
-                            <String fx:value="Quản Lý Chi Nhánh" />
-                            <String fx:value="Lễ Tân" />
-                        </javafx.collections.FXCollections>
-                    </items>
-                </ComboBox>
-            </VBox>
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Chi nhánh *" />
-                <ComboBox fx:id="cmbBranch" maxWidth="1.7976931348623157E308" promptText="Chọn chi nhánh..." styleClass="form-combo" />
-            </VBox>
-        </HBox>
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Vai trò *" />
+            <ComboBox fx:id="cbRole" maxWidth="1.7976931348623157E308" promptText="Chọn vai trò..." styleClass="form-combo" />
+        </VBox>
 
-        <Label fx:id="lblError" style="-fx-text-fill: -ph-red; -fx-font-size: 12px; -fx-font-weight: bold;" text="" wrapText="true" />
+        <Label fx:id="lblError" styleClass="form-error" text="" wrapText="true" />
     </VBox>
 
-    <HBox alignment="CENTER_RIGHT" spacing="10" style="-fx-padding: 16 24 20 24; -fx-border-color: -ph-border transparent transparent transparent; -fx-border-width: 1 0 0 0;">
-        <Button onAction="#onCancel" styleClass="btn-secondary" text="Hủy" />
-        <Button fx:id="btnSubmit" onAction="#onSubmit" styleClass="btn-primary" text="Tạo Tài Khoản" />
+    <HBox alignment="CENTER_RIGHT" spacing="10" styleClass="form-footer">
+        <Button onAction="#handleCancel" styleClass="btn-secondary" text="Hủy" />
+        <Button fx:id="btnSave" onAction="#handleSave" styleClass="btn-primary" text="Tạo Tài Khoản" />
     </HBox>
 
-</VBox>
+</VBox>  
