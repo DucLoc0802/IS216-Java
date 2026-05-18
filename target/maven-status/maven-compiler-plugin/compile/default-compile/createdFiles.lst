@@ -12,6 +12,7 @@ PetHotel\util\DBConnection.class
 PetHotel\bus\ServiceBUS.class
 PetHotel\dao\PetHealthRecordDAO.class
 PetHotel\gui\controller\ChangePasswordController.class
+PetHotel\gui\controller\PetFormController$1.class
 PetHotel\gui\controller\AddServiceCategoryController.class
 PetHotel\exception\NotFoundException.class
 PetHotel\gui\controller\BookingController.class
@@ -32,11 +33,13 @@ PetHotel\gui\controller\RoomTypeController.class
 PetHotel\gui\controller\AssignedTasksController.class
 PetHotel\gui\Main.class
 PetHotel\dao\BookingServiceDAO.class
+PetHotel\gui\controller\HealthRecordFormController.class
 PetHotel\gui\controller\GroomingBookingController$7.class
 PetHotel\exception\AuthorizationException.class
 PetHotel\model\BookingRoom.class
 PetHotel\util\PasswordUtil.class
 PetHotel\gui\controller\AccountFormController.class
+PetHotel\dao\PetDAO$PetBranchStats.class
 PetHotel\gui\controller\EmployeeFormController.class
 PetHotel\gui\controller\ReportController.class
 PetHotel\gui\controller\InvoiceController.class
@@ -44,6 +47,8 @@ PetHotel\bus\TypeRoomBUS.class
 PetHotel\gui\controller\GroomingBookingController$10.class
 PetHotel\gui\controller\ProductController.class
 PetHotel\gui\controller\CustomerController.class
+PetHotel\gui\controller\CreateBookingController$2.class
+PetHotel\gui\controller\CreateBookingController.class
 PetHotel\model\ServiceCategory.class
 PetHotel\model\BookingService.class
 PetHotel\model\BookingRoomPet.class
@@ -54,10 +59,12 @@ PetHotel\gui\controller\GroomingBookingController$1.class
 PetHotel\util\IDGenerator.class
 PetHotel\gui\controller\MainController.class
 PetHotel\gui\controller\AddServiceController$1.class
+PetHotel\bus\BookingBUS.class
 PetHotel\dao\AppUserDAO.class
 PetHotel\dao\EmployeeDAO.class
 PetHotel\model\PetHealthRecord.class
 PetHotel\gui\controller\ServiceController$1.class
+PetHotel\gui\controller\CreateBookingController$1.class
 PetHotel\bus\PetBUS.class
 PetHotel\dao\CustomerDAO.class
 PetHotel\model\TypeRoom.class
@@ -65,7 +72,6 @@ PetHotel\gui\controller\EmployeeController$1.class
 PetHotel\dao\ServiceCategoryDAO.class
 PetHotel\gui\controller\GroomingBookingController$2.class
 PetHotel\bus\EmployeeBUS.class
-PetHotel\gui\controller\PetController$2.class
 PetHotel\gui\controller\ProfileController.class
 PetHotel\gui\controller\GroomingBookingController$5.class
 PetHotel\gui\controller\ServiceDetailController$2.class
@@ -73,6 +79,7 @@ PetHotel\gui\controller\GroomingBookingController$8.class
 PetHotel\model\Booking.class
 PetHotel\gui\controller\AddRoomController.class
 PetHotel\model\Room.class
+PetHotel\dao\BookingDAO.class
 PetHotel\gui\controller\AssignedTasksController$1.class
 PetHotel\gui\controller\AddServiceController.class
 PetHotel\gui\controller\SupplierController.class
@@ -82,12 +89,16 @@ PetHotel\gui\controller\AddServiceController$2.class
 PetHotel\gui\controller\GroomingStaffAssignmentController.class
 PetHotel\exception\DuplicateRecordException.class
 PetHotel\gui\controller\AccountController$1.class
+PetHotel\gui\controller\PetFormController.class
 PetHotel\gui\controller\TopbarController.class
 PetHotel\model\Customer.class
+PetHotel\gui\controller\BookingController$1.class
 PetHotel\util\Role.class
 PetHotel\bus\AccountBUS.class
 PetHotel\gui\controller\RoomController$1.class
 PetHotel\gui\controller\GroomingBookingController$3.class
+PetHotel\gui\controller\PetController$PetLoadResult.class
+PetHotel\bus\PetBUS$PetBranchStats.class
 PetHotel\bus\CustomerBUS.class
 PetHotel\dao\PetDAO.class
 PetHotel\gui\controller\EmployeeController.class
@@ -96,6 +107,7 @@ PetHotel\bus\RoomBUS.class
 PetHotel\gui\controller\DashboardHomeController.class
 PetHotel\exception\ValidationException.class
 PetHotel\dao\TypeRoomDAO.class
+PetHotel\gui\controller\PetFormController$2.class
 PetHotel\gui\controller\GroomingBookingController.class
 PetHotel\gui\controller\GroomingController$1.class
 PetHotel\dao\RoomDAO.class

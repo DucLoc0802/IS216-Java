@@ -1,286 +1,127 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.geometry.*?>
-<?import javafx.collections.FXCollections?>
 <?import java.lang.String?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Pagination?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 
-<!--
-  PetManagement.fxml — Quản Lý Thú Cưng
-  ─────────────────────────────────────────────────────────────────
-  Đặt tại : src/main/resources/PetHotel/gui/view/PetManagement.fxml
-  Load bởi: SidebarController → mainController.loadView("PetManagement.fxml")
-  Controller: PetHotel.gui.controller.PetController
-  ─────────────────────────────────────────────────────────────────
--->
 <VBox spacing="20" styleClass="main-content"
       stylesheets="@../css/style.css"
       xmlns="http://javafx.com/javafx/25"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="PetHotel.gui.controller.PetController">
 
-    <!-- ══════════════════════════════════════════════════════
-         HEADER
-         ══════════════════════════════════════════════════════ -->
-    <HBox alignment="CENTER_LEFT" spacing="12">
+    <HBox fx:id="headerBar" alignment="CENTER_LEFT" spacing="12">
         <HBox alignment="CENTER_LEFT" spacing="8">
             <Region styleClass="section-header-line"/>
             <VBox spacing="2">
                 <Label text="Quản Lý Thú Cưng" styleClass="section-header"/>
-                <Label text="Danh sách và hồ sơ thú cưng toàn hệ thống"
-                       style="-fx-font-size:11px; -fx-text-fill: -ph-text-muted;"/>
+                <Label text="Danh sách thú cưng tại chi nhánh" styleClass="ph-page-subtitle"/>
             </VBox>
         </HBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="Thêm Thú Cưng" styleClass="action-btn action-btn-primary"
+        <Button fx:id="btnAddPet" text="Thêm Thú Cưng" styleClass="action-btn action-btn-primary"
                 onAction="#onAddPet"/>
     </HBox>
 
-    <!-- ══════════════════════════════════════════════════════
-         STAT CARDS
-         ══════════════════════════════════════════════════════ -->
-    <HBox spacing="14">
-        <VBox styleClass="stat-card stat-card-brown" HBox.hgrow="ALWAYS">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="" styleClass="stat-icon"/>
-                <VBox spacing="2">
-                    <Label text="Tổng Thú Cưng" styleClass="stat-label"/>
-                    <Label fx:id="statTotalPets" text="—" styleClass="stat-value"/>
-                </VBox>
-            </HBox>
-            <Label text="Đang đăng ký trong hệ thống" styleClass="stat-sublabel"/>
+    <HBox fillHeight="true" spacing="14" styleClass="summary-card-row">
+        <VBox alignment="CENTER_LEFT" maxWidth="Infinity" minHeight="118" prefHeight="118" spacing="8"
+              styleClass="summary-card summary-card-brown" HBox.hgrow="ALWAYS">
+            <Label text="Tổng thú cưng" styleClass="summary-title"/>
+            <Label fx:id="statTotalPets" text="-" styleClass="summary-value"/>
+            <Label text="Thuộc chi nhánh hiện tại" styleClass="summary-subtitle"/>
         </VBox>
-        <VBox styleClass="stat-card stat-card-green" HBox.hgrow="ALWAYS">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="" styleClass="stat-icon"/>
-                <VBox spacing="2">
-                    <Label text="Đang Ở Khách Sạn" styleClass="stat-label"/>
-                    <Label fx:id="statPetsStaying" text="—" styleClass="stat-value"/>
-                </VBox>
-            </HBox>
-            <Label text="Check-in hiện tại" styleClass="stat-sublabel"/>
+
+        <VBox alignment="CENTER_LEFT" maxWidth="Infinity" minHeight="118" prefHeight="118" spacing="8"
+              styleClass="summary-card summary-card-green" HBox.hgrow="ALWAYS">
+            <Label text="Đang ở khách sạn" styleClass="summary-title"/>
+            <Label fx:id="statPetsStaying" text="-" styleClass="summary-value"/>
+            <Label text="Booking đã check-in" styleClass="summary-subtitle"/>
         </VBox>
-        <VBox styleClass="stat-card stat-card-amber" HBox.hgrow="ALWAYS">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="" styleClass="stat-icon"/>
-                <VBox spacing="2">
-                    <Label text="Grooming Hôm Nay" styleClass="stat-label"/>
-                    <Label fx:id="statPetsGrooming" text="—" styleClass="stat-value"/>
-                </VBox>
-            </HBox>
-            <Label text="Lịch grooming trong ngày" styleClass="stat-sublabel"/>
+
+        <VBox alignment="CENTER_LEFT" maxWidth="Infinity" minHeight="118" prefHeight="118" spacing="8"
+              styleClass="summary-card summary-card-amber" HBox.hgrow="ALWAYS">
+            <Label text="Grooming hôm nay" styleClass="summary-title"/>
+            <Label fx:id="statPetsGrooming" text="-" styleClass="summary-value"/>
+            <Label text="Lịch grooming trong ngày" styleClass="summary-subtitle"/>
         </VBox>
-        <VBox styleClass="stat-card stat-card-red" HBox.hgrow="ALWAYS">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="" styleClass="stat-icon"/>
-                <VBox spacing="2">
-                    <Label text="Cần Theo Dõi Sức Khoẻ" styleClass="stat-label"/>
-                    <Label fx:id="statPetsMonitoring" text="—" styleClass="stat-value"/>
-                </VBox>
-            </HBox>
-            <Label text="Thú cưng cần chú ý" styleClass="stat-sublabel"/>
+
+        <VBox alignment="CENTER_LEFT" maxWidth="Infinity" minHeight="118" prefHeight="118" spacing="8"
+              styleClass="summary-card summary-card-red" HBox.hgrow="ALWAYS">
+            <Label text="Cần theo dõi sức khỏe" styleClass="summary-title"/>
+            <Label fx:id="statPetsMonitoring" text="-" styleClass="summary-value"/>
+            <Label text="Ghi nhận mới nhất cần chú ý" styleClass="summary-subtitle"/>
         </VBox>
     </HBox>
 
-    <!-- ══════════════════════════════════════════════════════
-         FILTER BAR
-         ══════════════════════════════════════════════════════ -->
-    <HBox styleClass="filter-bar" alignment="CENTER_LEFT" spacing="12">
-        <!-- Search -->
+    <HBox styleClass="filter-bar ph-pet-filter-bar" alignment="CENTER_LEFT" spacing="12">
         <HBox styleClass="search-box" alignment="CENTER_LEFT" spacing="8" HBox.hgrow="ALWAYS">
             <Label text="" styleClass="search-icon"/>
             <TextField fx:id="searchField"
-                       promptText="Tìm theo tên thú cưng, giống, chủ sở hữu..."
+                       promptText="Tìm theo mã, tên thú cưng, loài, giống, chủ sở hữu..."
                        styleClass="search-input"
                        HBox.hgrow="ALWAYS"
                        onAction="#onSearch"/>
         </HBox>
 
-        <!-- Filter: Loại thú -->
-        <VBox spacing="3">
-            <Label text="Loại thú" styleClass="filter-label"/>
-            <ComboBox fx:id="filterSpecies" styleClass="filter-combo" prefWidth="130"
-                      promptText="Tất cả">
-                <items>
-                    <FXCollections fx:factory="observableArrayList">
-                        <String fx:value="Tất cả"/>
-                        <String fx:value="Chó"/>
-                        <String fx:value="Mèo"/>
-                        <String fx:value="Khác"/>
-                    </FXCollections>
-                </items>
-            </ComboBox>
-        </VBox>
+        <ComboBox fx:id="filterSpecies" styleClass="filter-combo ph-pet-filter-combo" prefWidth="160" promptText="Loại thú">
+            <items>
+                <FXCollections fx:factory="observableArrayList">
+                    <String fx:value="Tất cả"/>
+                    <String fx:value="Chó"/>
+                    <String fx:value="Mèo"/>
+                    <String fx:value="Khác"/>
+                </FXCollections>
+            </items>
+        </ComboBox>
 
-        <!-- Filter: Sức khoẻ -->
-        <VBox spacing="3">
-            <Label text="Sức khoẻ" styleClass="filter-label"/>
-            <ComboBox fx:id="filterHealth" styleClass="filter-combo" prefWidth="140"
-                      promptText="Tất cả">
-                <items>
-                    <FXCollections fx:factory="observableArrayList">
-                        <String fx:value="Tất cả"/>
-                        <String fx:value="Bình thường"/>
-                        <String fx:value="Cần theo dõi"/>
-                        <String fx:value="Đang bệnh"/>
-                    </FXCollections>
-                </items>
-            </ComboBox>
-        </VBox>
+        <ComboBox fx:id="filterHealth" styleClass="filter-combo ph-pet-filter-combo" prefWidth="160" promptText="Sức khỏe">
+            <items>
+                <FXCollections fx:factory="observableArrayList">
+                    <String fx:value="Tất cả"/>
+                    <String fx:value="Bình thường"/>
+                    <String fx:value="Cần theo dõi"/>
+                    <String fx:value="Bất thường"/>
+                </FXCollections>
+            </items>
+        </ComboBox>
 
-        <Button text="Tìm" styleClass="action-btn action-btn-primary"
-                onAction="#onSearch" style="-fx-padding: 7 18 7 18;"/>
-        <Button text="Xóa lọc" styleClass="action-btn action-btn-outline"
-                onAction="#onClearFilter" style="-fx-padding: 7 14 7 14;"/>
+        <Button text="Tìm" prefWidth="90" styleClass="action-btn action-btn-primary" onAction="#onSearch"/>
+        <Button text="Xóa lọc" prefWidth="100" styleClass="action-btn action-btn-outline" onAction="#onClearFilter"/>
     </HBox>
 
-    <!-- ══════════════════════════════════════════════════════
-         ACTION TOOLBAR + TABLE  (left) | DETAIL PANEL (right)
-         ══════════════════════════════════════════════════════ -->
-    <HBox spacing="18" VBox.vgrow="ALWAYS">
-
-        <!-- LEFT: Table -->
-        <VBox styleClass="content-panel" HBox.hgrow="ALWAYS" spacing="12">
-
-            <!-- Toolbar -->
-            <HBox styleClass="action-toolbar" alignment="CENTER_LEFT">
-                <Button fx:id="btnEdit"    text="Sửa Thông Tin"    styleClass="action-btn action-btn-outline"
-                        onAction="#onEditPet"        disable="true"/>
-                <Button fx:id="btnDelete"  text="Xóa"              styleClass="action-btn action-btn-danger"
-                        onAction="#onDeletePet"      disable="true"/>
-                <Button fx:id="btnHealth"  text="Sức Khoẻ"        styleClass="action-btn action-btn-amber"
-                        onAction="#onHealthRecord"   disable="true"/>
-                <Button fx:id="btnHistory" text="Lịch Sử DV"      styleClass="action-btn action-btn-outline"
-                        onAction="#onServiceHistory" disable="true"/>
-                <Region HBox.hgrow="ALWAYS"/>
-                <Label fx:id="selectionInfo" text=""
-                       style="-fx-font-size:11px; -fx-text-fill: -ph-text-muted;"/>
-            </HBox>
-
-            <!-- Table -->
-            <TableView fx:id="petTable" styleClass="data-table" VBox.vgrow="ALWAYS"
-                       onMouseClicked="#onTableClick">
-                <columns>
-                    <TableColumn fx:id="colPetIcon"    text=""            prefWidth="46"  resizable="false"/>
-                    <TableColumn fx:id="colPetId"      text="Mã"          prefWidth="70"/>
-                    <TableColumn fx:id="colPetName"    text="Tên Thú Cưng" prefWidth="130"/>
-                    <TableColumn fx:id="colPetSpecies" text="Loại / Giống" prefWidth="130"/>
-                    <TableColumn fx:id="colPetAge"     text="Tuổi"         prefWidth="70"/>
-                    <TableColumn fx:id="colPetOwner"   text="Chủ Sở Hữu"  prefWidth="150"/>
-                    <TableColumn fx:id="colPetHealth"  text="Sức Khoẻ"    prefWidth="110"/>
-                    <TableColumn fx:id="colPetStatus"  text="Trạng Thái"  prefWidth="110"/>
-                    <TableColumn fx:id="colPetActions" text="Thao Tác"     prefWidth="110" resizable="false"/>
-                </columns>
-                <placeholder>
-                    <VBox alignment="CENTER" spacing="8">
-                        <Label text="" style="-fx-font-size:28px;"/>
-                        <Label text="Không tìm thấy thú cưng nào" styleClass="table-empty"/>
-                    </VBox>
-                </placeholder>
-            </TableView>
-
-            <!-- Pagination -->
-            <HBox alignment="CENTER_RIGHT" spacing="10">
-                <Label fx:id="pageInfo" text="Hiển thị 0 / 0 thú cưng"
-                       style="-fx-font-size:11px; -fx-text-fill: -ph-text-muted;"/>
-                <Pagination fx:id="pagination" pageCount="1" maxPageIndicatorCount="5"/>
-            </HBox>
-        </VBox>
-
-        <!-- RIGHT: Detail Panel -->
-        <VBox fx:id="detailPanel" prefWidth="320" minWidth="300" spacing="14">
-
-            <!-- Pet profile card -->
-            <VBox styleClass="content-panel" spacing="14">
-                <HBox alignment="CENTER_LEFT" spacing="8">
-                    <Region styleClass="section-header-line"/>
-                    <Label text="Hồ Sơ Thú Cưng" styleClass="panel-title"/>
-                </HBox>
-
-                <!-- Pet avatar + info -->
-                <VBox alignment="CENTER" spacing="8" style="-fx-padding: 8 0 8 0;">
-                    <Label fx:id="detailPetIcon" text="" styleClass="pet-avatar"/>
-                    <Label fx:id="detailPetName" text="—" styleClass="detail-name"/>
-                    <HBox alignment="CENTER" spacing="6">
-                        <Label fx:id="detailPetSpecies" text="—" styleClass="detail-sub"/>
-                        <Label text="·" style="-fx-text-fill: -ph-text-muted;"/>
-                        <Label fx:id="detailPetHealth" text="—" styleClass="status-badge status-healthy"/>
-                    </HBox>
+    <VBox styleClass="content-panel" spacing="12" VBox.vgrow="ALWAYS">
+        <TableView fx:id="petTable" VBox.vgrow="ALWAYS" onMouseClicked="#onTableClick">
+            <styleClass>
+                <String fx:value="data-table"/>
+                <String fx:value="management-table"/>
+                <String fx:value="ph-pet-table"/>
+            </styleClass>
+            <columns>
+                <TableColumn fx:id="colPetId" text="Mã thú cưng" prefWidth="130"/>
+                <TableColumn fx:id="colPetName" text="Tên thú cưng" prefWidth="180"/>
+                <TableColumn fx:id="colPetSpecies" text="Loài / Giống" prefWidth="210"/>
+                <TableColumn fx:id="colPetOwner" text="Chủ sở hữu" prefWidth="260"/>
+                <TableColumn fx:id="colPetHealth" text="Sức khỏe" prefWidth="180"/>
+            </columns>
+            <placeholder>
+                <VBox alignment="CENTER" spacing="8">
+                    <Label text="Không tìm thấy thú cưng nào" styleClass="table-empty"/>
                 </VBox>
+            </placeholder>
+        </TableView>
 
-                <Separator styleClass="detail-divider"/>
-
-                <!-- Info grid -->
-                <GridPane hgap="10" vgap="8">
-                    <Label text="Mã thú cưng" styleClass="detail-key" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                    <Label fx:id="detailPetId"    text="—" styleClass="detail-value" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-
-                    <Label text="Ngày sinh"    styleClass="detail-key" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                    <Label fx:id="detailPetDob"   text="—" styleClass="detail-value" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-
-                    <Label text="Cân nặng"     styleClass="detail-key" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                    <Label fx:id="detailPetWeight" text="—" styleClass="detail-value" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-
-                    <Label text="Màu lông"     styleClass="detail-key" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                    <Label fx:id="detailPetColor"  text="—" styleClass="detail-value" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-
-                    <Label text="Chủ sở hữu"  styleClass="detail-key" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                    <Label fx:id="detailOwner"     text="—" styleClass="detail-value" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
-
-                    <Label text="SĐT chủ"     styleClass="detail-key" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-                    <Label fx:id="detailOwnerPhone" text="—" styleClass="detail-value" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
-
-                    <Label text="Ghi chú đặc biệt" styleClass="detail-key" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
-                    <Label fx:id="detailPetNote"   text="—" styleClass="detail-value"
-                           wrapText="true" maxWidth="170"
-                           GridPane.rowIndex="6" GridPane.columnIndex="1"/>
-                    <columnConstraints>
-                        <ColumnConstraints prefWidth="110" minWidth="100"/>
-                        <ColumnConstraints hgrow="ALWAYS"/>
-                    </columnConstraints>
-                </GridPane>
-
-                <!-- Quick actions -->
-                <VBox spacing="8">
-                    <Separator styleClass="detail-divider"/>
-                    <Label text="Thao Tác Nhanh" styleClass="form-label"/>
-                    <HBox spacing="8">
-                        <Button fx:id="btnDetailEdit"    text="Sửa"      styleClass="action-btn action-btn-outline"
-                                onAction="#onEditPet"        disable="true"/>
-                        <Button fx:id="btnDetailHealth"  text="Sức Khoẻ" styleClass="action-btn action-btn-amber"
-                                onAction="#onHealthRecord"   disable="true"/>
-                        <Button fx:id="btnDetailHistory" text="Lịch Sử"  styleClass="action-btn action-btn-outline"
-                                onAction="#onServiceHistory" disable="true"/>
-                    </HBox>
-                </VBox>
-
-                <!-- No selection hint -->
-                <VBox fx:id="noSelectionHint" styleClass="no-selection-hint" spacing="8">
-                    <Label text="" style="-fx-font-size:26px;"/>
-                    <Label text="Chọn một thú cưng để xem hồ sơ"
-                           style="-fx-font-size:12px; -fx-text-fill: -ph-text-muted; -fx-text-alignment:center;"
-                           wrapText="true" maxWidth="200" textAlignment="CENTER"/>
-                </VBox>
-            </VBox>
-
-            <!-- Health summary card -->
-            <VBox styleClass="content-panel" spacing="10">
-                <HBox alignment="CENTER_LEFT" spacing="8">
-                    <Region styleClass="section-header-line"/>
-                    <Label text="Ghi Nhận Sức Khoẻ Gần Nhất" styleClass="panel-title"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="Thêm →" styleClass="panel-link-btn"
-                            onAction="#onHealthRecord" fx:id="btnAddHealth" disable="true"/>
-                </HBox>
-                <VBox fx:id="healthLogList" spacing="6">
-                    <!-- Populated by controller -->
-                </VBox>
-                <Label fx:id="healthEmptyHint" text="Chưa có ghi nhận sức khoẻ"
-                       style="-fx-font-size:12px; -fx-text-fill: -ph-text-muted; -fx-padding: 8 0 4 0;"/>
-            </VBox>
-
-        </VBox>
-    </HBox>
-
+        <HBox alignment="CENTER_RIGHT" spacing="10">
+            <Label fx:id="pageInfo" text="Hiển thị 0 / 0 thú cưng" styleClass="ph-page-info"/>
+            <Pagination fx:id="pagination" pageCount="1" maxPageIndicatorCount="5"/>
+        </HBox>
+    </VBox>
 </VBox>

@@ -1,57 +1,133 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 
-<VBox spacing="16" styleClass="dialog-content" stylesheets="@../css/style.css"
+<VBox maxWidth="550" prefWidth="550" spacing="0" 
+      styleClass="form-root"
+      stylesheets="@../css/style.css"
       xmlns="http://javafx.com/javafx/25"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="PetHotel.gui.controller.CreateBookingController"
-      prefWidth="600" prefHeight="500">
+      fx:controller="PetHotel.gui.controller.CreateBookingController">
 
-    <Label styleClass="dialog-title" text="Tạo Booking Mới" />
+    <!-- HEADER -->
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="form-header">
+        <Label styleClass="form-header-icon" text="" />
+        <VBox spacing="2">
+            <Label styleClass="form-header-title"
+                   text="Tạo Booking Mới" />
+            <Label styleClass="form-header-subtitle"
+                   text="Đặt phòng cho khách hàng và thú cưng" />
+        </VBox>
+        <Region HBox.hgrow="ALWAYS" />
+        <Button onAction="#onCancel" 
+                styleClass="form-close-btn"
+                text="Đóng" />
+    </HBox>
 
-    <GridPane hgap="12" vgap="12">
-        <Label text="Khách Hàng *" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-        <ComboBox fx:id="cbCustomer" prefWidth="300"
-                  GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+    <!-- BODY -->
+    <VBox spacing="16" styleClass="form-body">
 
-        <Label text="Thú Cưng *" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-        <ComboBox fx:id="cbPet" prefWidth="300"
-                  GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+        <!-- SECTION: Khách Hàng & Thú Cưng -->
+        <Label styleClass="form-section-title" text="Khách Hàng &amp; Thú Cưng" />
 
-        <Label text="Loại Phòng" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-        <ComboBox fx:id="cbRoomType" prefWidth="300"
-                  GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+        <HBox spacing="14">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Khách hàng *" />
+                <ComboBox fx:id="cbCustomer" styleClass="form-combo" />
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Thú cưng *" />
+                <ComboBox fx:id="cbPet" styleClass="form-combo" />
+            </VBox>
+        </HBox>
 
-        <Label text="Phòng *" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-        <ComboBox fx:id="cbRoom" prefWidth="300"
-                  GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+        <Separator styleClass="form-divider" />
 
-        <Label text="Ngày Check-in *" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
-        <DatePicker fx:id="dateCheckin" prefWidth="300"
-                    GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+        <!-- SECTION: Phòng -->
+        <Label styleClass="form-section-title" text="Thông Tin Phòng" />
 
-        <Label text="Ngày Check-out *" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
-        <DatePicker fx:id="dateCheckout" prefWidth="300"
-                    GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+        <HBox spacing="14">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Loại phòng" />
+                <ComboBox fx:id="cbRoomType" styleClass="form-combo" />
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Phòng *" />
+                <ComboBox fx:id="cbRoom" styleClass="form-combo" />
+            </VBox>
+        </HBox>
 
-        <Label text="Đặt Cọc" GridPane.columnIndex="0" GridPane.rowIndex="6"/>
-        <TextField fx:id="txtDeposit" promptText="0"
-                   GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+        <Separator styleClass="form-divider" />
 
-        <Label text="Ghi Chú" GridPane.columnIndex="0" GridPane.rowIndex="7"/>
-        <TextArea fx:id="txtNote" prefHeight="60" prefWidth="300"
-                  GridPane.columnIndex="1" GridPane.rowIndex="7"/>
-    </GridPane>
+        <!-- SECTION: Ngày -->
+        <Label styleClass="form-section-title" text="Ngày Check-in/Check-out" />
 
-    <Label fx:id="lblError" style="-fx-text-fill: red;" text=""/>
+        <HBox spacing="14">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Ngày Check-in *" />
+                <DatePicker fx:id="dateCheckin" styleClass="form-combo" />
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Ngày Check-out *" />
+                <DatePicker fx:id="dateCheckout" styleClass="form-combo" />
+            </VBox>
+        </HBox>
 
-    <HBox alignment="CENTER_RIGHT" spacing="10">
-        <Button fx:id="btnCancel" onAction="#onCancel" text="Hủy"
-                styleClass="action-btn action-btn-outline"/>
-        <Button onAction="#onSave" text="Lưu"
-                styleClass="action-btn action-btn-primary"/>
+        <Separator styleClass="form-divider" />
+
+        <!-- SECTION: Thanh Toán -->
+        <Label styleClass="form-section-title" text="Thanh Toán" />
+
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Đặt Cọc (VNĐ)" />
+            <TextField fx:id="txtDeposit" 
+                      promptText="0" 
+                      styleClass="form-field" />
+            <Label styleClass="form-hint" text="Số tiền đặt cọc ban đầu" />
+        </VBox>
+
+        <Separator styleClass="form-divider" />
+
+        <!-- SECTION: Ghi Chú -->
+        <Label styleClass="form-section-title" text="Ghi Chú" />
+
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Ghi chú bổ sung" />
+            <TextArea fx:id="txtNote" 
+                     promptText="Ví dụ: yêu cầu đặc biệt, chú ý sức khỏe..." 
+                     styleClass="form-area"
+                     prefRowCount="3"
+                     wrapText="true" />
+            <Label styleClass="form-hint" text="Không bắt buộc" />
+        </VBox>
+
+        <!-- ERROR LABEL -->
+        <Label fx:id="lblError" 
+               styleClass="form-error"
+               text="" 
+               wrapText="true" 
+               visible="false" />
+
+    </VBox>
+
+    <!-- FOOTER -->
+    <HBox alignment="CENTER_RIGHT" spacing="10" styleClass="form-footer">
+        <Button fx:id="btnCancel" 
+                onAction="#onCancel" 
+                styleClass="btn-secondary" 
+                text="Hủy" />
+        <Button onAction="#onSave" 
+                styleClass="btn-primary" 
+                text="Lưu Booking" />
     </HBox>
 
 </VBox>

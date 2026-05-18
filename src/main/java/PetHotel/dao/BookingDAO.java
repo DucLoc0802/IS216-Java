@@ -1,11 +1,16 @@
 package PetHotel.dao;
 
-import PetHotel.model.Booking;
-import PetHotel.util.DBConnection;
-
-import java.sql.*;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+
+import PetHotel.model.Booking;
+import PetHotel.util.DBConnection;
 
 public class BookingDAO {
 

@@ -10,6 +10,7 @@ import PetHotel.dao.EmployeeDAO;
 import PetHotel.exception.ValidationException;
 import PetHotel.model.AppUser;
 import PetHotel.model.BookingService;
+import PetHotel.model.Employee;
 import PetHotel.util.Role;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -50,6 +51,7 @@ public class GroomingController {
     @FXML private TableView<GroomingRow> groomingTable;
     @FXML private Button btnCreateGrooming;
     @FXML private Button btnAssignGroomingStaff;
+    @FXML private Label panelTitle;
     @FXML private TableColumn<GroomingRow, String> colGrId;
     @FXML private TableColumn<GroomingRow, String> colGrTime;
     @FXML private TableColumn<GroomingRow, String> colGrPet;
@@ -66,6 +68,7 @@ public class GroomingController {
     private AppUser currentUser;
     private DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("HH:mm");
+    private boolean viewAllSchedules = false;
 
     @FXML
     public void initialize() {
@@ -209,29 +212,73 @@ public class GroomingController {
             LocalDate selectedLocalDate = selectedDate.getValue();
             if (selectedLocalDate == null) {
                 selectedLocalDate = LocalDate.now();
+                selectedDate.setValue(selectedLocalDate);
             }
-            String dateStr = selectedLocalDate.format(dateFormatter);
-            
-            String selectedStaff = filterStaff.getValue();
-            String staffId = "Tất cả".equals(selectedStaff) ? null : getStaffIdFromName(selectedStaff);
-            
+
+            // Update panel title
+            if (panelTitle != null) {
+                if (viewAllSchedules) {
+                    panelTitle.setText("Lịch Grooming - Tất Cả");
+                } else {
+                    panelTitle.setText("Lịch Grooming Hôm Nay (" + selectedLocalDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")");
+                }
+            }
+
+            String dateStr = selectedLocalDate.format(dateFormatter);   
+
             String selectedStatus = filterGroomStatus.getValue();
-            String status = "Tất cả".equals(selectedStatus) ? null : selectedStatus;
+            String status = (selectedStatus == null || "Tất cả".equals(selectedStatus))
+                    ? null
+                    : selectedStatus;
 
-            // Gọi BUS để lấy dữ liệu
-            List<BookingService> bookingServices = groomingBUS.getGroomingScheduleByDate(dateStr, staffId, status, currentUser);
+            String staffId = null;
 
-            // Convert sang GroomingRow và hiển thị
-            ObservableList<GroomingRow> rows = FXCollections.observableArrayList();
-            for (BookingService bs : bookingServices) {
-                rows.add(new GroomingRow(bs));
+            if (currentUser.hasRole(Role.PET_CARE_STAFF)) {
+                staffId = currentUser.getEmployeeId();
             }
+
+            // Lễ tân và quản lý chi nhánh xem tất cả
+            if (currentUser.hasRole(Role.RECEPTIONIST)
+                    || currentUser.hasRole(Role.BRANCH_MANAGER)
+                    || currentUser.hasRole(Role.ADMIN)) {
+                staffId = null;
+            }
+
+            System.out.println("DEBUG load grooming:");
+            System.out.println("role = " + currentUser.getRole());
+            System.out.println("dateStr = " + dateStr);
+            System.out.println("staffId = " + staffId);
+            System.out.println("status = " + status);
+
+            List<BookingService> bookingServices =
+                    groomingBUS.getGroomingScheduleByDate(dateStr, staffId, status, currentUser);
+
+            System.out.println("DEBUG grooming size = " + bookingServices.size());
+
+            ObservableList<GroomingRow> rows = FXCollections.observableArrayList();
+
+            for (BookingService bs : bookingServices) {
+                System.out.println(
+                    "DEBUG row = " + bs.getBookingServiceId()
+                    + " | pet=" + bs.getPetName()
+                    + " | customer=" + bs.getCustomerName()
+                    + " | service=" + bs.getServiceName()
+                    + " | emp=" + bs.getEmployeeId()
+                    + " | status=" + bs.getStatus()
+                );
+
+                rows.add(new GroomingRow(bs, employeeDAO));
+            }
+
             groomingTable.setItems(rows);
 
         } catch (ValidationException e) {
             showAlert(Alert.AlertType.WARNING, "Cảnh báo", e.getMessage());
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Lỗi Database", e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            showAlert(Alert.AlertType.ERROR, "Lỗi", e.getMessage());
             e.printStackTrace();
         }
     }
@@ -326,6 +373,19 @@ public class GroomingController {
     @FXML
     public void onToday(ActionEvent event) {
         selectedDate.setValue(LocalDate.now());
+        viewAllSchedules = false;
+        loadGroomingSchedule();
+    }
+
+    @FXML
+    public void onViewAllSchedules(ActionEvent event) {
+        viewAllSchedules = false;
+
+        if (selectedDate.getValue() == null) {
+            selectedDate.setValue(LocalDate.now());
+        }
+
+        loadGroomingSchedule();
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {
@@ -374,14 +434,34 @@ public class GroomingController {
         private String staffName;
         private String status;
 
-        public GroomingRow(BookingService bs) {
+        public GroomingRow(BookingService bs, EmployeeDAO employeeDAO) {
             this.id = bs.getBookingServiceId();
-            this.time = bs.getScheduledAt() != null ? 
-                bs.getScheduledAt().format(DateTimeFormatter.ofPattern("HH:mm")) : "";
-            this.petName = "—"; // TODO: Load từ database
-            this.ownerName = "—";
-            this.serviceName = "Grooming";
-            this.staffName = bs.getEmployeeId() != null ? bs.getEmployeeId() : "Chưa phân công";
+
+            this.time = bs.getScheduledAt() != null
+                    ? bs.getScheduledAt().format(DateTimeFormatter.ofPattern("HH:mm"))
+                    : "";
+
+            this.petName = bs.getPetName() != null ? bs.getPetName() : "—";
+            this.ownerName = bs.getCustomerName() != null ? bs.getCustomerName() : "—";
+            this.serviceName = bs.getServiceName() != null ? bs.getServiceName() : "—";
+
+            // Get staff name with ID
+            if (bs.getEmployeeId() != null && !bs.getEmployeeId().isEmpty()) {
+                try {
+                    Employee employee = employeeDAO.findById(bs.getEmployeeId());
+                    if (employee != null && employee.getFullName() != null) {
+                        this.staffName = bs.getEmployeeId() + " - " + employee.getFullName();
+                    } else {
+                        this.staffName = bs.getEmployeeId() + " - (Không tìm thấy)";
+                    }
+                } catch (Exception e) {
+                    this.staffName = bs.getEmployeeId() + " - (Lỗi tải tên)";
+                    e.printStackTrace();
+                }
+            } else {
+                this.staffName = "Chưa phân công";
+            }
+
             this.status = bs.getStatus();
         }
 

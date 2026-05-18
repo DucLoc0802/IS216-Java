@@ -34,6 +34,7 @@
         <DatePicker fx:id="selectedDate" prefWidth="160" styleClass="filter-combo" />
         <Button onAction="#onNextDay" style="-fx-padding: 6 12 6 12;" styleClass="action-btn action-btn-outline" text="Sau" />
         <Button onAction="#onToday" style="-fx-padding: 6 14 6 14;" styleClass="action-btn action-btn-outline" text="Hôm Nay" />
+        <Button onAction="#onViewAllSchedules" style="-fx-padding: 6 14 6 14;" styleClass="action-btn action-btn-outline" text="Xem Tất Cả Lịch" />
         <Region HBox.hgrow="ALWAYS" />
         <ComboBox fx:id="filterStaff" prefWidth="170" promptText="Nhân viên thực hiện" styleClass="filter-combo" />
         <ComboBox fx:id="filterGroomStatus" prefWidth="140" promptText="Trạng thái" styleClass="filter-combo" />
@@ -42,7 +43,7 @@
     <HBox spacing="18">
         <!-- Schedule list -->
         <VBox spacing="12" styleClass="content-panel" HBox.hgrow="ALWAYS">
-            <Label styleClass="panel-title" text="Lịch Grooming Hôm Nay" />
+            <Label fx:id="panelTitle" styleClass="panel-title" text="Lịch Grooming Hôm Nay" />
             <TableView fx:id="groomingTable" styleClass="data-table" VBox.vgrow="ALWAYS">
                 <columns>
                     <TableColumn fx:id="colGrId" prefWidth="70" text="Mã" />
@@ -50,7 +51,7 @@
                     <TableColumn fx:id="colGrPet" prefWidth="120" text="Thú Cưng" />
                     <TableColumn fx:id="colGrOwner" prefWidth="120" text="Chủ" />
                     <TableColumn fx:id="colGrService" prefWidth="150" text="Dịch Vụ" />
-                    <TableColumn fx:id="colGrStaff" prefWidth="130" text="Nhân Viên" />
+                    <TableColumn fx:id="colGrStaff" prefWidth="160" text="Nhân Viên (ID - Tên)" />
                     <TableColumn fx:id="colGrStatus" prefWidth="110" text="Trạng Thái" />
                     <TableColumn fx:id="colGrAction" prefWidth="120" resizable="false" text="Thao Tác" />
                 </columns>

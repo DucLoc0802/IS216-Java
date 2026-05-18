@@ -1,5 +1,7 @@
 package PetHotel.gui.controller;
 
+import java.io.IOException;
+
 import PetHotel.bus.AuthBUS;
 import PetHotel.model.AppUser;
 import PetHotel.util.Role;
