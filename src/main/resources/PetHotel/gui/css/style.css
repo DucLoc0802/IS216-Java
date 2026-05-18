@@ -1989,7 +1989,7 @@
     -fx-padding: 14 0 14 0;
 }
 
-.ph-detail-scroll > .viewport {
+.ph-detail-scroll>.viewport {
     -fx-background-color: transparent;
 }
 

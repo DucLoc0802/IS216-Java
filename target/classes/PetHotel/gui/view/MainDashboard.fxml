@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.control.ScrollPane?>
+<?import java.net.URL?>
+
+<BorderPane prefHeight="800" prefWidth="1280" 
+            xmlns="http://javafx.com/javafx/21" 
+            xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="PetHotel.gui.controller.MainController">
+
+    <!-- 1. Gắn Topbar lên phía trên -->
+    <top>
+        <fx:include source="topbar.fxml" fx:id="topbar" />
+    </top>
+
+    <!-- 2. Gắn Sidebar vào bên trái -->
+    <left>
+        <fx:include source="sidebar.fxml" fx:id="sidebar" />
+    </left>
+
+    <!-- 3. Vùng chứa nội dung động ở giữa (Nơi dashboard-home sẽ chui vào) -->
+    <center>
+        <ScrollPane fitToWidth="true" style="-fx-background-color: #F8F9FA; -fx-border-color: transparent;">
+             <StackPane fx:id="contentArea" style="-fx-padding: 20;" />
+        </ScrollPane>
+    </center>
+
+    <stylesheets>
+        <URL value="@../css/style.css" />
+    </stylesheets>
+
+</BorderPane>

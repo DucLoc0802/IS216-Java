@@ -15,7 +15,7 @@ import PetHotel.util.DBConnection;
 public class EmployeeDAO {
 
     private static final String SELECT_BASE =
-        "SELECT e.employee_id, e.branch_id, e.full_name, e.email, e.phone, e.hire_date, e.status_code, e.note, " +
+        "SELECT e.employee_id, e.branch_id, e.full_name, e.salary, e.email, e.phone, e.hire_date, e.status_code, e.note, " +
         "       au.user_name, au.role_emp " +
         "FROM employee e " +
         "LEFT JOIN app_user au ON au.employee_id = e.employee_id ";
@@ -35,11 +35,11 @@ public class EmployeeDAO {
         "ORDER BY e.hire_date DESC NULLS LAST, e.full_name";
 
     private static final String SQL_INSERT =
-        "INSERT INTO employee (employee_id, branch_id, full_name, email, phone, hire_date, status_code, note) " +
-        "VALUES (?, ?, ?, ?, ?, SYSTIMESTAMP, ?, ?)";
+        "INSERT INTO employee (employee_id, branch_id, full_name, salary, email, phone, hire_date, status_code, note) " +
+        "VALUES (?, ?, ?, ?, ?, ?, SYSTIMESTAMP, ?, ?)";
 
     private static final String SQL_UPDATE =
-        "UPDATE employee SET branch_id = ?, full_name = ?, email = ?, phone = ?, status_code = ?, note = ? " +
+        "UPDATE employee SET branch_id = ?, full_name = ?, salary = ?, email = ?, phone = ?, status_code = ?, note = ? " +
         "WHERE employee_id = ?";
 
     private static final String SQL_UPDATE_PROFILE =
@@ -56,7 +56,7 @@ public class EmployeeDAO {
         "FROM employee e LEFT JOIN app_user au ON au.employee_id = e.employee_id";
 
     private static final String SQL_DISTINCT_BRANCH =
-        "SELECT DISTINCT branch_id FROM employee ORDER BY branch_id";
+        "SELECT branch_id FROM branch WHERE is_active = 1 ORDER BY branch_id";
 
     public Employee findById(String employeeId) throws SQLException {
         try (Connection conn = DBConnection.getConnection();
@@ -114,10 +114,11 @@ public class EmployeeDAO {
             ps.setString(1, employee.getEmployeeId());
             ps.setString(2, employee.getBranchId());
             ps.setString(3, employee.getFullName());
-            ps.setString(4, employee.getEmail());
-            ps.setString(5, employee.getPhone());
-            ps.setString(6, employee.getStatusCode());
-            ps.setString(7, employee.getNote());
+            ps.setBigDecimal(4, employee.getSalary());
+            ps.setString(5, employee.getEmail());
+            ps.setString(6, employee.getPhone());
+            ps.setString(7, employee.getStatusCode());
+            ps.setString(8, employee.getNote());
             ps.executeUpdate();
         }
     }
@@ -127,11 +128,12 @@ public class EmployeeDAO {
              PreparedStatement ps = conn.prepareStatement(SQL_UPDATE)) {
             ps.setString(1, employee.getBranchId());
             ps.setString(2, employee.getFullName());
-            ps.setString(3, employee.getEmail());
-            ps.setString(4, employee.getPhone());
-            ps.setString(5, employee.getStatusCode());
-            ps.setString(6, employee.getNote());
-            ps.setString(7, employee.getEmployeeId());
+            ps.setBigDecimal(3, employee.getSalary());
+            ps.setString(4, employee.getEmail());
+            ps.setString(5, employee.getPhone());
+            ps.setString(6, employee.getStatusCode());
+            ps.setString(7, employee.getNote());
+            ps.setString(8, employee.getEmployeeId());
             return ps.executeUpdate();
         }
     }
@@ -189,6 +191,7 @@ public class EmployeeDAO {
         employee.setEmployeeId(rs.getString("employee_id"));
         employee.setBranchId(rs.getString("branch_id"));
         employee.setFullName(rs.getString("full_name"));
+        employee.setSalary(rs.getBigDecimal("salary"));
         employee.setEmail(rs.getString("email"));
         employee.setPhone(rs.getString("phone"));
         employee.setStatusCode(rs.getString("status_code"));

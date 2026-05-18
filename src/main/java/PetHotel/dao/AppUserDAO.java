@@ -117,6 +117,13 @@ public class AppUserDAO {
         "    SUM(CASE WHEN role_emp = '0' THEN 1 ELSE 0 END) AS admin " +
         "FROM app_user";
 
+    private static final String SQL_FIND_EMPLOYEES_WITHOUT_ACCOUNT =
+        "SELECT e.employee_id, e.branch_id, e.full_name, e.salary, e.email, e.phone, e.hire_date, e.status_code, e.note " +
+        "FROM employee e " +
+        "LEFT JOIN app_user au ON au.employee_id = e.employee_id " +
+        "WHERE au.employee_id IS NULL " +
+        "ORDER BY e.full_name, e.employee_id";
+
     // ── Public Methods ───────────────────────────────────────────
 
     public AppUser findByUsername(String username) throws SQLException {
@@ -249,6 +256,33 @@ public class AppUserDAO {
             }
         }
         return stats;
+    }
+
+    public List<Employee> findEmployeesWithoutAccount() throws SQLException {
+        List<Employee> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_FIND_EMPLOYEES_WITHOUT_ACCOUNT);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Employee employee = new Employee();
+                employee.setEmployeeId(rs.getString("employee_id"));
+                employee.setBranchId(rs.getString("branch_id"));
+                employee.setFullName(rs.getString("full_name"));
+                employee.setSalary(rs.getBigDecimal("salary"));
+                employee.setEmail(rs.getString("email"));
+                employee.setPhone(rs.getString("phone"));
+
+                Timestamp hireDate = rs.getTimestamp("hire_date");
+                if (hireDate != null) {
+                    employee.setHireDate(hireDate.toInstant().atOffset(java.time.ZoneOffset.UTC));
+                }
+
+                employee.setStatusCode(rs.getString("status_code"));
+                employee.setNote(rs.getString("note"));
+                list.add(employee);
+            }
+        }
+        return list;
     }
 
     // ── Private Helpers ──────────────────────────────────────────

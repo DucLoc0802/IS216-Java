@@ -8,6 +8,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.layout.StackPane;
+import java.io.IOException;
 
 public class MainController {
     private static MainController activeInstance;

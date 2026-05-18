@@ -5,7 +5,6 @@ import java.util.List;
 
 import PetHotel.bus.AccountBUS;
 import PetHotel.exception.AuthorizationException;
-import PetHotel.exception.BusinessException;
 import PetHotel.exception.NotFoundException;
 import PetHotel.exception.ValidationException;
 import PetHotel.model.AppUser;
@@ -31,18 +30,14 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 
 public class AccountController {
 
-    // ── BUS ─────────────────────────────────────────────────────
     private AccountBUS accountBUS;
 
-    // ── FXML Fields ─────────────────────────────────────────────
     @FXML private TextField searchAccount;
     @FXML private ComboBox<String> filterRole;
     @FXML private ComboBox<String> filterStatus;
@@ -73,7 +68,6 @@ public class AccountController {
     @FXML private Pagination pagination;
     @FXML private Label pageInfo;
 
-    // Detail panel
     @FXML private VBox detailPanel;
     @FXML private VBox accountDetailCard;
     @FXML private VBox noSelectionHint;
@@ -90,18 +84,15 @@ public class AccountController {
     @FXML private Button btnDetailLock;
     @FXML private Button btnDetailReset;
 
-    // Permission panel
     @FXML private ComboBox<String> roleSelector;
     @FXML private ComboBox<String> branchSelector;
     @FXML private Button btnSavePermission;
 
-    // Audit log
     @FXML private VBox auditLogList;
     @FXML private Pagination logPagination;
     @FXML private Label logPageInfo;
 
-    // ── Data ────────────────────────────────────────────────────
-    private ObservableList<AppUser> accountData = FXCollections.observableArrayList();
+    private final ObservableList<AppUser> accountData = FXCollections.observableArrayList();
     private AppUser selectedUser;
 
     private static final int PAGE_SIZE = 15;
@@ -111,13 +102,12 @@ public class AccountController {
         accountBUS = new AccountBUS();
 
         setupTableColumns();
+        accountTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         setupFilterListeners();
         loadAccountData();
         loadStats();
         loadBranches();
     }
-
-    // ── Table Setup ─────────────────────────────────────────────
 
     private void setupTableColumns() {
         colUsername.setCellValueFactory(cellData ->
@@ -146,7 +136,7 @@ public class AccountController {
             return new SimpleStringProperty("Chưa đăng nhập");
         });
 
-        colAvatar.setCellFactory(col -> new TableCell<AppUser, String>() {
+        colAvatar.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
@@ -161,8 +151,7 @@ public class AccountController {
             }
         });
 
-        // Status column with color
-        colStatus.setCellFactory(col -> new TableCell<AppUser, String>() {
+        colStatus.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
@@ -189,8 +178,6 @@ public class AccountController {
         filterBranch.setOnAction(e -> loadAccountData());
     }
 
-    // ── Load Data ───────────────────────────────────────────────
-
     private void loadAccountData() {
         try {
             List<AppUser> allAccounts = accountBUS.getAllAccounts();
@@ -215,8 +202,6 @@ public class AccountController {
     }
 
     private void loadBranches() {
-        // Branch data can be loaded from BranchBUS if needed
-        // For now, keep prompt text
     }
 
     private void updatePageInfo() {
@@ -224,8 +209,6 @@ public class AccountController {
         pageInfo.setText("Hiển thị " + total + " / " + total + " tài khoản");
         pagination.setPageCount(Math.max(1, (int) Math.ceil((double) total / PAGE_SIZE)));
     }
-
-    // ── Search ──────────────────────────────────────────────────
 
     @FXML
     public void onSearch(ActionEvent event) {
@@ -256,8 +239,6 @@ public class AccountController {
         filterStatus.getSelectionModel().clearSelection();
         loadAccountData();
     }
-
-    // ── Table Selection ─────────────────────────────────────────
 
     @FXML
     public void onTableClick(MouseEvent event) {
@@ -295,12 +276,10 @@ public class AccountController {
             detailStatus.getStyleClass().add("status-inactive");
         }
 
-        // Enable detail buttons
         btnDetailEdit.setDisable(false);
         btnDetailLock.setDisable(false);
         btnDetailReset.setDisable(false);
 
-        // Permission section
         roleSelector.setDisable(false);
         branchSelector.setDisable(false);
         btnSavePermission.setDisable(false);
@@ -312,8 +291,6 @@ public class AccountController {
         btnResetPwd.setDisable(!enable);
         btnPermission.setDisable(!enable);
     }
-
-    // ── Create Account ──────────────────────────────────────────
 
     @FXML
     public void onCreateAccount(ActionEvent event) {
@@ -339,8 +316,6 @@ public class AccountController {
     public void handleAdd(ActionEvent event) {
         onCreateAccount(event);
     }
-
-    // ── Edit Account ────────────────────────────────────────────
 
     @FXML
     public void onEditAccount(ActionEvent event) {
@@ -371,8 +346,6 @@ public class AccountController {
     public void handleEdit(ActionEvent event) {
         onEditAccount(event);
     }
-
-    // ── Lock / Unlock ───────────────────────────────────────────
 
     @FXML
     public void onLockSelected(ActionEvent event) {
@@ -406,8 +379,6 @@ public class AccountController {
                 loadStats();
             });
     }
-
-    // ── Reset Password ──────────────────────────────────────────
 
     @FXML
     public void onResetPassword(ActionEvent event) {
@@ -446,8 +417,6 @@ public class AccountController {
         });
     }
 
-    // ── Permission ──────────────────────────────────────────────
-
     @FXML
     public void onManagePermission(ActionEvent event) {
         if (selectedUser == null) return;
@@ -468,7 +437,7 @@ public class AccountController {
                 accountBUS.updateRole(currentUser, selectedUser.getEmployeeId(), newRole);
                 showAlert(AlertType.INFORMATION, "Thành công", "Đã cập nhật vai trò.");
                 loadAccountData();
-                showAccountDetail(selectedUser); // refresh detail
+                showAccountDetail(selectedUser);
             });
     }
 
@@ -476,8 +445,6 @@ public class AccountController {
     public void onSavePermission(ActionEvent event) {
         onManagePermission(event);
     }
-
-    // ── Audit Log ───────────────────────────────────────────────
 
     @FXML
     public void onFilterLog(ActionEvent event) {
@@ -489,14 +456,10 @@ public class AccountController {
         System.out.println("Xuất Audit Log (chưa implement đầy đủ)");
     }
 
-    // ── Bulk Actions (placeholder) ───────────────────────────────
-
     @FXML
     public void handleDelete(ActionEvent event) {
         showAlert(AlertType.INFORMATION, "Thông báo", "Chức năng xóa tài khoản không được hỗ trợ. Vui lòng dùng Khóa tài khoản.");
     }
-
-    // ── Helpers ─────────────────────────────────────────────────
 
     private void confirmAndExecute(String title, String message, Runnable action) {
         Alert alert = new Alert(AlertType.CONFIRMATION);
@@ -535,11 +498,6 @@ public class AccountController {
         alert.showAndWait();
     }
 
-    // ── Refresh Method ──────────────────────────────────────────
-
-    /**
-     * Gọi từ AccountFormController sau khi lưu thành công.
-     */
     public void refreshAccountData() {
         loadAccountData();
         loadStats();

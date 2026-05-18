@@ -21,6 +21,7 @@ public class EmployeeFormController {
 
     @FXML private TextField txtEmployeeId;
     @FXML private TextField txtFullName;
+    @FXML private TextField txtSalary;
     @FXML private TextField txtEmail;
     @FXML private TextField txtPhone;
     @FXML private ComboBox<String> cbBranch;
@@ -33,6 +34,7 @@ public class EmployeeFormController {
         cbBranch.setItems(FXCollections.observableArrayList(employeeBUS.getBranches()));
         cbStatus.setItems(FXCollections.observableArrayList("WORKING", "ON_LEAVE", "RESIGNED"));
         cbStatus.setValue("WORKING");
+        txtEmployeeId.setDisable(true);
     }
 
     public void setParentController(EmployeeController parentController) {
@@ -42,8 +44,8 @@ public class EmployeeFormController {
     public void setEditData(Employee employee) {
         this.editingEmployee = employee;
         txtEmployeeId.setText(employee.getEmployeeId());
-        txtEmployeeId.setDisable(true);
         txtFullName.setText(employee.getFullName());
+        txtSalary.setText(employee.getSalary() == null ? "" : employee.getSalary().stripTrailingZeros().toPlainString());
         txtEmail.setText(employee.getEmail());
         txtPhone.setText(employee.getPhone());
         cbBranch.setValue(employee.getBranchId());
@@ -58,6 +60,7 @@ public class EmployeeFormController {
                 employeeBUS.createEmployee(
                     cbBranch.getValue(),
                     txtFullName.getText(),
+                    txtSalary.getText(),
                     txtEmail.getText(),
                     txtPhone.getText(),
                     txtNote.getText()
@@ -67,6 +70,7 @@ public class EmployeeFormController {
                     editingEmployee.getEmployeeId(),
                     cbBranch.getValue(),
                     txtFullName.getText(),
+                    txtSalary.getText(),
                     txtEmail.getText(),
                     txtPhone.getText(),
                     cbStatus.getValue(),

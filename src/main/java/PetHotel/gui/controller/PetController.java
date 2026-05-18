@@ -1,5 +1,12 @@
 package PetHotel.gui.controller;
 
+import java.net.URL;
+import java.sql.SQLException;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import PetHotel.bus.AuthBUS;
 import PetHotel.bus.CustomerBUS;
 import PetHotel.bus.PetBUS;
@@ -10,19 +17,9 @@ import PetHotel.model.Customer;
 import PetHotel.model.Pet;
 import PetHotel.model.PetHealthRecord;
 import PetHotel.util.Role;
-
-import java.net.URL;
-import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.ObservableList;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -328,7 +325,18 @@ public class PetController {
     }
     @FXML public void onDeletePet(ActionEvent event) { showInfo("Ngoài phạm vi", "UC-PET-05 chưa triển khai trong lần này."); }
     @FXML public void onServiceHistory(ActionEvent event) { showInfo("Ngoài phạm vi", "UC-PET-08 chưa triển khai trong lần này."); }
-    @FXML public void onHealthRecord(ActionEvent event) { if (selectedPet != null) openHealthForm(selectedPet); }
+    @FXML 
+    public void onHealthRecord(ActionEvent event) { 
+        if (selectedPet != null) {
+            // Lấy cửa sổ hiện tại làm cha
+            Stage mainStage = null;
+            if (btnHealth != null && btnHealth.getScene() != null) {
+                mainStage = (Stage) btnHealth.getScene().getWindow();
+            }
+            // Truyền false để không đóng màn hình chính khi lưu xong
+            openHealthForm(selectedPet, mainStage, false); 
+        }
+    }
 
     @FXML
     public void onTableClick(MouseEvent event) {
@@ -394,6 +402,7 @@ public class PetController {
         stage.setMinHeight(680);
         root.applyCss();
         root.layout();
+        //Đã sửa xóa snapshot()
         root.snapshot(null, null);
         stage.sizeToScene();
         stage.centerOnScreen();
@@ -438,8 +447,8 @@ public class PetController {
         history.setTooltip(new Tooltip("Chưa triển khai"));
         close.setOnAction(e -> stage.close());
         health.setOnAction(e -> {
-            stage.close();
-            openHealthForm(pet);
+            //đã sửa xóa e.close();
+            openHealthForm(pet, stage, true); //Đã sửa
         });
 
         VBox root = new VBox(16,
@@ -453,7 +462,7 @@ public class PetController {
         stage.showAndWait();
     }
 
-    private void openHealthForm(Pet pet) {
+    private void openHealthForm(Pet pet, Stage parentStage, boolean closeParentOnSave) { //đã sửa
         System.out.println("[HealthForm] open start");
         String fxmlPath = "/PetHotel/gui/view/HealthRecordForm.fxml";
         try {
@@ -476,11 +485,23 @@ public class PetController {
                 reloadPetsFromDatabase(pet.getPetId());
             });
 
-            Stage stage = modalStage(editMode ? "Ghi Nhận Sức Khỏe" : "Xem Ghi Nhận Sức Khỏe");
+            // Sử dụng hàm modalStage CÓ truyền parentStage vào
+            Stage stage = modalStage(editMode ? "Ghi Nhận Sức Khỏe" : "Xem Ghi Nhận Sức Khỏe", parentStage); //đã sửa
             prepareHealthFormStage(stage, root);
-            stage.setOnShown(e -> System.out.println("[HealthForm] shown"));
+            
+            // Ép hệ điều hành Focus để tránh lỗi mất hover và kẹt ComboBox
+            stage.setOnShown(e -> {
+                System.out.println("[HealthForm] shown");
+                stage.requestFocus();
+            });
+            
             stage.showAndWait();
+            
             if (controller.isSaved()) {
+                // Chỉ đóng parentStage nếu nó là Form Chi Tiết
+                if (closeParentOnSave && parentStage != null) {
+                    parentStage.close();
+                }
                 openPetDetail(petBUS.getPetDetail(pet.getPetId()));
             }
         } catch (Exception e) {
@@ -501,7 +522,6 @@ public class PetController {
         stage.setMinHeight(620);
         root.applyCss();
         root.layout();
-        root.snapshot(null, null);
         stage.sizeToScene();
         stage.centerOnScreen();
     }
@@ -578,10 +598,23 @@ public class PetController {
         grid.add(v, 1, row);
     }
 
-    private Stage modalStage(String title) {
+// 1. Giữ nguyên hàm cũ của bạn
+    private Stage modalStage(String title) { //đã sửa
+        return modalStage(title, null); // Gọi sang hàm mới
+    }
+
+    // 2. Thêm hàm mới này vào ngay bên dưới:
+    private Stage modalStage(String title, Stage owner) { //đã sửa 
         Stage stage = new Stage();
         stage.setTitle(title);
-        stage.initModality(Modality.APPLICATION_MODAL);
+        
+        // ĐÂY LÀ DÒNG PHÉP THUẬT GIẢI QUYẾT LỖI ĐƠ FORM:
+        if (owner != null) {
+            stage.initOwner(owner); 
+        }
+        
+        // Khi có Owner, bắt buộc dùng WINDOW_MODAL
+        stage.initModality(owner != null ? Modality.WINDOW_MODAL : Modality.APPLICATION_MODAL);
         return stage;
     }
 

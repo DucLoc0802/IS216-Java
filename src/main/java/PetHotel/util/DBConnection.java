@@ -7,12 +7,12 @@ import java.sql.SQLException;
 public class DBConnection {
     private static final String HOST = "localhost";
     private static final String PORT = "1521";
-    private static final String SERVICE_NAME = "orcldb"; 
+    private static final String SERVICE_NAME = "xe"; 
     private static final String USER = "pethotel"; 
     private static final String PASS = "admin";
 
     // Chuỗi URL kết nối Oracle dùng SID (orcldb là SID)
-    private static final String URL = "jdbc:oracle:thin:@" + HOST + ":" + PORT + ":" + SERVICE_NAME;
+    private static final String URL = "jdbc:oracle:thin:@" + HOST + ":" + PORT + "/" + SERVICE_NAME;
     public static Connection getConnection() throws SQLException {
         try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
@@ -59,4 +59,6 @@ public class DBConnection {
             }
         }
     }
+
+    // Lưu ý: Đảm bảo rằng Oracle JDBC Driver (ojdbc8.jar hoặc tương đương) đã được thêm vào classpath của dự án.
 }

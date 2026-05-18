@@ -1,5 +1,6 @@
 package PetHotel.bus;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -32,7 +33,7 @@ public class EmployeeBUS {
         try {
             return employeeDAO.search(keyword, mapRoleLabelToCode(roleName), mapStatusLabelToCode(statusLabel), branchId);
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi database khi tra cứu nhân viên.", e);
+            throw new RuntimeException("Loi database khi tra cuu nhan vien.", e);
         }
     }
 
@@ -41,17 +42,19 @@ public class EmployeeBUS {
         try {
             Employee employee = employeeDAO.findById(employeeId);
             if (employee == null) {
-                throw new NotFoundException("Không tìm thấy nhân viên: " + employeeId);
+                throw new NotFoundException("Khong tim thay nhan vien: " + employeeId);
             }
             return employee;
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi database khi tải hồ sơ nhân viên.", e);
+            throw new RuntimeException("Loi database khi tai ho so nhan vien.", e);
         }
     }
 
-    public Employee createEmployee(String branchId, String fullName, String email, String phone, String note) {
+    public Employee createEmployee(String branchId, String fullName, String salaryText,
+                                   String email, String phone, String note) {
         validateBranch(branchId);
         validateFullName(fullName);
+        BigDecimal salary = parseAndValidateSalary(salaryText);
         validatePhone(phone);
         validateEmail(email);
 
@@ -60,6 +63,7 @@ public class EmployeeBUS {
             employee.setEmployeeId(nextEmployeeId());
             employee.setBranchId(branchId.trim());
             employee.setFullName(fullName.trim());
+            employee.setSalary(salary);
             employee.setEmail(normalizeNullable(email));
             employee.setPhone(phone.trim());
             employee.setStatusCode("WORKING");
@@ -67,15 +71,17 @@ public class EmployeeBUS {
             employeeDAO.insert(employee);
             return employeeDAO.findById(employee.getEmployeeId());
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi database khi thêm nhân viên.", e);
+            throw new RuntimeException("Loi database khi them nhan vien: " + rootCauseMessage(e), e);
         }
     }
 
     public Employee updateEmployee(String employeeId, String branchId, String fullName,
-                                   String email, String phone, String statusCode, String note) {
+                                   String salaryText, String email, String phone,
+                                   String statusCode, String note) {
         validateEmployeeId(employeeId);
         validateBranch(branchId);
         validateFullName(fullName);
+        BigDecimal salary = parseAndValidateSalary(salaryText);
         validatePhone(phone);
         validateEmail(email);
         validateStatusCode(statusCode);
@@ -83,11 +89,12 @@ public class EmployeeBUS {
         try {
             Employee employee = employeeDAO.findById(employeeId);
             if (employee == null) {
-                throw new NotFoundException("Không tìm thấy nhân viên: " + employeeId);
+                throw new NotFoundException("Khong tim thay nhan vien: " + employeeId);
             }
 
             employee.setBranchId(branchId.trim());
             employee.setFullName(fullName.trim());
+            employee.setSalary(salary);
             employee.setEmail(normalizeNullable(email));
             employee.setPhone(phone.trim());
             employee.setStatusCode(statusCode.trim());
@@ -96,7 +103,7 @@ public class EmployeeBUS {
             employeeDAO.update(employee);
             return employeeDAO.findById(employeeId);
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi database khi cập nhật nhân viên.", e);
+            throw new RuntimeException("Loi database khi cap nhat nhan vien: " + rootCauseMessage(e), e);
         }
     }
 
@@ -112,7 +119,7 @@ public class EmployeeBUS {
         try {
             return employeeDAO.getStats();
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi database khi tải thống kê nhân viên.", e);
+            throw new RuntimeException("Loi database khi tai thong ke nhan vien.", e);
         }
     }
 
@@ -120,14 +127,12 @@ public class EmployeeBUS {
         try {
             return employeeDAO.getDistinctBranches();
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi database khi tải danh sách chi nhánh.", e);
+            throw new RuntimeException("Loi database khi tai danh sach chi nhanh.", e);
         }
     }
 
     public int[] getPerformanceSummary(String employeeId) {
         validateEmployeeId(employeeId);
-        // Schema hiện tại chưa có bảng đánh giá rõ ràng để tính đủ KPI.
-        // Tạm thời trả về số liệu 0 để UI vẫn hoạt động ổn định.
         return new int[] {0, 0};
     }
 
@@ -137,15 +142,21 @@ public class EmployeeBUS {
 
     public Employee updateOwnProfile(AppUser actor, String fullName, String email, String phone, String note) {
         if (actor == null) {
-            throw new ValidationException("Bạn cần đăng nhập để cập nhật thông tin cá nhân.");
+            throw new ValidationException("Ban can dang nhap de cap nhat thong tin ca nhan.");
         }
+
+        Employee currentEmployee = actor.getEmployee() != null
+            ? actor.getEmployee()
+            : getEmployeeDetail(actor.getEmployeeId());
+
         return updateEmployee(
             actor.getEmployeeId(),
-            actor.getEmployee() != null ? actor.getEmployee().getBranchId() : getEmployeeDetail(actor.getEmployeeId()).getBranchId(),
+            currentEmployee.getBranchId(),
             fullName,
+            formatSalary(currentEmployee.getSalary()),
             email,
             phone,
-            actor.getEmployee() != null ? actor.getEmployee().getStatusCode() : getEmployeeDetail(actor.getEmployeeId()).getStatusCode(),
+            currentEmployee.getStatusCode(),
             note
         );
     }
@@ -156,51 +167,51 @@ public class EmployeeBUS {
         try {
             Employee employee = employeeDAO.findById(employeeId);
             if (employee == null) {
-                throw new NotFoundException("Không tìm thấy nhân viên: " + employeeId);
+                throw new NotFoundException("Khong tim thay nhan vien: " + employeeId);
             }
             employeeDAO.updateStatus(employeeId, statusCode);
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi database khi cập nhật trạng thái nhân viên.", e);
+            throw new RuntimeException("Loi database khi cap nhat trang thai nhan vien.", e);
         }
     }
 
     private void validateEmployeeId(String employeeId) {
         if (employeeId == null || employeeId.trim().isEmpty()) {
-            throw new ValidationException("Mã nhân viên không hợp lệ.");
+            throw new ValidationException("Ma nhan vien khong hop le.");
         }
     }
 
     private void validateBranch(String branchId) {
         if (branchId == null || branchId.trim().isEmpty()) {
-            throw new ValidationException("Chi nhánh không được để trống.");
+            throw new ValidationException("Chi nhanh khong duoc de trong.");
         }
     }
 
     private void validateFullName(String fullName) {
         if (fullName == null || fullName.trim().isEmpty()) {
-            throw new ValidationException("Họ tên không được để trống.");
+            throw new ValidationException("Ho ten khong duoc de trong.");
         }
         if (fullName.trim().length() > 120) {
-            throw new ValidationException("Họ tên không được vượt quá 120 ký tự.");
+            throw new ValidationException("Ho ten khong duoc vuot qua 120 ky tu.");
         }
     }
 
     private void validatePhone(String phone) {
         if (phone == null || phone.trim().isEmpty()) {
-            throw new ValidationException("Số điện thoại không được để trống.");
+            throw new ValidationException("So dien thoai khong duoc de trong.");
         }
         if (!PHONE_PATTERN.matcher(phone.trim()).matches()) {
-            throw new ValidationException("Số điện thoại không đúng định dạng.");
+            throw new ValidationException("So dien thoai khong dung dinh dang.");
         }
     }
 
     private void validateEmail(String email) {
         if (email == null || email.trim().isEmpty()) return;
         if (email.trim().length() > 254) {
-            throw new ValidationException("Email không được vượt quá 254 ký tự.");
+            throw new ValidationException("Email khong duoc vuot qua 254 ky tu.");
         }
         if (!EMAIL_PATTERN.matcher(email.trim()).matches()) {
-            throw new ValidationException("Email không đúng định dạng.");
+            throw new ValidationException("Email khong dung dinh dang.");
         }
     }
 
@@ -208,31 +219,54 @@ public class EmployeeBUS {
         if (!"WORKING".equalsIgnoreCase(statusCode)
             && !"ON_LEAVE".equalsIgnoreCase(statusCode)
             && !"RESIGNED".equalsIgnoreCase(statusCode)) {
-            throw new ValidationException("Trạng thái nhân viên không hợp lệ.");
+            throw new ValidationException("Trang thai nhan vien khong hop le.");
+        }
+    }
+
+    private BigDecimal parseAndValidateSalary(String salaryText) {
+        if (salaryText == null || salaryText.trim().isEmpty()) {
+            throw new ValidationException("Luong khong duoc de trong.");
+        }
+
+        String normalized = salaryText.trim().replace(",", "");
+        try {
+            BigDecimal salary = new BigDecimal(normalized);
+            if (salary.compareTo(BigDecimal.ZERO) < 0) {
+                throw new ValidationException("Luong khong duoc am.");
+            }
+            if (salary.scale() > 2) {
+                throw new ValidationException("Luong toi da 2 chu so thap phan.");
+            }
+            if (salary.precision() > 12) {
+                throw new ValidationException("Luong vuot qua gioi han luu tru.");
+            }
+            return salary;
+        } catch (NumberFormatException ex) {
+            throw new ValidationException("Luong khong dung dinh dang.");
         }
     }
 
     private String mapStatusLabelToCode(String statusLabel) {
-        if (statusLabel == null || statusLabel.isBlank() || "Tất cả".equalsIgnoreCase(statusLabel)) {
+        if (statusLabel == null || statusLabel.isBlank() || "Tat ca".equalsIgnoreCase(statusLabel)) {
             return null;
         }
         return switch (statusLabel.trim()) {
-            case "Đang hoạt động" -> "WORKING";
-            case "Ngưng hoạt động" -> "RESIGNED";
+            case "Dang hoat dong" -> "WORKING";
+            case "Ngung hoat dong" -> "RESIGNED";
             default -> statusLabel;
         };
     }
 
     private String mapRoleLabelToCode(String roleLabel) {
-        if (roleLabel == null || roleLabel.isBlank() || "Tất cả".equalsIgnoreCase(roleLabel)) {
+        if (roleLabel == null || roleLabel.isBlank() || "Tat ca".equalsIgnoreCase(roleLabel)) {
             return null;
         }
         return switch (roleLabel.trim()) {
-            case "Lễ Tân" -> "1";
-            case "Nhân Viên Chăm Sóc", "Groomer", "Chăm Sóc Thú" -> "2";
-            case "Quản Lý" -> "3";
+            case "Le Tan" -> "1";
+            case "Nhan Vien Cham Soc", "Groomer", "Cham Soc Thu" -> "2";
+            case "Quan Ly" -> "3";
             case "CEO" -> "4";
-            case "Quản Trị Viên" -> "5";
+            case "Quan Tri Vien" -> "5";
             default -> null;
         };
     }
@@ -244,6 +278,18 @@ public class EmployeeBUS {
     }
 
     private String nextEmployeeId() {
-        return "EMP" + (System.currentTimeMillis() % 1_000_000_000L);
+        return "EMP" + String.format("%07d", System.currentTimeMillis() % 10_000_000L);
+    }
+
+    private String formatSalary(BigDecimal salary) {
+        return salary == null ? null : salary.stripTrailingZeros().toPlainString();
+    }
+
+    private String rootCauseMessage(Throwable throwable) {
+        Throwable current = throwable;
+        while (current.getCause() != null) {
+            current = current.getCause();
+        }
+        return current.getMessage() != null ? current.getMessage() : throwable.getMessage();
     }
 }
