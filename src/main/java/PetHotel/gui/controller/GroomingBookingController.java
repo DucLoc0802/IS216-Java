@@ -212,7 +212,6 @@ public class GroomingBookingController {
             Customer customer = cbCustomer.getValue();
             Pet pet = cbPet.getValue();
             PetService service = cbService.getValue();
-            Employee employee = cbEmployee.getValue();
             LocalDate date = dpScheduleDate.getValue();
             String timeText = txtScheduleTime.getText().trim();
 
@@ -228,11 +227,6 @@ public class GroomingBookingController {
 
             if (service == null) {
                 showWarning("Vui lòng chọn dịch vụ grooming.");
-                return;
-            }
-
-            if (employee == null) {
-                showWarning("Vui lòng chọn nhân viên thực hiện.");
                 return;
             }
 
@@ -258,7 +252,7 @@ public class GroomingBookingController {
                     customer.getCustomerId(),
                     pet.getPetId(),
                     service.getServiceId(),
-                    employee.getEmployeeId(),
+                    null,
                     currentBranchId,
                     date,
                     time,

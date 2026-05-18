@@ -32,7 +32,6 @@ public class ServiceCategoryDAO {
     private static final String SQL_FIND_GROOMING =
         "SELECT service_category_id, category_name, note, created_at, updated_at " +
         "FROM category_services " +
-        "WHERE UPPER(category_name) LIKE '%GROOMING%' OR UPPER(category_name) LIKE '%CHĂM SÓC%' " +
         "ORDER BY category_name";
 
     /**

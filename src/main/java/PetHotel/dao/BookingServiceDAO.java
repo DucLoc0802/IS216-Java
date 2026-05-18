@@ -90,19 +90,25 @@ public class BookingServiceDAO {
      */
     public List<BookingService> findByDateAndFilter(String dateStr, String employeeId, String status) throws SQLException {
         List<BookingService> list = new ArrayList<>();
+
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SQL_FIND_BY_DATE_AND_FILTER)) {
+            PreparedStatement ps = conn.prepareStatement(SQL_FIND_BY_DATE_AND_FILTER)) {
+
             ps.setString(1, dateStr);
+
             ps.setString(2, employeeId);
             ps.setString(3, employeeId);
+
             ps.setString(4, status);
             ps.setString(5, status);
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapRow(rs));
                 }
             }
         }
+
         return list;
     }
 
@@ -353,7 +359,7 @@ public void createGroomingSchedule(
 ) throws SQLException {
 
     String bookingId = generateShortId("BK");
-    String bookingServiceId = generateShortId("BS");
+    String bookingServiceId;
 
     LocalDateTime scheduledDateTime = LocalDateTime.of(scheduleDate, scheduleTime);
     Timestamp scheduledTimestamp = Timestamp.valueOf(scheduledDateTime);
@@ -381,6 +387,8 @@ public void createGroomingSchedule(
         conn = DBConnection.getConnection();
         conn.setAutoCommit(false);
 
+        bookingServiceId = generateNextBookingServiceId(conn);
+
         try (PreparedStatement ps = conn.prepareStatement(insertBookingSql)) {
             ps.setString(1, bookingId);
             ps.setString(2, customerId);
@@ -404,7 +412,13 @@ public void createGroomingSchedule(
             ps.setString(2, bookingId);
             ps.setString(3, serviceId);
             ps.setString(4, petId);
-            ps.setString(5, employeeId);
+            
+            if (employeeId == null || employeeId.trim().isEmpty()) {
+                ps.setNull(5, Types.VARCHAR);
+            } else {
+                ps.setString(5, employeeId);
+            }
+
             ps.setTimestamp(6, scheduledTimestamp);
 
             if (note == null || note.trim().isEmpty()) {
@@ -430,6 +444,23 @@ public void createGroomingSchedule(
             conn.close();
         }
     }
+}
+
+private String generateNextBookingServiceId(Connection conn) throws SQLException {
+    String sql =
+        "SELECT NVL(MAX(TO_NUMBER(SUBSTR(booking_service_id, 4))), 0) + 1 AS next_id " +
+        "FROM booking_services " +
+        "WHERE REGEXP_LIKE(booking_service_id, '^BKS[0-9]+$')";
+
+    try (PreparedStatement ps = conn.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
+
+        if (rs.next()) {
+            int nextId = rs.getInt("next_id");
+            return "BKS" + String.format("%03d", nextId);
+        }
+    }
+    return "BKS001";
 }
 
 /**
