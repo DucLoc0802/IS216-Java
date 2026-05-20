@@ -1,47 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="PetHotel.gui.controller.GroomingStaffAssignmentController"
       spacing="16"
-      style="-fx-background-color: #fffaf5;">
-
-    <padding>
-        <Insets top="20" right="24" bottom="20" left="24"/>
-    </padding>
+      stylesheets="@../css/style.css"
+      style="-fx-padding: 20 24 24 24; -fx-background-color: -ph-bg-main;">
 
     <!-- Header -->
     <HBox alignment="CENTER_LEFT" spacing="8">
         <Label text="Phân Công Nhân Viên Thực Hiện Grooming"
-               style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #3b2314;"/>
+               styleClass="page-title"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button fx:id="btnRefresh"
                 text="Làm mới"
-                style="-fx-padding: 8px 16px;"/>
+                styleClass="action-btn action-btn-outline"/>
     </HBox>
 
     <!-- Filter Bar -->
-    <HBox spacing="12" style="-fx-padding: 12px; -fx-border-color: #e8dcc4; -fx-border-width: 1; -fx-border-radius: 4;">
-        <Label text="Lọc theo:" style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
-        <DatePicker fx:id="dpFilterDate" prefWidth="150"/>
-        <ComboBox fx:id="cbFilterStatus" prefWidth="150" promptText="Trạng thái"/>
+    <HBox spacing="12" styleClass="filter-bar">
+        <Label text="Lọc theo:" styleClass="filter-label"/>
+        <DatePicker fx:id="dpFilterDate" prefWidth="150" styleClass="filter-combo"/>
+        <ComboBox fx:id="cbFilterStatus" prefWidth="150" promptText="Trạng thái" styleClass="filter-combo"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <TextField fx:id="txtSearch" prefWidth="200" promptText="Tìm kiếm theo tên pet, khách hàng..."/>
+        <TextField fx:id="txtSearch" prefWidth="200" promptText="Tìm kiếm theo tên pet, khách hàng..." styleClass="filter-field"/>
     </HBox>
 
     <!-- Main Content -->
     <HBox spacing="16" VBox.vgrow="ALWAYS">
         
         <!-- Unassigned Tasks List -->
-        <VBox spacing="12" style="-fx-border-color: #d4a574; -fx-border-width: 1; -fx-border-radius: 4; -fx-padding: 12px;" HBox.hgrow="ALWAYS">
+        <VBox spacing="12" styleClass="content-panel" HBox.hgrow="ALWAYS">
             <Label text="Danh Sách Công Việc Chưa Phân Công"
-                   style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #3b2314;"/>
+                   styleClass="panel-title"/>
             
-            <TableView fx:id="taskTable" style="-fx-font-size: 11px;" VBox.vgrow="ALWAYS">
+            <TableView fx:id="taskTable" styleClass="data-table" VBox.vgrow="ALWAYS">
                 <columns>
                     <TableColumn fx:id="colTaskId" prefWidth="70" text="Mã Công Việc"/>
                     <TableColumn fx:id="colScheduleTime" prefWidth="90" text="Giờ Hẹn"/>
@@ -51,36 +57,36 @@
                     <TableColumn fx:id="colStatus" prefWidth="100" text="Trạng Thái"/>
                 </columns>
                 <placeholder>
-                    <Label text="Không có công việc chưa phân công"/>
+                    <Label text="Không có công việc chưa phân công" styleClass="table-empty"/>
                 </placeholder>
             </TableView>
         </VBox>
 
         <!-- Assignment Panel -->
-        <VBox spacing="14" style="-fx-border-color: #d4a574; -fx-border-width: 1; -fx-border-radius: 4; -fx-padding: 14px;" prefWidth="300">
+        <VBox spacing="14" styleClass="content-panel" prefWidth="340">
             <Label text="Phân Công"
-                   style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #3b2314;"/>
+                   styleClass="panel-title"/>
             
-            <Separator/>
+            <Separator styleClass="form-divider"/>
             
             <!-- Selected Task Info -->
             <VBox spacing="8">
-                <Label text="Công Việc Được Chọn:" style="-fx-font-size: 11px; -fx-font-weight: bold;"/>
-                <VBox style="-fx-border-color: #e8dcc4; -fx-border-width: 1; -fx-border-radius: 3; -fx-padding: 8px;" spacing="6">
+                <Label text="Công Việc Được Chọn:" styleClass="form-label"/>
+                <VBox style="-fx-background-color: -ph-bg-input; -fx-background-radius: 6px; -fx-border-color: -ph-border-input; -fx-border-radius: 6px; -fx-border-width: 1px; -fx-padding: 10px;" spacing="6">
                     <HBox spacing="8">
-                        <Label text="Mã công việc:" style="-fx-font-size: 10px; -fx-text-fill: #666666;"/>
+                        <Label text="Mã công việc:" style="-fx-font-size: 11px; -fx-text-fill: -ph-text-secondary;"/>
                         <Label fx:id="lblSelectedTaskId" text="—" style="-fx-font-weight: bold;"/>
                     </HBox>
                     <HBox spacing="8">
-                        <Label text="Thú cưng:" style="-fx-font-size: 10px; -fx-text-fill: #666666;"/>
+                        <Label text="Thú cưng:" style="-fx-font-size: 11px; -fx-text-fill: -ph-text-secondary;"/>
                         <Label fx:id="lblSelectedPetName" text="—" style="-fx-font-weight: bold;"/>
                     </HBox>
                     <HBox spacing="8">
-                        <Label text="Dịch vụ:" style="-fx-font-size: 10px; -fx-text-fill: #666666;"/>
+                        <Label text="Dịch vụ:" style="-fx-font-size: 11px; -fx-text-fill: -ph-text-secondary;"/>
                         <Label fx:id="lblSelectedService" text="—" style="-fx-font-weight: bold;"/>
                     </HBox>
                     <HBox spacing="8">
-                        <Label text="Giờ hẹn:" style="-fx-font-size: 10px; -fx-text-fill: #666666;"/>
+                        <Label text="Giờ hẹn:" style="-fx-font-size: 11px; -fx-text-fill: -ph-text-secondary;"/>
                         <Label fx:id="lblSelectedTime" text="—" style="-fx-font-weight: bold;"/>
                     </HBox>
                 </VBox>
@@ -88,32 +94,33 @@
 
             <!-- Staff Selection -->
             <VBox spacing="8">
-                <Label text="Chọn Nhân Viên:" style="-fx-font-size: 11px; -fx-font-weight: bold;"/>
-                <ComboBox fx:id="cbStaff" prefWidth="250" promptText="Chọn nhân viên..."/>
+                <Label text="Chọn Nhân Viên:" styleClass="form-label"/>
+                <ComboBox fx:id="cbStaff" styleClass="form-combo" promptText="Chọn nhân viên..."/>
                 <VBox fx:id="staffAvailabilityBox" spacing="6">
-                    <Label text="Tình trạng nhân viên:" style="-fx-font-size: 10px; -fx-text-fill: #666666;"/>
+                    <Label text="Tình trạng nhân viên:" styleClass="form-hint"/>
                     <HBox spacing="6">
                         <Region prefWidth="10"/>
                         <VBox spacing="4" HBox.hgrow="ALWAYS">
                             <HBox spacing="6">
-                                <Label text="Công việc hôm nay:" style="-fx-font-size: 10px;"/>
-                                <Label fx:id="lblTodayTasks" text="0" style="-fx-font-weight: bold; -fx-text-fill: #2e5090;"/>
+                                <Label text="Công việc hôm nay:" style="-fx-font-size: 11px;"/>
+                                <Label fx:id="lblTodayTasks" text="0" style="-fx-font-weight: bold; -fx-text-fill: -ph-blue;"/>
                             </HBox>
                             <HBox spacing="6">
-                                <Label text="Trạng thái:" style="-fx-font-size: 10px;"/>
-                                <Label fx:id="lblStaffStatus" text="Có sẵn" style="-fx-font-weight: bold; -fx-text-fill: #2d7c2d;"/>
+                                <Label text="Trạng thái:" style="-fx-font-size: 11px;"/>
+                                <Label fx:id="lblStaffStatus" text="Có sẵn" style="-fx-font-weight: bold; -fx-text-fill: -ph-green;"/>
                             </HBox>
                         </VBox>
-                    </VBox>
+                    </HBox>
                 </VBox>
             </VBox>
 
-            <Separator/>
+            <Separator styleClass="form-divider"/>
 
             <!-- Assignment Note -->
             <VBox spacing="8">
-                <Label text="Ghi Chú:" style="-fx-font-size: 11px; -fx-font-weight: bold;"/>
+                <Label text="Ghi Chú:" styleClass="form-label"/>
                 <TextArea fx:id="txtAssignmentNote"
+                          styleClass="form-area"
                           prefRowCount="3"
                           wrapText="true"
                           promptText="Ghi chú về công việc này..."/>
@@ -123,10 +130,10 @@
             <HBox spacing="10" alignment="CENTER_RIGHT">
                 <Button fx:id="btnAssign"
                         text="Phân Công"
-                        style="-fx-padding: 8px 20px; -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: white; -fx-background-color: #2e5090;"/>
+                        styleClass="btn-primary"/>
                 <Button fx:id="btnClear"
                         text="Xóa"
-                        style="-fx-padding: 8px 16px; -fx-font-size: 11px;"/>
+                        styleClass="btn-secondary"/>
             </HBox>
         </VBox>
     </HBox>

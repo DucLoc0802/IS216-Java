@@ -108,6 +108,7 @@ private void applyRolePermissions(Role role) {
             hideMenu(menuCustomer);
             hideMenu(menuBooking);
             hideMenu(menuService);
+            hideMenu(menuAssignedTasks);
             hideMenu(menuRoom);
             hideMenu(menuInvoice); 
 
@@ -232,6 +233,10 @@ private void applyRolePermissions(Role role) {
         setActive(menuPet);
     }
 
+    public void setActiveGroomingMenu() {
+        setActive(menuGrooming);
+    }
+
     @FXML
     public void onMenu(MouseEvent event) {
         Node source = (Node) event.getSource();
@@ -291,10 +296,10 @@ private void applyRolePermissions(Role role) {
                         break;
                     case "assigned-tasks":
                         if (currentRole == Role.PET_CARE_STAFF || currentRole == Role.BRANCH_MANAGER) {
-                            mainController.loadView("AssignedTasks.fxml");
+                            mainController.loadView("GroomingManagement.fxml");
                             mainController.getTopbarController().setTitle(
-                                "Công Việc Được Phân Công",
-                                "Danh sách dịch vụ cần thực hiện"
+                                "Grooming",
+                                "Công việc grooming được phân công"
                             );
                         }
                         break;

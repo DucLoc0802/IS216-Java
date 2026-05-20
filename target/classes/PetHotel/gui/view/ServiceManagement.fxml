@@ -57,9 +57,10 @@
                 <TableColumn fx:id="colServiceId" prefWidth="100" text="Mã DV" />
                 <TableColumn fx:id="colServiceName" prefWidth="200" text="Tên Dịch Vụ" />
                 <TableColumn fx:id="colCategory" prefWidth="150" text="Loại Dịch Vụ" />
-                <TableColumn fx:id="colSpecies" prefWidth="120" text="Loài" />
+                <TableColumn fx:id="colSpecies" prefWidth="100" text="Loài" />
                 <TableColumn fx:id="colPrice" prefWidth="120" text="Giá (VNĐ)" />
                 <TableColumn fx:id="colDuration" prefWidth="100" text="Thời gian (phút)" />
+                <TableColumn fx:id="colStatus" prefWidth="120" text="Trạng Thái" />
             </columns>
             <placeholder>
                 <Label styleClass="table-empty" text="Chưa có dịch vụ nào hoặc không tìm thấy kết quả" />

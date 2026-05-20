@@ -380,8 +380,7 @@ public class ServiceBUS {
         // Tạo mã dịch vụ tự động
         String serviceId = generateServiceId();
 
-        // Chèn vào database
-        bookingServiceDAO.createService(serviceId, serviceName, serviceCategoryId, 
+        bookingServiceDAO.createService(serviceName, serviceCategoryId, 
                                        species, basePrice, durationMinutes);
     }
 
@@ -403,5 +402,105 @@ public class ServiceBUS {
         }
 
         throw new SQLException("Không thể tạo mã dịch vụ mới. Vui lòng thử lại.");
+    }
+
+    /**
+     * Lấy tất cả dịch vụ (bao gồm cả inactive) cho quản lý
+     * Chỉ Quản lý chi nhánh và Admin được phép
+     * 
+     * @param currentUser Người dùng hiện tại
+     * @return Danh sách tất cả dịch vụ
+     * @throws ValidationException nếu người dùng không có quyền
+     * @throws SQLException nếu lỗi cơ sở dữ liệu
+     */
+    public List<PetService> getAllServicesForManagement(AppUser currentUser)
+            throws ValidationException, SQLException {
+        
+        // Chỉ Quản lý chi nhánh và Admin được phép xem quản lý dịch vụ
+        if (!currentUser.hasRole(Role.BRANCH_MANAGER) && !currentUser.hasRole(Role.ADMIN)) {
+            throw new ValidationException("Bạn không có quyền quản lý dịch vụ. Chỉ Quản lý chi nhánh được phép.");
+        }
+
+        return bookingServiceDAO.getAllServicesForManagement();
+    }
+
+    /**
+     * Kích hoạt dịch vụ
+     * Chỉ Quản lý chi nhánh và Admin được phép
+     * 
+     * @param serviceId Mã dịch vụ cần kích hoạt
+     * @param currentUser Người dùng hiện tại
+     * @throws ValidationException nếu dữ liệu không hợp lệ hoặc người dùng không có quyền
+     * @throws SQLException nếu lỗi cơ sở dữ liệu
+     */
+    public void activateService(String serviceId, AppUser currentUser)
+            throws ValidationException, SQLException {
+        
+        // Kiểm tra quyền
+        if (!currentUser.hasRole(Role.BRANCH_MANAGER) && !currentUser.hasRole(Role.ADMIN)) {
+            throw new ValidationException("Bạn không có quyền kích hoạt dịch vụ. Chỉ Quản lý chi nhánh được phép.");
+        }
+
+        // Validate mã dịch vụ
+        if (serviceId == null || serviceId.trim().isEmpty()) {
+            throw new ValidationException("Mã dịch vụ không hợp lệ");
+        }
+
+        serviceId = serviceId.trim();
+
+        // Kiểm tra dịch vụ tồn tại không
+        if (!bookingServiceDAO.existsServiceById(serviceId)) {
+            throw new ValidationException("Dịch vụ với mã '" + serviceId + "' không tồn tại");
+        }
+
+        // Cập nhật trạng thái thành hoạt động
+        bookingServiceDAO.updateServiceStatus(serviceId, 1);
+    }
+
+    /**
+     * Vô hiệu hóa dịch vụ (không thể đặt lịch này nữa)
+     * Chỉ Quản lý chi nhánh và Admin được phép
+     * 
+     * @param serviceId Mã dịch vụ cần vô hiệu hóa
+     * @param currentUser Người dùng hiện tại
+     * @throws ValidationException nếu dữ liệu không hợp lệ hoặc người dùng không có quyền
+     * @throws SQLException nếu lỗi cơ sở dữ liệu
+     */
+    public void deactivateService(String serviceId, AppUser currentUser)
+            throws ValidationException, SQLException {
+        
+        // Kiểm tra quyền
+        if (!currentUser.hasRole(Role.BRANCH_MANAGER) && !currentUser.hasRole(Role.ADMIN)) {
+            throw new ValidationException("Bạn không có quyền vô hiệu hóa dịch vụ. Chỉ Quản lý chi nhánh được phép.");
+        }
+
+        // Validate mã dịch vụ
+        if (serviceId == null || serviceId.trim().isEmpty()) {
+            throw new ValidationException("Mã dịch vụ không hợp lệ");
+        }
+
+        serviceId = serviceId.trim();
+
+        // Kiểm tra dịch vụ tồn tại không
+        if (!bookingServiceDAO.existsServiceById(serviceId)) {
+            throw new ValidationException("Dịch vụ với mã '" + serviceId + "' không tồn tại");
+        }
+
+        // Cập nhật trạng thái thành không hoạt động
+        bookingServiceDAO.updateServiceStatus(serviceId, 0);
+    }
+
+    /**
+     * Kiểm tra xem dịch vụ có đang hoạt động không
+     * 
+     * @param serviceId Mã dịch vụ
+     * @return true nếu dịch vụ đang hoạt động, false nếu không
+     * @throws SQLException nếu lỗi cơ sở dữ liệu
+     */
+    public boolean isServiceActive(String serviceId) throws SQLException {
+        if (serviceId == null || serviceId.trim().isEmpty()) {
+            return false;
+        }
+        return bookingServiceDAO.isServiceActive(serviceId.trim());
     }
 }

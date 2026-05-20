@@ -74,6 +74,15 @@ public class ServiceDetailController {
     private Button btnDelete;
 
     @FXML
+    private Label lblStatusDisplay;
+
+    @FXML
+    private Button btnActivateService;
+
+    @FXML
+    private Button btnDeactivateService;
+
+    @FXML
     private VBox formContainer;
 
     private final ServiceBUS serviceBUS = new ServiceBUS();
@@ -131,26 +140,14 @@ public class ServiceDetailController {
         btnSave.setVisible(canEdit);
         btnDelete.setVisible(canEdit);
 
+        // Hiển thị nút kích hoạt/vô hiệu hóa nếu người dùng là Branch Manager/Admin
+        btnActivateService.setVisible(canEdit);
+        btnDeactivateService.setVisible(canEdit);
+
         // Tải danh sách categories
         try {
             List<ServiceCategory> categories = serviceBUS.getAllServiceCategories(currentUser);
-            ObservableList<ServiceCategory> categoryList = FXCollections.observableArrayList(categories);
-            cmbCategory.setItems(categoryList);
-            cmbCategory.setCellFactory(param -> new ListCell<ServiceCategory>() {
-                @Override
-                protected void updateItem(ServiceCategory item, boolean empty) {
-                    super.updateItem(item, empty);
-                    setText(empty || item == null ? null : item.getCategoryName());
-                }
-            });
-
-            cmbCategory.setButtonCell(new ListCell<ServiceCategory>() {
-                @Override
-                protected void updateItem(ServiceCategory item, boolean empty) {
-                    super.updateItem(item, empty);
-                    setText(empty || item == null ? null : item.getCategoryName());
-                }
-            });
+            SearchableComboBoxUtil.setup(cmbCategory, categories, ServiceCategory::getCategoryName);
         } catch (Exception e) {
             showError("Không thể tải danh sách loại dịch vụ: " + e.getMessage());
         }
@@ -178,6 +175,23 @@ public class ServiceDetailController {
         txtSpecies.setText(service.getSpecies() != null ? service.getSpecies() : "");
         txtPrice.setText(String.format("%.0f", service.getBasePrice()));
         txtDuration.setText(String.valueOf(service.getDurationMinutes()));
+
+        // Hiển thị trạng thái
+        if (service.getIsActive() == 1) {
+            lblStatusDisplay.setText("✓ Đang hoạt động");
+            lblStatusDisplay.setStyle("-fx-text-fill: #2ecc71; -fx-font-weight: bold;");
+
+            // Hiển thị nút vô hiệu hóa khi dịch vụ đang hoạt động
+            btnActivateService.setVisible(false);
+            btnDeactivateService.setVisible(true);
+        } else {
+            lblStatusDisplay.setText("✗ Ngừng cung cấp");
+            lblStatusDisplay.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+
+            // Hiển thị nút kích hoạt khi dịch vụ không hoạt động
+            btnActivateService.setVisible(true);
+            btnDeactivateService.setVisible(false);
+        }
 
         // Tìm và set category
         for (ServiceCategory cat : cmbCategory.getItems()) {
@@ -360,5 +374,80 @@ public class ServiceDetailController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    /**
+     * Kích hoạt dịch vụ
+     */
+    @FXML
+    public void handleActivateService() {
+        if (currentService == null || currentUser == null) {
+            showError("Dữ liệu không hợp lệ");
+            return;
+        }
+
+        try {
+            serviceBUS.activateService(currentService.getServiceId(), currentUser);
+
+            // Cập nhật trạng thái trên UI
+            currentService.setIsActive(1);
+            populateFields(currentService);
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Thành công");
+            alert.setHeaderText(null);
+            alert.setContentText("Dịch vụ '" + currentService.getServiceName() + "' đã được kích hoạt!");
+            alert.showAndWait();
+
+            // Callback để refresh danh sách
+            if (onServiceUpdated != null) {
+                onServiceUpdated.accept(null);
+            }
+        } catch (Exception e) {
+            showError("Không thể kích hoạt dịch vụ: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Vô hiệu hóa dịch vụ
+     */
+    @FXML
+    public void handleDeactivateService() {
+        if (currentService == null || currentUser == null) {
+            showError("Dữ liệu không hợp lệ");
+            return;
+        }
+
+        // Xác nhận trước khi vô hiệu hóa
+        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmAlert.setTitle("Xác nhận");
+        confirmAlert.setHeaderText(null);
+        confirmAlert.setContentText(
+            "Bạn chắc chắn muốn vô hiệu hóa dịch vụ '" + currentService.getServiceName() + "' không?\n\n" +
+            "Khách hàng sẽ không thể đặt lịch dịch vụ này."
+        );
+
+        if (confirmAlert.showAndWait().isPresent() && confirmAlert.getResult() == javafx.scene.control.ButtonType.OK) {
+            try {
+                serviceBUS.deactivateService(currentService.getServiceId(), currentUser);
+
+                // Cập nhật trạng thái trên UI
+                currentService.setIsActive(0);
+                populateFields(currentService);
+
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Thành công");
+                alert.setHeaderText(null);
+                alert.setContentText("Dịch vụ '" + currentService.getServiceName() + "' đã được vô hiệu hóa!");
+                alert.showAndWait();
+
+                // Callback để refresh danh sách
+                if (onServiceUpdated != null) {
+                    onServiceUpdated.accept(null);
+                }
+            } catch (Exception e) {
+                showError("Không thể vô hiệu hóa dịch vụ: " + e.getMessage());
+            }
+        }
     }
 }

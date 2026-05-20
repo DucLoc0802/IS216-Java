@@ -1,12 +1,9 @@
 package PetHotel.util;
 
-import PetHotel.util.DBConnection;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.UUID;
 
 /**
  * IDGenerator — Sinh primary key dạng chuỗi có prefix cho từng bảng.
@@ -42,6 +39,44 @@ public class IDGenerator {
      */
     public static synchronized String nextPetId() throws SQLException {
         return nextId("PET", "SELECT MAX(pet_id) FROM pet");
+    }
+
+    public static synchronized String nextServiceId() throws SQLException {
+        String sql =
+            "SELECT NVL(MAX(TO_NUMBER(SUBSTR(service_id, 3))), 0) + 1 AS next_id " +
+            "FROM services " +
+            "WHERE REGEXP_LIKE(service_id, '^SV[0-9]{3}$')";
+
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                int nextNum = rs.getInt("next_id");
+                return String.format("SV%03d", nextNum);
+            }
+        }
+
+        return "SV001";
+    }
+
+    public static synchronized String nextServiceCategoryId() throws SQLException {
+        String sql =
+            "SELECT NVL(MAX(TO_NUMBER(SUBSTR(service_category_id, 3))), 0) + 1 AS next_id " +
+            "FROM category_services " +
+            "WHERE REGEXP_LIKE(service_category_id, '^SVC[0-9]{3}$')";
+
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                int nextNum = rs.getInt("next_id");
+                return String.format("SVC%03d", nextNum);
+            }
+        }
+
+        return "SVC001";
     }
 
     /**

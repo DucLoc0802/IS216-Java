@@ -129,4 +129,6 @@ insert into app_user (
     NULL
 );
 
+select * from app_user;
+
 COMMIT;

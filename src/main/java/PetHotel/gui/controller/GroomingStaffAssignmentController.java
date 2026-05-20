@@ -18,7 +18,6 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
@@ -194,28 +193,10 @@ public class GroomingStaffAssignmentController {
 
     private void loadStaffList() {
         try {
-            String branchId = currentUser.getEmployee().getBranchId();
+            String branchId = getCurrentBranchId();
             List<Employee> staffList = groomingBUS.getWorkingEmployeesByBranch(branchId, currentUser);
 
-            ObservableList<Employee> observableStaff = FXCollections.observableArrayList(staffList);
-            cbStaff.setItems(observableStaff);
-
-            // Custom display
-            cbStaff.setCellFactory(param -> new ListCell<>() {
-                @Override
-                protected void updateItem(Employee item, boolean empty) {
-                    super.updateItem(item, empty);
-                    setText(empty || item == null ? null : item.getFullName());
-                }
-            });
-
-            cbStaff.setButtonCell(new ListCell<>() {
-                @Override
-                protected void updateItem(Employee item, boolean empty) {
-                    super.updateItem(item, empty);
-                    setText(empty || item == null ? null : item.getFullName());
-                }
-            });
+            SearchableComboBoxUtil.setup(cbStaff, staffList, this::employeeDisplayText);
 
         } catch (Exception e) {
             showError("Lỗi", "Không thể tải danh sách nhân viên: " + e.getMessage());
@@ -243,7 +224,7 @@ public class GroomingStaffAssignmentController {
     }
 
     private void displayStaffAvailability() {
-        Employee selectedStaff = cbStaff.getValue();
+        Employee selectedStaff = SearchableComboBoxUtil.getSelectedOrExactTextMatch(cbStaff);
         if (selectedStaff == null) {
             lblTodayTasks.setText("0");
             lblStaffStatus.setText("Có sẵn");
@@ -253,7 +234,7 @@ public class GroomingStaffAssignmentController {
         try {
             int taskCount = groomingBUS.getEmployeeTaskCount(
                     selectedStaff.getEmployeeId(),
-                    dpFilterDate.getValue().format(dateFormatter),
+                    getSelectedDate().format(dateFormatter),
                     currentUser
             );
 
@@ -279,9 +260,9 @@ public class GroomingStaffAssignmentController {
             return;
         }
 
-        Employee selectedStaff = cbStaff.getValue();
+        Employee selectedStaff = SearchableComboBoxUtil.getSelectedOrExactTextMatch(cbStaff);
         if (selectedStaff == null) {
-            showWarning("Cảnh báo", "Vui lòng chọn nhân viên");
+            showWarning("Cảnh báo", "Vui lòng chọn nhân viên trong danh sách gợi ý");
             return;
         }
 
@@ -323,6 +304,28 @@ public class GroomingStaffAssignmentController {
         lblStaffStatus.setStyle("-fx-text-fill: #2d7c2d;");
     }
 
+    private String getCurrentBranchId() {
+        if (currentUser.getEmployee() != null && currentUser.getEmployee().getBranchId() != null) {
+            return currentUser.getEmployee().getBranchId();
+        }
+
+        String branchId = SessionManager.getInstance().getBranchId();
+        if (branchId != null && !branchId.trim().isEmpty()) {
+            return branchId.trim();
+        }
+
+        return "BR001";
+    }
+
+    private LocalDate getSelectedDate() {
+        LocalDate selectedDate = dpFilterDate.getValue();
+        if (selectedDate == null) {
+            selectedDate = LocalDate.now();
+            dpFilterDate.setValue(selectedDate);
+        }
+        return selectedDate;
+    }
+
     private void showError(String title, String message) {
         new Alert(Alert.AlertType.ERROR, message, ButtonType.OK).showAndWait();
     }
@@ -333,6 +336,21 @@ public class GroomingStaffAssignmentController {
 
     private void showInfo(String title, String message) {
         new Alert(Alert.AlertType.INFORMATION, message, ButtonType.OK).showAndWait();
+    }
+
+    private String employeeDisplayText(Employee employee) {
+        if (employee == null) {
+            return "";
+        }
+        String employeeId = employee.getEmployeeId() == null ? "" : employee.getEmployeeId().trim();
+        String fullName = employee.getFullName() == null ? "" : employee.getFullName().trim();
+        if (employeeId.isEmpty()) {
+            return fullName;
+        }
+        if (fullName.isEmpty()) {
+            return employeeId;
+        }
+        return employeeId + " - " + fullName;
     }
 
 }

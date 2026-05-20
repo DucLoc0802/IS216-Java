@@ -97,6 +97,35 @@
         <Label styleClass="form-hint" 
                text="Thông tin được đánh dấu (*) là bắt buộc" />
 
+        <Separator styleClass="form-divider" />
+
+        <!-- SECTION: Trạng Thái Dịch Vụ -->
+        <Label styleClass="form-section-title" text="Trạng Thái Dịch Vụ" />
+
+        <HBox spacing="14" alignment="CENTER_LEFT">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Tình Trạng" />
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label fx:id="lblStatusDisplay" 
+                           styleClass="status-badge"
+                           text="Đang hoạt động" />
+                </HBox>
+            </VBox>
+        </HBox>
+
+        <HBox spacing="10">
+            <Button fx:id="btnActivateService" 
+                    onAction="#handleActivateService" 
+                    styleClass="btn-success" 
+                    text="✓ Kích Hoạt" 
+                    visible="false" />
+            <Button fx:id="btnDeactivateService" 
+                    onAction="#handleDeactivateService" 
+                    styleClass="btn-warning" 
+                    text="✗ Vô Hiệu Hóa" 
+                    visible="false" />
+        </HBox>
+
     </VBox>
 
     <!-- FOOTER -->

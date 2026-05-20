@@ -20,6 +20,7 @@ import PetHotel.model.Employee;
 import PetHotel.model.Pet;
 import PetHotel.model.PetService;
 import PetHotel.util.DBConnection;
+import PetHotel.util.IDGenerator;
 
 /**
  * BookingServiceDAO — Quản lý dữ liệu lịch dịch vụ/grooming từ bảng BOOKING_SERVICES.
@@ -34,7 +35,7 @@ public class BookingServiceDAO {
     private static final String SQL_FIND_BY_DATE_AND_FILTER =
         "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bs.pet_id, bs.employee_id, " +
         "       bs.scheduled_at, bs.status, bs.note, bs.created_at, bs.updated_at, " +
-        "       sv.service_name, e.full_name, p.pet_name, p.species, c.customer_id, c.full_name as customer_name " +
+        "       sv.service_name, e.full_name, p.pet_name, p.species, c.customer_id, c.full_name as customer_name, c.phone, c.address " +
         "FROM booking_services bs " +
         "LEFT JOIN services sv ON bs.service_id = sv.service_id " +
         "LEFT JOIN employee e ON bs.employee_id = e.employee_id " +
@@ -45,6 +46,32 @@ public class BookingServiceDAO {
         "  AND (? IS NULL OR bs.employee_id = ?) " +
         "  AND (? IS NULL OR bs.status = ?) " +
         "ORDER BY bs.scheduled_at ASC";
+
+    private static final String SQL_FIND_ALL_AND_FILTER =
+        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bs.pet_id, bs.employee_id, " +
+        "       bs.scheduled_at, bs.status, bs.note, bs.created_at, bs.updated_at, " +
+        "       sv.service_name, e.full_name, p.pet_name, p.species, c.customer_id, c.full_name as customer_name, c.phone, c.address " +
+        "FROM booking_services bs " +
+        "LEFT JOIN services sv ON bs.service_id = sv.service_id " +
+        "LEFT JOIN employee e ON bs.employee_id = e.employee_id " +
+        "LEFT JOIN booking b ON bs.booking_id = b.booking_id " +
+        "LEFT JOIN pet p ON bs.pet_id = p.pet_id " +
+        "LEFT JOIN customer c ON b.customer_id = c.customer_id " +
+        "WHERE (? IS NULL OR bs.employee_id = ?) " +
+        "  AND (? IS NULL OR bs.status = ?) " +
+        "ORDER BY bs.scheduled_at ASC";
+
+    private static final String SQL_FIND_BY_ID =
+        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bs.pet_id, bs.employee_id, " +
+        "       bs.scheduled_at, bs.status, bs.note, bs.created_at, bs.updated_at, " +
+        "       sv.service_name, e.full_name, p.pet_name, p.species, c.customer_id, c.full_name as customer_name, c.phone, c.address " +
+        "FROM booking_services bs " +
+        "LEFT JOIN services sv ON bs.service_id = sv.service_id " +
+        "LEFT JOIN employee e ON bs.employee_id = e.employee_id " +
+        "LEFT JOIN booking b ON bs.booking_id = b.booking_id " +
+        "LEFT JOIN pet p ON bs.pet_id = p.pet_id " +
+        "LEFT JOIN customer c ON b.customer_id = c.customer_id " +
+        "WHERE bs.booking_service_id = ?";
 
     private static final String SQL_FIND_ALL_BY_DATE_RANGE =
         "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bs.pet_id, bs.employee_id, " +
@@ -71,7 +98,7 @@ public class BookingServiceDAO {
     "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bs.pet_id, bs.employee_id, " +
     "       bs.scheduled_at, bs.status, bs.note, bs.created_at, bs.updated_at, " +
     "       sv.service_name, e.full_name AS employee_name, p.pet_name, " +
-    "       p.species, c.customer_id, c.full_name AS customer_name " +
+    "       p.species, c.customer_id, c.full_name AS customer_name, c.phone, c.address " +
     "FROM booking_services bs " +
     "LEFT JOIN services sv ON bs.service_id = sv.service_id " +
     "LEFT JOIN employee e ON bs.employee_id = e.employee_id " +
@@ -110,6 +137,48 @@ public class BookingServiceDAO {
         }
 
         return list;
+    }
+
+    /**
+     * Lấy toàn bộ lịch grooming, không giới hạn ngày.
+     * @param employeeId null = tất cả
+     * @param status null = tất cả
+     */
+    public List<BookingService> findAllAndFilter(String employeeId, String status) throws SQLException {
+        List<BookingService> list = new ArrayList<>();
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_FIND_ALL_AND_FILTER)) {
+
+            ps.setString(1, employeeId);
+            ps.setString(2, employeeId);
+
+            ps.setString(3, status);
+            ps.setString(4, status);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        }
+
+        return list;
+    }
+
+    /**
+     * Lấy một lịch grooming theo mã lịch dịch vụ.
+     */
+    public BookingService findById(String bookingServiceId) throws SQLException {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_FIND_BY_ID)) {
+
+            ps.setString(1, bookingServiceId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? mapRow(rs) : null;
+            }
+        }
     }
 
     private String generateShortId(String prefix) {
@@ -283,7 +352,7 @@ public List<PetService> getGroomingServices() throws SQLException {
 
     String sql =
         "SELECT s.service_id, s.service_category_id, s.service_name, " +
-        "       s.species, s.base_price, s.duration_minutes " +
+        "       s.species, s.base_price, s.duration_minutes, s.is_active " +
         "FROM services s " +
         "JOIN category_services cs ON s.service_category_id = cs.service_category_id " +
         "WHERE s.is_active = 1 " +
@@ -305,6 +374,7 @@ public List<PetService> getGroomingServices() throws SQLException {
             s.setSpecies(rs.getString("species"));
             s.setBasePrice(rs.getDouble("base_price"));
             s.setDurationMinutes(rs.getInt("duration_minutes"));
+            s.setIsActive(rs.getInt("is_active"));
             list.add(s);
         }
     }
@@ -695,7 +765,7 @@ public List<PetService> getAllServices() throws SQLException {
 
     String sql =
         "SELECT s.service_id, s.service_category_id, s.service_name, " +
-        "       s.species, s.base_price, s.duration_minutes " +
+        "       s.species, s.base_price, s.duration_minutes, s.is_active " +
         "FROM services s " +
         "WHERE s.is_active = 1 " +
         "ORDER BY s.service_name";
@@ -712,6 +782,7 @@ public List<PetService> getAllServices() throws SQLException {
             s.setSpecies(rs.getString("species"));
             s.setBasePrice(rs.getDouble("base_price"));
             s.setDurationMinutes(rs.getInt("duration_minutes"));
+            s.setIsActive(rs.getInt("is_active"));
             list.add(s);
         }
     }
@@ -727,7 +798,7 @@ public List<PetService> searchServices(String keyword) throws SQLException {
 
     String sql =
         "SELECT s.service_id, s.service_category_id, s.service_name, " +
-        "       s.species, s.base_price, s.duration_minutes " +
+        "       s.species, s.base_price, s.duration_minutes, s.is_active " +
         "FROM services s " +
         "WHERE s.is_active = 1 " +
         "  AND (LOWER(s.service_name) LIKE LOWER(?) " +
@@ -752,6 +823,7 @@ public List<PetService> searchServices(String keyword) throws SQLException {
                 s.setSpecies(rs.getString("species"));
                 s.setBasePrice(rs.getDouble("base_price"));
                 s.setDurationMinutes(rs.getInt("duration_minutes"));
+                s.setIsActive(rs.getInt("is_active"));
                 list.add(s);
             }
         }
@@ -870,7 +942,6 @@ public PetService getServiceById(String serviceId) throws SQLException {
 
 /**
  * Tạo dịch vụ mới
- * @param serviceId Mã dịch vụ
  * @param serviceName Tên dịch vụ
  * @param serviceCategoryId Mã loại dịch vụ
  * @param species Loài thú cưng
@@ -878,8 +949,14 @@ public PetService getServiceById(String serviceId) throws SQLException {
  * @param durationMinutes Thời gian (phút)
  * @throws SQLException nếu lỗi DB
  */
-public void createService(String serviceId, String serviceName, String serviceCategoryId, 
-                         String species, double basePrice, int durationMinutes) throws SQLException {
+public void createService(String serviceName,
+                          String serviceCategoryId,
+                          String species,
+                          double basePrice,
+                          int durationMinutes) throws SQLException {
+
+    String serviceId = IDGenerator.nextServiceId();
+
     String sql =
         "INSERT INTO services (service_id, service_name, service_category_id, species, " +
         "                      base_price, duration_minutes, is_active, created_at, updated_at) " +
@@ -887,18 +964,20 @@ public void createService(String serviceId, String serviceName, String serviceCa
 
     try (Connection conn = DBConnection.getConnection();
          PreparedStatement ps = conn.prepareStatement(sql)) {
+
         ps.setString(1, serviceId);
         ps.setString(2, serviceName);
         ps.setString(3, serviceCategoryId);
-        
+
         if (species != null && !species.trim().isEmpty()) {
             ps.setString(4, species);
         } else {
             ps.setNull(4, java.sql.Types.VARCHAR);
         }
-        
+
         ps.setDouble(5, basePrice);
         ps.setInt(6, durationMinutes);
+
         ps.executeUpdate();
     }
 }
@@ -923,5 +1002,117 @@ public boolean existsServiceById(String serviceId) throws SQLException {
     }
 
     return false;
+}
+
+/**
+ * Lấy tất cả dịch vụ (bao gồm cả inactive) cho quản lý
+ * @return Danh sách tất cả dịch vụ
+ * @throws SQLException nếu lỗi DB
+ */
+public List<PetService> getAllServicesForManagement() throws SQLException {
+    List<PetService> list = new ArrayList<>();
+
+    String sql =
+        "SELECT s.service_id, s.service_category_id, s.service_name, " +
+        "       s.species, s.base_price, s.duration_minutes, s.is_active " +
+        "FROM services s " +
+        "ORDER BY s.service_name";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
+
+        while (rs.next()) {
+            PetService s = new PetService();
+            s.setServiceId(rs.getString("service_id"));
+            s.setServiceCategoryId(rs.getString("service_category_id"));
+            s.setServiceName(rs.getString("service_name"));
+            s.setSpecies(rs.getString("species"));
+            s.setBasePrice(rs.getDouble("base_price"));
+            s.setDurationMinutes(rs.getInt("duration_minutes"));
+            s.setIsActive(rs.getInt("is_active"));
+            list.add(s);
+        }
+    }
+
+    return list;
+}
+
+/**
+ * Kích hoạt/vô hiệu hóa dịch vụ
+ * @param serviceId Mã dịch vụ
+ * @param isActive 1 = kích hoạt, 0 = vô hiệu hóa
+ * @throws SQLException nếu lỗi DB
+ */
+public void updateServiceStatus(String serviceId, int isActive) throws SQLException {
+    String sql =
+        "UPDATE services " +
+        "SET is_active = ?, updated_at = SYSTIMESTAMP " +
+        "WHERE service_id = ?";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setInt(1, isActive);
+        ps.setString(2, serviceId);
+        ps.executeUpdate();
+    }
+}
+
+/**
+ * Kiểm tra xem dịch vụ có đang hoạt động không
+ * @param serviceId Mã dịch vụ
+ * @return true nếu dịch vụ đang hoạt động, false nếu không hoạt động hoặc không tồn tại
+ * @throws SQLException nếu lỗi DB
+ */
+public boolean isServiceActive(String serviceId) throws SQLException {
+    String sql = "SELECT is_active FROM services WHERE service_id = ?";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, serviceId);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt("is_active") == 1;
+            }
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Lấy tất cả dịch vụ đang hoạt động (chỉ dùng cho khách hàng)
+ * Bao gồm cả thông tin is_active để có thể hiển thị trạng thái
+ * @return Danh sách dịch vụ đang hoạt động
+ * @throws SQLException nếu lỗi DB
+ */
+public List<PetService> getActiveServicesWithStatus() throws SQLException {
+    List<PetService> list = new ArrayList<>();
+
+    String sql =
+        "SELECT s.service_id, s.service_category_id, s.service_name, " +
+        "       s.species, s.base_price, s.duration_minutes, s.is_active " +
+        "FROM services s " +
+        "WHERE s.is_active = 1 " +
+        "ORDER BY s.service_name";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
+
+        while (rs.next()) {
+            PetService s = new PetService();
+            s.setServiceId(rs.getString("service_id"));
+            s.setServiceCategoryId(rs.getString("service_category_id"));
+            s.setServiceName(rs.getString("service_name"));
+            s.setSpecies(rs.getString("species"));
+            s.setBasePrice(rs.getDouble("base_price"));
+            s.setDurationMinutes(rs.getInt("duration_minutes"));
+            s.setIsActive(rs.getInt("is_active"));
+            list.add(s);
+        }
+    }
+
+    return list;
 }
 }

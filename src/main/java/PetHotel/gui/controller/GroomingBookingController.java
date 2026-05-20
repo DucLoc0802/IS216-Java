@@ -3,6 +3,7 @@ package PetHotel.gui.controller;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import PetHotel.bus.GroomingBUS;
 import PetHotel.model.AppUser;
@@ -19,7 +20,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.Modality;
@@ -71,101 +71,23 @@ public class GroomingBookingController {
     }
 
     private void setupComboBoxDisplay() {
-        cbCustomer.setCellFactory(param -> new ListCell<>() {
-            @Override
-            protected void updateItem(Customer item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getFullName() + " - " + item.getPhone());
-            }
-        });
-
-        cbCustomer.setButtonCell(new ListCell<>() {
-            @Override
-            protected void updateItem(Customer item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getFullName());
-            }
-        });
-
-        cbPet.setCellFactory(param -> new ListCell<>() {
-            @Override
-            protected void updateItem(Pet item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getPetName() + " - " + item.getSpecies());
-            }
-        });
-
-        cbPet.setButtonCell(new ListCell<>() {
-            @Override
-            protected void updateItem(Pet item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getPetName());
-            }
-        });
-
-        cbServiceCategory.setCellFactory(param -> new ListCell<ServiceCategory>() {
-            @Override
-            protected void updateItem(ServiceCategory item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getCategoryName());
-            }
-        });
-
-        cbServiceCategory.setButtonCell(new ListCell<ServiceCategory>() {
-            @Override
-            protected void updateItem(ServiceCategory item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getCategoryName());
-            }
-        });
-
-        cbService.setCellFactory(param -> new ListCell<>() {
-            @Override
-            protected void updateItem(PetService item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getServiceName());
-            }
-        });
-
-        cbService.setButtonCell(new ListCell<>() {
-            @Override
-            protected void updateItem(PetService item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getServiceName());
-            }
-        });
-
-        cbEmployee.setCellFactory(param -> new ListCell<>() {
-            @Override
-            protected void updateItem(Employee item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getFullName());
-            }
-        });
-
-        cbEmployee.setButtonCell(new ListCell<>() {
-            @Override
-            protected void updateItem(Employee item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getFullName());
-            }
-        });
+        SearchableComboBoxUtil.setup(cbCustomer, List.of(), this::customerDisplayText);
+        SearchableComboBoxUtil.setup(cbPet, List.of(), this::petDisplayText);
+        SearchableComboBoxUtil.setup(cbServiceCategory, List.of(), this::categoryDisplayText);
+        SearchableComboBoxUtil.setup(cbService, List.of(), this::serviceDisplayText);
+        SearchableComboBoxUtil.setup(cbEmployee, List.of(), this::employeeDisplayText);
     }
 
     private void loadData() {
         try {
-            cbCustomer.setItems(FXCollections.observableArrayList(
-                    groomingBUS.getAllCustomersForBooking(currentUser)
-            ));
+            List<Customer> customers = groomingBUS.getAllCustomersForBooking(currentUser);
+            SearchableComboBoxUtil.setup(cbCustomer, customers, this::customerDisplayText);
 
-            // Load all grooming service categories
-            cbServiceCategory.setItems(FXCollections.observableArrayList(
-                    groomingBUS.getGroomingServiceCategories(currentUser)
-            ));
+            List<ServiceCategory> categories = groomingBUS.getGroomingServiceCategories(currentUser);
+            SearchableComboBoxUtil.setup(cbServiceCategory, categories, this::categoryDisplayText);
 
-            cbEmployee.setItems(FXCollections.observableArrayList(
-                    groomingBUS.getWorkingEmployeesByBranch(currentBranchId, currentUser)
-            ));
+            List<Employee> employees = groomingBUS.getWorkingEmployeesByBranch(currentBranchId, currentUser);
+            SearchableComboBoxUtil.setup(cbEmployee, employees, this::employeeDisplayText);
 
         } catch (Exception e) {
             showError("Không thể tải dữ liệu: " + e.getMessage());
@@ -176,14 +98,17 @@ public class GroomingBookingController {
         Customer customer = cbCustomer.getValue();
 
         if (customer == null) {
-            cbPet.getItems().clear();
+            cbPet.setValue(null);
+            cbPet.getEditor().clear();
+            SearchableComboBoxUtil.setup(cbPet, List.of(), this::petDisplayText);
             return;
         }
 
         try {
-            cbPet.setItems(FXCollections.observableArrayList(
-                    groomingBUS.getPetsByCustomer(customer.getCustomerId(), currentUser)
-            ));
+            cbPet.setValue(null);
+            cbPet.getEditor().clear();
+            List<Pet> pets = groomingBUS.getPetsByCustomer(customer.getCustomerId(), currentUser);
+            SearchableComboBoxUtil.setup(cbPet, pets, this::petDisplayText);
         } catch (Exception e) {
             showError("Không thể tải thú cưng: " + e.getMessage());
         }
@@ -193,14 +118,17 @@ public class GroomingBookingController {
         ServiceCategory category = cbServiceCategory.getValue();
 
         if (category == null) {
-            cbService.getItems().clear();
+            cbService.setValue(null);
+            cbService.getEditor().clear();
+            SearchableComboBoxUtil.setup(cbService, List.of(), this::serviceDisplayText);
             return;
         }
 
         try {
-            cbService.setItems(FXCollections.observableArrayList(
-                    groomingBUS.getGroomingServicesByCategory(category.getServiceCategoryId(), currentUser)
-            ));
+            cbService.setValue(null);
+            cbService.getEditor().clear();
+            List<PetService> services = groomingBUS.getGroomingServicesByCategory(category.getServiceCategoryId(), currentUser);
+            SearchableComboBoxUtil.setup(cbService, services, this::serviceDisplayText);
         } catch (Exception e) {
             showError("Không thể tải dịch vụ grooming: " + e.getMessage());
         }
@@ -293,5 +221,50 @@ public class GroomingBookingController {
 
     private void showError(String message) {
         new Alert(Alert.AlertType.ERROR, message).showAndWait();
+    }
+
+    private String customerDisplayText(Customer customer) {
+        if (customer == null) {
+            return "";
+        }
+        return joinParts(customer.getFullName(), customer.getPhone());
+    }
+
+    private String petDisplayText(Pet pet) {
+        if (pet == null) {
+            return "";
+        }
+        return joinParts(pet.getPetName(), pet.getSpecies());
+    }
+
+    private String categoryDisplayText(ServiceCategory category) {
+        return category == null ? "" : valueOrEmpty(category.getCategoryName());
+    }
+
+    private String serviceDisplayText(PetService service) {
+        return service == null ? "" : valueOrEmpty(service.getServiceName());
+    }
+
+    private String employeeDisplayText(Employee employee) {
+        if (employee == null) {
+            return "";
+        }
+        return joinParts(employee.getEmployeeId(), employee.getFullName());
+    }
+
+    private String joinParts(String first, String second) {
+        String firstValue = valueOrEmpty(first);
+        String secondValue = valueOrEmpty(second);
+        if (secondValue.isEmpty()) {
+            return firstValue;
+        }
+        if (firstValue.isEmpty()) {
+            return secondValue;
+        }
+        return firstValue + " - " + secondValue;
+    }
+
+    private String valueOrEmpty(String value) {
+        return value == null ? "" : value.trim();
     }
 }
