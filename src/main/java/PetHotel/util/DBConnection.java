@@ -9,9 +9,9 @@ public class DBConnection {
     private static final String HOST = "localhost";
     private static final String PORT = "1521";
     private static final String SERVICE_NAME = "xe"; 
-    private static final String USER = "pethotel"; 
-    private static final String PASS = "admin";
-
+    // Sửa 2 dòng dưới đây:
+    private static final String USER = "system"; 
+    private static final String PASS = "123456"; 
     // Chuỗi URL kết nối chuẩn Oracle
     private static final String URL = "jdbc:oracle:thin:@//" + HOST + ":" + PORT + "/" + SERVICE_NAME;
     public static Connection getConnection() {

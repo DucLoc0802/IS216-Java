@@ -1,21 +1,28 @@
 -- =========================================================
--- MENU
+-- FILE: 03_functions.sql
+-- HỆ THỐNG: Pet Hotel and Spa
+-- MỤC ĐÍCH: Tập hợp các User-defined Functions (UDF) hỗ trợ xử lý
+-- logic nghiệp vụ, dùng nội bộ trong Trigger và Procedure.
+--
+-- DANH SÁCH CÁC FUNCTION:
+-- 01. fn_add_minutes            : Cộng số phút vào một mốc thời gian, trả về thời điểm kết thúc dịch vụ.
+-- 02. fn_get_available_stock    : Tra cứu số lượng tồn kho của một vật tư tại chi nhánh.
+-- 03. fn_convert_unit           : Quy đổi đơn vị định mức lớn (L, KG) về đơn vị nhỏ (ML, G).
+-- 04. fn_check_pet_weight_limit : Kiểm tra cân nặng thú cưng có vượt giới hạn loại phòng không.
+-- 05. fn_is_order_ready_to_pay  : Kiểm tra toàn bộ điều kiện cho phép thanh toán hóa đơn.
+-- 06. fn_get_total_paid         : Tính tổng số tiền đã thanh toán thành công của một hóa đơn.
+-- 07. fn_calc_deposit_applied   : Trả về tiền cọc đã áp dụng (đã khấu trừ) vào một hóa đơn.
 -- =========================================================
 
--- I. FUNCTION
---   1. fn_add_minutes                    -- Hàm cộng thêm số phút vào một mốc thời gian
---   2. fn_get_available_stock            -- Hàm lấy số lượng tồn kho hiện có của sản phẩm tại chi nhánh
---   3. fn_convert_unit                   -- Hàm quy đổi đơn vị về đơn vị chuẩn nhỏ nhất g,kg,ml,l
---   4. fn_check_pet_weight_limit         -- Hàm kiểm tra cân nặng thú cưng có phù hợp với giới hạn phòng hay không
---   5. fn_is_order_ready_to_pay          -- Hàm kiểm tra hóa đơn đã đủ điều kiện để thanh toán hay chưa
---   6. fn_calc_difference_rate           -- Hàm tính tỷ lệ chênh lệch giữa số lượng hệ thống và số lượng thực tế khi kiểm kê
---   7. fn_get_product_cost_price         -- Hàm lấy giá vốn hiện tại của sản phẩm
-
 -- =========================================================
--- I. FUNCTION
+-- FUNC-01: Tính thời điểm kết thúc dịch vụ
+-- Input:  p_start_time (Thời gian bắt đầu), p_minutes (Số phút thực hiện)
+-- Output: TIMESTAMP WITH TIME ZONE
+-- Mục đích:
+--   Cộng thêm p_minutes vào p_start_time để ra thời điểm dịch vụ kết thúc.
+--   Dùng trong TRG-02 (employee_no_overlap) và TRG-03 (booking_service_no_overlap)
+--   để xác định khoảng thời gian chiếm dụng của từng ca làm dịch vụ.
 -- =========================================================
-
--- 1. Cộng thêm số phút vào thời điểm bắt đầu
 CREATE OR REPLACE FUNCTION fn_add_minutes (
     p_start_time TIMESTAMP WITH TIME ZONE,
     p_minutes    NUMBER
@@ -24,82 +31,92 @@ RETURN TIMESTAMP WITH TIME ZONE
 AS
 BEGIN
     RETURN p_start_time + NUMTODSINTERVAL(p_minutes, 'MINUTE');
-END;
+END fn_add_minutes;
 /
 
--- 2. Lấy số lượng tồn kho hiện có của một sản phẩm tại một chi nhánh
+-- =========================================================
+-- FUNC-02: Tra cứu tồn kho vật tư tại chi nhánh
+-- Bảng liên quan: branch_inventory
+-- Input:  p_product_id (Mã vật tư), p_branch_id (Mã chi nhánh)
+-- Output: NUMBER — Số lượng tồn kho hiện tại (trả 0 nếu chưa có bản ghi)
+-- Mục đích:
+--   Tra cứu tồn kho thực tế, dùng trong PROC-02 trước khi trừ kho.
+--   NVL đảm bảo không trả về NULL; NO_DATA_FOUND trả về 0 khi
+--   vật tư chưa từng được nhập cho chi nhánh đó.
+-- =========================================================
 CREATE OR REPLACE FUNCTION fn_get_available_stock (
-    p_product_id IN product.product_id%TYPE,
-    p_branch_id  IN branch.branch_id%TYPE
-)
-RETURN NUMBER
-IS
+    p_product_id IN branch_inventory.product_id%TYPE,
+    p_branch_id  IN branch_inventory.branch_id%TYPE
+) RETURN NUMBER IS
     v_stock NUMBER;
 BEGIN
     SELECT NVL(bi.quantity_in_stock, 0)
-    INTO v_stock
-    FROM branch_inventory bi
-    WHERE bi.product_id = p_product_id
-      AND bi.branch_id = p_branch_id;
+    INTO   v_stock
+    FROM   branch_inventory bi
+    WHERE  bi.product_id = p_product_id
+      AND  bi.branch_id  = p_branch_id;
 
     RETURN v_stock;
 
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
         RETURN 0;
-END;
+END fn_get_available_stock;
 /
 
--- 3. Quy đổi đơn vị về đơn vị chuẩn nhỏ nhất
+-- =========================================================
+-- FUNC-03: Quy đổi đơn vị định mức sang đơn vị lưu kho nhỏ nhất
+-- Input:  p_amount (Số lượng), p_unit (Đơn vị: 'ML','G','L','KG')
+-- Output: NUMBER — Số lượng sau khi quy đổi về ML hoặc G
+-- Mục đích:
+--   Định mức trong service_product_standard có thể ghi 0.5 KG hoặc 1 L.
+--   Hàm này chuẩn hóa về ML / G để đối chiếu và trừ kho đúng.
+--   Dùng trong PROC-02 (trừ kho) và PROC-03 (hoàn kho).
+-- =========================================================
 CREATE OR REPLACE FUNCTION fn_convert_unit (
-    p_amount IN NUMBER,
-    p_unit   IN VARCHAR2
-)
-RETURN NUMBER
-IS
+    p_amount NUMBER,
+    p_unit   VARCHAR2
+) RETURN NUMBER IS
 BEGIN
-    IF UPPER(TRIM(p_unit)) IN ('L', 'KG') THEN
+    IF UPPER(p_unit) IN ('L', 'KG') THEN
         RETURN p_amount * 1000;
-    ELSIF UPPER(TRIM(p_unit)) IN ('ML', 'G') THEN
-        RETURN p_amount;
     ELSE
-        -- Đơn vị không hợp lệ
-        RAISE_APPLICATION_ERROR(
-            -20070,
-            'Invalid unit: ' || p_unit
-        );
+        RETURN p_amount;   -- Đơn vị đã là ML hoặc G, giữ nguyên
     END IF;
-END;
+END fn_convert_unit;
 /
 
--- 4. Kiểm tra cân nặng thú cưng có phù hợp với giới hạn của phòng hay không
+-- =========================================================
+-- FUNC-04: Kiểm tra cân nặng thú cưng so với giới hạn loại phòng
+-- Bảng liên quan: pet, booking_room, room, type_room
+-- Input:  p_pet_id (Mã thú cưng), p_booking_room_id (Mã phiếu đặt phòng)
+-- Output: BOOLEAN — TRUE nếu hợp lệ, FALSE nếu vượt tải trọng
+-- Mục đích:
+--   Hàm bảo vệ kép cho TRG-08 (trg_validate_pet_room_weight).
+--   Nếu loại phòng không quy định max_weight_kg thì không hạn chế (trả TRUE).
+--   NO_DATA_FOUND trả FALSE để fail-safe.
+-- =========================================================
 CREATE OR REPLACE FUNCTION fn_check_pet_weight_limit (
     p_pet_id          IN pet.pet_id%TYPE,
     p_booking_room_id IN booking_room.booking_room_id%TYPE
-)
-RETURN BOOLEAN
-IS
+) RETURN BOOLEAN IS
     v_pet_weight      pet.weight_kg%TYPE;
-    v_room_max_weight type_room.max_weight_kg%TYPE;
+    v_max_weight      type_room.max_weight_kg%TYPE;
 BEGIN
-    -- Lấy cân nặng thực tế của thú cưng
     SELECT p.weight_kg
-    INTO v_pet_weight
-    FROM pet p
-    WHERE p.pet_id = p_pet_id;
+    INTO   v_pet_weight
+    FROM   pet p
+    WHERE  p.pet_id = p_pet_id;
 
-    -- Lấy giới hạn cân nặng của loại phòng
     SELECT tr.max_weight_kg
-    INTO v_room_max_weight
-    FROM booking_room br
-    JOIN room r
-        ON br.room_id = r.room_id
-    JOIN type_room tr
-        ON r.type_room_id = tr.type_room_id
-    WHERE br.booking_room_id = p_booking_room_id;
+    INTO   v_max_weight
+    FROM   booking_room br
+    JOIN   room         r  ON r.room_id      = br.room_id
+    JOIN   type_room    tr ON tr.type_room_id = r.type_room_id
+    WHERE  br.booking_room_id = p_booking_room_id;
 
-    -- Nếu phòng không giới hạn cân nặng hoặc thú cưng không vượt ngưỡng thì hợp lệ
-    IF v_room_max_weight IS NULL OR v_pet_weight <= v_room_max_weight THEN
+    -- Phòng không đặt giới hạn hoặc thú cưng nằm trong mức cho phép
+    IF v_max_weight IS NULL OR v_pet_weight IS NULL OR v_pet_weight <= v_max_weight THEN
         RETURN TRUE;
     ELSE
         RETURN FALSE;
@@ -107,83 +124,110 @@ BEGIN
 
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
-        RETURN FALSE;
-END;
+        RETURN FALSE;   -- Fail-safe: dữ liệu không tồn tại → từ chối
+END fn_check_pet_weight_limit;
 /
 
--- 5. Kiểm tra hóa đơn đã đủ điều kiện để thanh toán hay chưa
+-- =========================================================
+-- FUNC-05: Kiểm tra điều kiện cho phép thanh toán hóa đơn
+-- Bảng liên quan: orders, order_details, booking_services_pet, booking_room
+-- Input:  p_order_id (Mã hóa đơn)
+-- Output: BOOLEAN — TRUE nếu đủ điều kiện, FALSE nếu chưa
+-- Mục đích:
+--   Một hóa đơn chỉ được chốt PAID khi:
+--   (1) Mọi dịch vụ trong đơn đều ở trạng thái DONE hoặc CANCELLED.
+--   (2) Mọi phòng liên kết đều đã CHECKED_OUT hoặc booking CANCELLED.
+--   Dùng trong TRG-10 (trg_prevent_manual_paid_status) và PROC-05.
+-- =========================================================
 CREATE OR REPLACE FUNCTION fn_is_order_ready_to_pay (
     p_order_id IN orders.order_id%TYPE
-)
-RETURN BOOLEAN
-IS
-    v_count_not_done_service      NUMBER;
-    v_count_not_checked_out_room  NUMBER;
+) RETURN BOOLEAN IS
+    v_pending_services NUMBER;
+    v_pending_rooms    NUMBER;
 BEGIN
-    -- Đếm các dịch vụ chưa hoàn tất
+    -- Đếm dịch vụ chưa hoàn thành (không phải DONE hoặc CANCELLED)
     SELECT COUNT(*)
-    INTO v_count_not_done_service
-    FROM order_details od
-    JOIN booking_services bs
-        ON od.booking_id = bs.booking_id
-       AND od.service_id = bs.service_id
-    WHERE od.order_id = p_order_id
-      AND bs.status NOT IN ('DONE', 'CANCELLED');
+    INTO   v_pending_services
+    FROM   order_details    od
+    JOIN   booking_services_pet bsp ON od.booking_service_id = bsp.booking_service_id
+    WHERE  od.order_id = p_order_id
+      AND  bsp.status NOT IN ('DONE', 'CANCELLED');
 
-    -- Đếm các booking lưu trú chưa hoàn tất
+    -- Đếm booking liên kết chưa checkout / chưa hủy
     SELECT COUNT(*)
-    INTO v_count_not_checked_out_room
-    FROM order_details od
-    JOIN booking b
-        ON od.booking_id = b.booking_id
-    WHERE od.order_id = p_order_id
-      AND b.status NOT IN ('CHECKED_OUT', 'CANCELLED');
+    INTO   v_pending_rooms
+    FROM   orders  o
+    JOIN   booking b ON b.booking_id = o.booking_id
+    WHERE  o.order_id = p_order_id
+      AND  b.status NOT IN ('CHECKED_OUT', 'CANCELLED');
 
-    IF v_count_not_done_service = 0
-       AND v_count_not_checked_out_room = 0 THEN
+    IF v_pending_services = 0 AND v_pending_rooms = 0 THEN
         RETURN TRUE;
     ELSE
         RETURN FALSE;
     END IF;
-END;
-/
--- 6. Tính tỷ lệ chênh lệch kiểm kê
-CREATE OR REPLACE FUNCTION fn_calc_difference_rate (
-    p_system_quantity IN NUMBER,
-    p_actual_quantity IN NUMBER
-)
-RETURN NUMBER
-IS
-BEGIN
-    IF p_system_quantity IS NULL OR p_system_quantity = 0 THEN
-        RETURN NULL;
-    END IF;
-
-    RETURN ROUND(ABS(p_actual_quantity - p_system_quantity) / p_system_quantity * 100, 2);
-END;
-/
-
--- 7. Lấy giá vốn hiện tại của sản phẩm
-CREATE OR REPLACE FUNCTION fn_get_product_cost_price (
-    p_product_id IN product.product_id%TYPE
-)
-RETURN NUMBER
-IS
-    v_cost_price product.cost_price%TYPE;
-BEGIN
-    SELECT p.cost_price
-    INTO v_cost_price
-    FROM product p
-    WHERE p.product_id = p_product_id;
-
-    RETURN NVL(v_cost_price, 0);
 
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
-        RAISE_APPLICATION_ERROR(
-            -20101,
-            'Product does not exist.'
-            -- Không tìm thấy sản phẩm
-        );
-END;
+        RETURN FALSE;
+END fn_is_order_ready_to_pay;
+/
+
+-- =========================================================
+-- FUNC-06: Tính tổng tiền đã thanh toán thành công của một hóa đơn
+-- Bảng liên quan: payments
+-- Input:  p_order_id (Mã hóa đơn)
+-- Output: NUMBER — Tổng tiền có status = 'SUCCESS' (trả 0 nếu chưa có)
+-- Mục đích:
+--   Được gọi tập trung từ PROC-05 và TRG-10 để tránh trùng lặp logic
+--   tính tổng thanh toán. Chỉ cộng các khoản có trạng thái SUCCESS,
+--   bỏ qua PENDING / FAILED / REFUNDED.
+-- =========================================================
+CREATE OR REPLACE FUNCTION fn_get_total_paid (
+    p_order_id IN payments.order_id%TYPE
+) RETURN NUMBER IS
+    v_total NUMBER;
+BEGIN
+    SELECT NVL(SUM(p.amount), 0)
+    INTO   v_total
+    FROM   payments p
+    WHERE  p.order_id = p_order_id
+      AND  p.status   = 'SUCCESS';
+
+    RETURN v_total;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN 0;
+END fn_get_total_paid;
+/
+
+-- =========================================================
+-- FUNC-07: Lấy tiền cọc đã áp dụng vào hóa đơn
+-- Bảng liên quan: booking, orders
+-- Input:  p_order_id (Mã hóa đơn)
+-- Output: NUMBER — Số tiền cọc (deposit_amount) của booking gốc
+-- Mục đích:
+--   Khi tạo Order, grand_total = subtotal - deposit_amount.
+--   Hàm này trả về deposit_amount thực tế đã được khấu trừ,
+--   phục vụ TRG-16 (trg_auto_deposit_payment) và PROC-05 đối soát.
+--   Nếu booking không có cọc hoặc không tìm thấy thì trả về 0.
+-- =========================================================
+CREATE OR REPLACE FUNCTION fn_calc_deposit_applied (
+    p_order_id IN orders.order_id%TYPE
+) RETURN NUMBER IS
+    v_deposit NUMBER;
+BEGIN
+    SELECT NVL(b.deposit_amount, 0)
+    INTO   v_deposit
+    FROM   orders  o
+    JOIN   booking b ON b.booking_id = o.booking_id
+    WHERE  o.order_id = p_order_id;
+
+    RETURN v_deposit;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN 0;
+END fn_calc_deposit_applied;
 /

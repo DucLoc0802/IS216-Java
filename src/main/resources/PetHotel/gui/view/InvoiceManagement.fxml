@@ -28,25 +28,23 @@
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
         <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
             <Label styleClass="search-icon" text="🔍" />
-            <TextField fx:id="searchField" promptText="Mã HĐ, tên khách hàng..." styleClass="search-input" HBox.hgrow="ALWAYS" />
+            <TextField fx:id="txtSearch" promptText="Mã HĐ, tên khách hàng..." styleClass="search-input" HBox.hgrow="ALWAYS" />
         </HBox>
         <DatePicker fx:id="filterFrom" prefWidth="140" styleClass="filter-combo" />
         <DatePicker fx:id="filterTo" prefWidth="140" styleClass="filter-combo" />
         <ComboBox fx:id="filterStatus" prefWidth="130" promptText="Trạng thái" styleClass="filter-combo" />
-        <Button onAction="#onFilter" style="-fx-padding: 7 16 7 16;" styleClass="action-btn action-btn-primary" text="Lọc" />
+        <Button onAction="#handleSearch" style="-fx-padding: 7 16 7 16;" styleClass="action-btn action-btn-primary" text="Lọc" />
     </HBox>
 
     <HBox spacing="18">
         <VBox spacing="12" styleClass="content-panel" HBox.hgrow="ALWAYS">
-            <TableView fx:id="invoiceTable" onMouseClicked="#onTableClick" styleClass="data-table" VBox.vgrow="ALWAYS">
+            <TableView fx:id="tableInvoice" onMouseClicked="#onTableClick" styleClass="data-table" VBox.vgrow="ALWAYS">
                 <columns>
-                    <TableColumn fx:id="colInvId" prefWidth="90" text="Mã HĐ" />
-                    <TableColumn fx:id="colInvCustomer" prefWidth="150" text="Khách Hàng" />
-                    <TableColumn fx:id="colInvDate" prefWidth="110" text="Ngày Tạo" />
-                    <TableColumn fx:id="colInvTotal" prefWidth="120" text="Tổng Tiền" />
-                    <TableColumn fx:id="colInvDiscount" prefWidth="100" text="Giảm Giá" />
-                    <TableColumn fx:id="colInvFinal" prefWidth="120" text="Thực Trả" />
-                    <TableColumn fx:id="colInvStatus" prefWidth="110" text="Trạng Thái" />
+                    <TableColumn fx:id="colInvoiceId" prefWidth="90" text="Mã HĐ" />
+                    <TableColumn fx:id="colCustomerId" prefWidth="150" text="Khách Hàng" />
+                    <TableColumn fx:id="colCreateDate" prefWidth="110" text="Ngày Tạo" />
+                    <TableColumn fx:id="colTotalAmount" prefWidth="120" text="Tổng Tiền" />
+                    <TableColumn fx:id="colStatus" prefWidth="110" text="Trạng Thái" />
                     <TableColumn fx:id="colInvAction" prefWidth="130" resizable="false" text="Thao Tác" />
                 </columns>
                 <placeholder>
