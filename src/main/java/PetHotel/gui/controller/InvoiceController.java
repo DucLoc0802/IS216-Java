@@ -3,6 +3,7 @@ package PetHotel.gui.controller;
 import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import PetHotel.bus.InvoiceBUS;
 import PetHotel.model.Invoice;
@@ -11,16 +12,24 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 public class InvoiceController {
 
@@ -47,6 +56,12 @@ public class InvoiceController {
 
     @FXML
     private VBox invoicePreview;
+
+    @FXML
+    private Button btnPay;
+
+    @FXML
+    private Button btnCancelInvoice;
 
     private final InvoiceBUS invoiceBus;
 
@@ -80,12 +95,14 @@ public class InvoiceController {
 
         if (tableInvoice != null) {
             tableInvoice.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+                updateActionButtons(newSelection);
                 if (newSelection != null) {
                     showSelectedInvoiceDetail();
                 }
             });
         }
 
+        updateActionButtons(null);
         handleSearch(null);
     }
 
@@ -107,8 +124,13 @@ public class InvoiceController {
                 null
             );
 
+            for (Invoice invoice : results) {
+                invoiceBus.syncPaymentStatus(invoice);
+            }
+
             ObservableList<Invoice> data = FXCollections.observableArrayList(results);
             tableInvoice.setItems(data);
+            updateActionButtons(tableInvoice.getSelectionModel().getSelectedItem());
 
             if (results == null || results.isEmpty()) {
                 showAlert(Alert.AlertType.INFORMATION, "Thông báo", "Không tìm thấy hóa đơn phù hợp.");
@@ -125,66 +147,22 @@ public class InvoiceController {
     @FXML
     public void onCreateInvoice(ActionEvent event) {
         try {
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle("Tạo hóa đơn");
-            dialog.setHeaderText("Nhập thông tin hóa đơn mới");
-            dialog.setContentText(
-                "Nhập theo định dạng:\n" +
-                "order_id,customer_id,branch_id,booking_id,created_by_emp,total_amount\n\n" +
-                "Ví dụ: ORD999,CUS001,BR001,BK001,EMP001,500000"
-            );
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/PetHotel/gui/view/CreateInvoice.fxml"));
+            Parent root = loader.load();
 
-            var result = dialog.showAndWait();
+            Stage stage = new Stage();
+            stage.setTitle("Tạo Hóa Đơn Mới");
+            stage.setScene(new Scene(root));
+            stage.setResizable(false);
+            stage.showAndWait();
 
-            if (result.isEmpty()) {
-                return;
+            if (txtSearch != null) {
+                txtSearch.clear();
             }
-
-            String input = result.get().trim();
-            String[] parts = input.split(",");
-
-            if (parts.length != 6) {
-                showAlert(
-                    Alert.AlertType.WARNING,
-                    "Sai định dạng",
-                    "Vui lòng nhập đúng 6 thông tin:\norder_id,customer_id,branch_id,booking_id,created_by_emp,total_amount"
-                );
-                return;
-            }
-
-            String orderId = parts[0].trim();
-            String customerId = parts[1].trim();
-            String branchId = parts[2].trim();
-            String bookingId = parts[3].trim();
-            String createdByEmp = parts[4].trim();
-            double totalAmount = Double.parseDouble(parts[5].trim());
-
-            Invoice invoice = new Invoice();
-            invoice.setId(orderId);
-            invoice.setCustomerId(customerId);
-            invoice.setBranchId(branchId);
-            invoice.setBookingId(bookingId);
-            invoice.setCreatedByEmp(createdByEmp);
-            invoice.setSubtotal(totalAmount);
-            invoice.setTotalAmount(totalAmount);
-            invoice.setStatus("PENDING");
-
-            boolean success = invoiceBus.createInvoice(invoice);
-
-            if (success) {
-                showAlert(Alert.AlertType.INFORMATION, "Thành công", "Tạo hóa đơn thành công: " + orderId);
-                handleSearch(null);
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Thất bại", "Không thể tạo hóa đơn.");
-            }
-
-        } catch (NumberFormatException ex) {
-            showAlert(Alert.AlertType.WARNING, "Sai số tiền", "Tổng tiền phải là số.");
-        } catch (IllegalArgumentException ex) {
-            showAlert(Alert.AlertType.WARNING, "Dữ liệu không hợp lệ", ex.getMessage());
+            handleSearch(null);
         } catch (Exception ex) {
             ex.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", "Không thể tạo hóa đơn: " + ex.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", "Không thể mở form tạo hóa đơn: " + ex.getMessage());
         }
     }
 
@@ -197,8 +175,72 @@ public class InvoiceController {
             return;
         }
 
-        System.out.println("Chức năng thanh toán cho hóa đơn: " + selectedInvoice.getId());
-        showAlert(Alert.AlertType.INFORMATION, "Thông báo", "Chức năng thanh toán sẽ làm ở bước sau.");
+        if (!isPayable(selectedInvoice)) {
+            showAlert(Alert.AlertType.WARNING, "Thông báo", "Không thể thanh toán hóa đơn có trạng thái " + selectedInvoice.getStatus());
+            return;
+        }
+
+        try {
+            double paid = invoiceBus.getTotalPaidByOrderId(selectedInvoice.getId());
+            double remaining = selectedInvoice.getTotalAmount() - paid;
+            if (remaining <= 0.01) {
+                invoiceBus.syncPaymentStatus(selectedInvoice);
+                updateActionButtons(selectedInvoice);
+                showAlert(Alert.AlertType.INFORMATION, "Thông báo", "Hóa đơn này đã thanh toán đủ.");
+                handleSearch(null);
+                return;
+            }
+            Optional<PaymentInput> input = showPaymentDialog(remaining);
+
+            if (input.isEmpty()) {
+                return;
+            }
+
+            invoiceBus.payInvoice(selectedInvoice, input.get().method, input.get().amount);
+            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Ghi nhận thanh toán thành công.");
+            handleSearch(null);
+        } catch (IllegalArgumentException ex) {
+            showAlert(Alert.AlertType.WARNING, "Dữ liệu không hợp lệ", ex.getMessage());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", "Không thể thanh toán hóa đơn: " + ex.getMessage());
+        }
+    }
+
+    @FXML
+    public void onCancelInvoice(ActionEvent event) {
+        Invoice selectedInvoice = tableInvoice.getSelectionModel().getSelectedItem();
+
+        if (selectedInvoice == null) {
+            showAlert(Alert.AlertType.WARNING, "Thông báo", "Vui lòng chọn một hóa đơn để hủy.");
+            return;
+        }
+
+        if (!isCancelable(selectedInvoice)) {
+            showAlert(Alert.AlertType.WARNING, "Thông báo", "Không thể hủy hóa đơn có trạng thái " + selectedInvoice.getStatus());
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Xác nhận hủy hóa đơn");
+        confirm.setHeaderText(null);
+        confirm.setContentText("Bạn có chắc muốn hủy hóa đơn " + selectedInvoice.getId() + "?");
+
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.OK) {
+            return;
+        }
+
+        try {
+            invoiceBus.cancelInvoice(selectedInvoice);
+            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã hủy hóa đơn " + selectedInvoice.getId() + ".");
+            handleSearch(null);
+        } catch (IllegalArgumentException ex) {
+            showAlert(Alert.AlertType.WARNING, "Không thể hủy", ex.getMessage());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", "Không thể hủy hóa đơn: " + ex.getMessage());
+        }
     }
 
     @FXML
@@ -226,18 +268,7 @@ public void onTableClick(MouseEvent event) {
 
     System.out.println("DEBUG 4: Hoa don dang chon = " + selectedInvoice.getId());
 
-    invoicePreview.getChildren().clear();
-
-    Label title = new Label("Chi Tiết Hóa Đơn");
-    title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-
-    Label id = new Label("Mã hóa đơn: " + selectedInvoice.getId());
-    Label customer = new Label("Mã khách hàng: " + selectedInvoice.getCustomerId());
-    Label date = new Label("Ngày tạo: " + selectedInvoice.getCreateDate());
-    Label total = new Label("Tổng tiền: " + selectedInvoice.getTotalAmount());
-    Label status = new Label("Trạng thái: " + selectedInvoice.getStatus());
-
-    invoicePreview.getChildren().addAll(title, id, customer, date, total, status);
+    showSelectedInvoiceDetail();
 
     System.out.println("DEBUG 5: Da render chi tiet hoa don");
 }
@@ -268,18 +299,13 @@ public void onTableClick(MouseEvent event) {
         return;
     }
 
-    invoicePreview.getChildren().clear();
-
-    Label title = new Label("Chi Tiết Hóa Đơn");
-    title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-
-    Label id = new Label("Mã hóa đơn: " + selectedInvoice.getId());
-    Label customer = new Label("Mã khách hàng: " + selectedInvoice.getCustomerId());
-    Label date = new Label("Ngày tạo: " + selectedInvoice.getCreateDate());
-    Label total = new Label("Tổng tiền: " + selectedInvoice.getTotalAmount());
-    Label status = new Label("Trạng thái: " + selectedInvoice.getStatus());
-
-    invoicePreview.getChildren().addAll(title, id, customer, date, total, status);
+    try {
+        List<InvoiceDetail> details = invoiceBus.getInvoiceDetailsByOrderId(selectedInvoice.getId());
+        renderInvoiceDetail(selectedInvoice, details);
+    } catch (Exception ex) {
+        ex.printStackTrace();
+        showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", "Không thể tải chi tiết hóa đơn: " + ex.getMessage());
+    }
 }
 
     private void renderInvoiceDetail(Invoice invoice, List<InvoiceDetail> details) {
@@ -322,25 +348,128 @@ public void onTableClick(MouseEvent event) {
         detailTitle.setStyle("-fx-font-weight: bold;");
         invoicePreview.getChildren().add(detailTitle);
 
+        double detailTotal = 0;
         for (InvoiceDetail detail : details) {
-            String itemText =
-                "- Mã chi tiết: " + detail.getDetailId()
-                + "\n  Phòng booking: " + safeText(detail.getBookingRoomId())
-                + "\n  Dịch vụ booking: " + safeText(detail.getBookingServiceId())
-                + "\n  Ghi chú: " + safeText(detail.getNote())
-                + "\n  Số lượng: " + detail.getQuantity()
-                + "\n  Đơn giá: " + moneyFormat.format(detail.getUnitPrice()) + " VNĐ"
-                + "\n  Thành tiền: " + moneyFormat.format(detail.getLineTotal()) + " VNĐ";
+            detailTotal += detail.getLineTotal();
+            StringBuilder itemText = new StringBuilder("- Mã chi tiết: ")
+                .append(detail.getDetailId());
 
-            Label itemLabel = new Label(itemText);
+            appendIfPresent(itemText, "Phòng booking", detail.getBookingRoomId());
+            appendIfPresent(itemText, "Dịch vụ booking", detail.getBookingServiceId());
+            appendIfPresent(itemText, "Mô tả", detail.getNote());
+
+            itemText
+                .append("\n  Số lượng: ").append(formatQuantity(detail.getQuantity()))
+                .append("\n  Đơn giá: ").append(moneyFormat.format(detail.getUnitPrice())).append(" VNĐ")
+                .append("\n  Thành tiền: ").append(moneyFormat.format(detail.getLineTotal())).append(" VNĐ");
+
+            Label itemLabel = new Label(itemText.toString());
             itemLabel.setWrapText(true);
 
             invoicePreview.getChildren().addAll(itemLabel, new Separator());
         }
+
+        if (Math.abs(detailTotal - invoice.getTotalAmount()) > 0.01) {
+            Label warning = new Label("Lưu ý: Tổng chi tiết chưa khớp tổng hóa đơn.");
+            warning.setWrapText(true);
+            warning.setStyle("-fx-text-fill: #a15c00; -fx-font-weight: bold;");
+            invoicePreview.getChildren().add(warning);
+        }
     }
 
-    private String safeText(String value) {
-        return value == null || value.trim().isEmpty() ? "Không có" : value;
+    private void appendIfPresent(StringBuilder builder, String label, String value) {
+        if (value != null && !value.trim().isEmpty()) {
+            builder.append("\n  ").append(label).append(": ").append(value.trim());
+        }
+    }
+
+    private String formatQuantity(double quantity) {
+        if (quantity == Math.rint(quantity)) {
+            return String.valueOf((long) quantity);
+        }
+        return String.valueOf(quantity);
+    }
+
+    private Optional<PaymentInput> showPaymentDialog(double remaining) {
+        DecimalFormat moneyFormat = new DecimalFormat("#,###");
+        Dialog<PaymentInput> dialog = new Dialog<>();
+        dialog.setTitle("Thanh toán hóa đơn");
+        dialog.setHeaderText("Số tiền còn lại: " + moneyFormat.format(Math.max(remaining, 0)) + " VNĐ");
+
+        ButtonType payButtonType = new ButtonType("Thanh toán", ButtonType.OK.getButtonData());
+        dialog.getDialogPane().getButtonTypes().addAll(payButtonType, ButtonType.CANCEL);
+
+        ComboBox<String> methodBox = new ComboBox<>(FXCollections.observableArrayList(
+            "CASH",
+            "BANK_TRANSFER",
+            "CARD",
+            "EWALLET"
+        ));
+        methodBox.setValue("CASH");
+        methodBox.setMaxWidth(Double.MAX_VALUE);
+
+        TextField amountField = new TextField();
+        amountField.setPromptText("Nhập số tiền");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.add(new Label("Phương thức:"), 0, 0);
+        grid.add(methodBox, 1, 0);
+        grid.add(new Label("Số tiền:"), 0, 1);
+        grid.add(amountField, 1, 1);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.setResultConverter(button -> {
+            if (button == payButtonType) {
+                double amount = Double.parseDouble(amountField.getText().trim());
+                return new PaymentInput(methodBox.getValue(), amount);
+            }
+            return null;
+        });
+
+        return dialog.showAndWait();
+    }
+
+    private void updateActionButtons(Invoice invoice) {
+        boolean payable = isPayable(invoice) && hasRemainingAmount(invoice);
+        boolean cancelable = isCancelable(invoice);
+
+        if (btnPay != null) {
+            btnPay.setDisable(!payable);
+        }
+        if (btnCancelInvoice != null) {
+            btnCancelInvoice.setDisable(!cancelable);
+        }
+    }
+
+    private boolean isPayable(Invoice invoice) {
+        return invoice != null
+            && ("PENDING".equalsIgnoreCase(invoice.getStatus())
+                || "PARTIAL".equalsIgnoreCase(invoice.getStatus()));
+    }
+
+    private boolean isCancelable(Invoice invoice) {
+        return isPayable(invoice);
+    }
+
+    private boolean hasRemainingAmount(Invoice invoice) {
+        try {
+            return invoice != null && invoiceBus.getRemainingAmount(invoice) > 0.01;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    private static class PaymentInput {
+        private final String method;
+        private final double amount;
+
+        private PaymentInput(String method, double amount) {
+            this.method = method;
+            this.amount = amount;
+        }
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {

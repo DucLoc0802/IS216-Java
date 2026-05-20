@@ -10,11 +10,12 @@ INSERT INTO branch (
 );
 
 INSERT INTO employee (
-    employee_id, branch_id, full_name, email, phone, hire_date, status_code, note
+    employee_id, branch_id, full_name, salary, email, phone, hire_date, status_code, note
 ) VALUES (
     'EMP_ADMIN', 
     'BR001', 
     N'Quản Trị Viên Hệ Thống', 
+    30000000,
     'admin@pethotel.vn', 
     '09999999999', 
     SYSTIMESTAMP, 
@@ -34,11 +35,12 @@ INSERT INTO app_user (
 );
 
 INSERT INTO EMPLOYEE (
-    employee_id, branch_id, full_name, email, phone, hire_date, status_code, note
+    employee_id, branch_id, full_name, salary, email, phone, hire_date, status_code, note
 ) VALUES (
     'EMP001',
     'BR001',
     N'Nguyễn Văn A',
+    12000000,
     'nguyen.van.a@pethotel.vn',
     '0123456789',
     SYSTIMESTAMP,
@@ -47,11 +49,12 @@ INSERT INTO EMPLOYEE (
 );
 
 INSERT INTO EMPLOYEE (
-    employee_id, branch_id, full_name, email, phone, hire_date, status_code, note
+    employee_id, branch_id, full_name, salary, email, phone, hire_date, status_code, note
 ) VALUES (
     'EMP002',
     'BR001',
     N'Lê Thị B',
+    11000000,
     'le.thi.b@pethotel.vn',
     '0987654321',
     SYSTIMESTAMP,
@@ -60,11 +63,12 @@ INSERT INTO EMPLOYEE (
 );
 
 INSERT INTO EMPLOYEE (
-    employee_id, branch_id, full_name, email, phone, hire_date, status_code, note
+    employee_id, branch_id, full_name, salary, email, phone, hire_date, status_code, note
 ) VALUES (
     'EMP003',
     'BR001',
     N'Phạm Văn C',
+    18000000,
     'pham.van.c@pethotel.vn',
     '0912345678',
     SYSTIMESTAMP,
@@ -73,11 +77,12 @@ INSERT INTO EMPLOYEE (
 );
 
 insert into employee (
-    employee_id, branch_id, full_name, email, phone, hire_date, status_code, note
+    employee_id, branch_id, full_name, salary, email, phone, hire_date, status_code, note
 ) values (
     'EMP004', 
     'BR001', 
     N'Nguyễn Thị D', 
+    40000000,
     'nguyen.thi.d@pethotel.vn',
     '0901234567',
     SYSTIMESTAMP,

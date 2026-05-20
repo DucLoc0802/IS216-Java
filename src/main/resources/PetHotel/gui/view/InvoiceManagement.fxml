@@ -22,6 +22,7 @@
         <Region HBox.hgrow="ALWAYS" />
         <Button onAction="#onCreateInvoice" styleClass="action-btn action-btn-primary" text="+ Tạo Hóa Đơn" />
         <Button fx:id="btnPay" disable="true" onAction="#onPayment" styleClass="action-btn action-btn-success" text="💳 Thanh Toán" />
+        <Button fx:id="btnCancelInvoice" disable="true" onAction="#onCancelInvoice" styleClass="action-btn action-btn-outline" text="Hủy hóa đơn" />
         <Button fx:id="btnPrint" disable="true" onAction="#onPrint" styleClass="action-btn action-btn-outline" text="🖨 In / Xuất" />
     </HBox>
 
