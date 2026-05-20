@@ -12,13 +12,13 @@
 <VBox maxWidth="520" prefWidth="520" spacing="0" 
       styleClass="form-root"
       stylesheets="@../css/style.css, @../css/styles.css" 
-      xmlns="http://javafx.com/javafx/17" 
+      xmlns="http://javafx.com/javafx/25" 
       xmlns:fx="http://javafx.com/fxml/1" 
       fx:controller="PetHotel.gui.controller.CustomerFormController">
 
     <!-- HEADER -->
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="form-header">
-        <Label styleClass="form-header-icon" text="👤" />
+        <Label styleClass="form-header-icon" text="" />
         <VBox spacing="2">
             <Label fx:id="formTitle" 
                    styleClass="form-header-title"
@@ -30,7 +30,7 @@
         <Region HBox.hgrow="ALWAYS" />
         <Button onAction="#onCancel" 
                 styleClass="form-close-btn"
-                text="✕" />
+                text="Đóng" />
     </HBox>
 
     <!-- BODY -->

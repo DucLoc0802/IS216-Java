@@ -10,6 +10,7 @@ import java.util.Objects;
  *   customer_id  VARCHAR2(10)    PK
  *   full_name    NVARCHAR2(120)  NOT NULL
  *   email        NVARCHAR2(254)  UNIQUE
+ *   cccd         VARCHAR2(12)    NOT NULL, UNIQUE
  *   phone        NVARCHAR2(20)   NOT NULL, UNIQUE
  *   address      NVARCHAR2(120)
  *   note         CLOB
@@ -26,6 +27,9 @@ public class Customer {
 
     /** Email, có thể null, unique */
     private String email;
+
+    /** Căn cước công dân, NOT NULL, unique */
+    private String cccd;
 
     /** Số điện thoại, NOT NULL, unique */
     private String phone;
@@ -50,9 +54,16 @@ public class Customer {
 /** Constructor cho insert mới khi đã sinh ID từ BUS */
     public Customer(String customerId, String fullName, String email, 
                     String phone, String address, String note) {
+        this(customerId, fullName, email, null, phone, address, note);
+    }
+
+    /** Constructor cho insert mới với schema customer có CCCD */
+    public Customer(String customerId, String fullName, String email,
+                    String cccd, String phone, String address, String note) {
         this.customerId = customerId;
         this.fullName   = fullName;
         this.email      = email;
+        this.cccd       = cccd;
         this.phone      = phone;
         this.address    = address;
         this.note       = note;
@@ -62,9 +73,17 @@ public class Customer {
     public Customer(String customerId, String fullName, String email,
                     String phone, String address, String note,
                     OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        this(customerId, fullName, email, null, phone, address, note, createdAt, updatedAt);
+    }
+
+    /** Constructor đầy đủ cho DAO mapping với schema customer có CCCD */
+    public Customer(String customerId, String fullName, String email,
+                    String cccd, String phone, String address, String note,
+                    OffsetDateTime createdAt, OffsetDateTime updatedAt) {
         this.customerId = customerId;
         this.fullName   = fullName;
         this.email      = email;
+        this.cccd       = cccd;
         this.phone      = phone;
         this.address    = address;
         this.note       = note;
@@ -82,6 +101,9 @@ public class Customer {
 
     public String getEmail()                   { return email; }
     public void setEmail(String v)             { this.email = v; }
+
+    public String getCccd()                    { return cccd; }
+    public void setCccd(String v)              { this.cccd = v; }
 
     public String getPhone()                   { return phone; }
     public void setPhone(String v)             { this.phone = v; }

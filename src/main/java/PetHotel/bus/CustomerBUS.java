@@ -3,14 +3,10 @@ package PetHotel.bus;
 import PetHotel.dao.CustomerDAO;
 import PetHotel.dao.PetDAO;
 import PetHotel.exception.*;
-import PetHotel.model.AppUser;
 import PetHotel.model.Customer;
 import PetHotel.model.Pet;
-import PetHotel.util.DBConnection;
-import PetHotel.util.IDGenerator;
 import PetHotel.util.Role;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -46,6 +42,9 @@ public class CustomerBUS {
     // Pattern kiểm tra phone: cho phép +, -, khoảng trắng, chữ số
     private static final Pattern PHONE_PATTERN =
         Pattern.compile("^[+\\d][\\d\\s\\-]{6,18}$");
+
+    private static final Pattern CCCD_PATTERN =
+        Pattern.compile("^\\d{12}$");
 
     private final CustomerDAO customerDAO;
     private final PetDAO      petDAO;
@@ -91,40 +90,44 @@ public class CustomerBUS {
      * @throws AuthorizationException   nếu không đủ quyền
      */
     public Customer createCustomer(String fullName, String phone,
-                                   String email, String address, String note) {
+                                   String cccd, String email, String address, String note) {
         // 1. Kiểm tra quyền
         authBUS.requireRole(Role.RECEPTIONIST);
 
         // 2. Validate
         validateFullName(fullName);
         validatePhone(phone, null);
-        if (email != null && !email.trim().isEmpty()) {
-            validateEmail(email, null);
+        String normalizedCccd = normalizeOptional(cccd);
+        validateCccd(normalizedCccd, null);
+        String normalizedEmail = normalizeOptional(email);
+        if (normalizedEmail != null) {
+            validateEmail(normalizedEmail, null);
         }
 
         try {
             // 3. Kiểm tra unique
             if (customerDAO.existsByPhone(phone.trim(), null)) {
-                throw new DuplicateRecordException(
-                    "Số điện thoại '" + phone + "' đã được đăng ký bởi khách hàng khác.");
+                throw new DuplicateRecordException("Số điện thoại đã tồn tại trong hệ thống.");
             }
-            if (email != null && !email.trim().isEmpty()
-                    && customerDAO.existsByEmail(email.trim(), null)) {
-                throw new DuplicateRecordException(
-                    "Email '" + email + "' đã được đăng ký bởi khách hàng khác.");
+            if (normalizedEmail != null && customerDAO.existsByEmail(normalizedEmail, null)) {
+                throw new DuplicateRecordException("Email đã tồn tại trong hệ thống.");
+            }
+            if (normalizedCccd != null && customerDAO.existsByCccd(normalizedCccd, null)) {
+                throw new DuplicateRecordException("CCCD đã tồn tại trong hệ thống.");
             }
 
             // 4. Sinh ID
-            String newId = IDGenerator.nextCustomerId();
+            String newId = customerDAO.generateNextCustomerId();
 
             // 5. Insert
             Customer customer = new Customer(
                 newId,
                 fullName.trim(),
-                email != null ? email.trim() : null,
+                normalizedEmail,
+                normalizedCccd,
                 phone.trim(),
-                address != null ? address.trim() : null,
-                note
+                normalizeOptional(address),
+                normalizeOptional(note)
             );
             customerDAO.insert(customer, null);
             return customer;
@@ -132,8 +135,14 @@ public class CustomerBUS {
         } catch (DuplicateRecordException | ValidationException e) {
             throw e; // re-throw exception nghiệp vụ
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi database khi tạo khách hàng.", e);
+            throw mapCustomerSaveException(e);
         }
+    }
+
+    /** Overload giữ tương thích với controller/code cũ chưa truyền CCCD. */
+    public Customer createCustomer(String fullName, String phone,
+                                   String email, String address, String note) {
+        return createCustomer(fullName, phone, null, email, address, note);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -164,15 +173,18 @@ public class CustomerBUS {
      * @throws DuplicateRecordException nếu phone/email trùng với customer khác
      */
     public Customer updateCustomer(String customerId, String fullName, String phone,
-                                   String email, String address, String note) {
+                                   String cccd, String email, String address, String note) {
         // 1. Quyền
         authBUS.requireRole(Role.RECEPTIONIST);
 
         // 2. Validate
         validateFullName(fullName);
         validatePhone(phone, customerId);
-        if (email != null && !email.trim().isEmpty()) {
-            validateEmail(email, customerId);
+        String normalizedCccd = normalizeOptional(cccd);
+        validateCccd(normalizedCccd, customerId);
+        String normalizedEmail = normalizeOptional(email);
+        if (normalizedEmail != null) {
+            validateEmail(normalizedEmail, customerId);
         }
 
         try {
@@ -184,21 +196,22 @@ public class CustomerBUS {
 
             // 4. Unique check (loại trừ chính customer đang cập nhật)
             if (customerDAO.existsByPhone(phone.trim(), customerId)) {
-                throw new DuplicateRecordException(
-                    "Số điện thoại '" + phone + "' đã được dùng bởi khách hàng khác.");
+                throw new DuplicateRecordException("Số điện thoại đã tồn tại trong hệ thống.");
             }
-            if (email != null && !email.trim().isEmpty()
-                    && customerDAO.existsByEmail(email.trim(), customerId)) {
-                throw new DuplicateRecordException(
-                    "Email '" + email + "' đã được dùng bởi khách hàng khác.");
+            if (normalizedEmail != null && customerDAO.existsByEmail(normalizedEmail, customerId)) {
+                throw new DuplicateRecordException("Email đã tồn tại trong hệ thống.");
+            }
+            if (normalizedCccd != null && customerDAO.existsByCccd(normalizedCccd, customerId)) {
+                throw new DuplicateRecordException("CCCD đã tồn tại trong hệ thống.");
             }
 
             // 5. Update
             existing.setFullName(fullName.trim());
             existing.setPhone(phone.trim());
-            existing.setEmail(email != null ? email.trim() : null);
-            existing.setAddress(address != null ? address.trim() : null);
-            existing.setNote(note);
+            existing.setCccd(normalizedCccd);
+            existing.setEmail(normalizedEmail);
+            existing.setAddress(normalizeOptional(address));
+            existing.setNote(normalizeOptional(note));
 
             int rows = customerDAO.update(existing, null);
             if (rows == 0) {
@@ -209,8 +222,14 @@ public class CustomerBUS {
         } catch (NotFoundException | ValidationException | DuplicateRecordException e) {
             throw e;
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi database khi cập nhật khách hàng.", e);
+            throw mapCustomerSaveException(e);
         }
+    }
+
+    /** Overload giữ tương thích với controller/code cũ chưa truyền CCCD. */
+    public Customer updateCustomer(String customerId, String fullName, String phone,
+                                   String email, String address, String note) {
+        return updateCustomer(customerId, fullName, phone, null, email, address, note);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -443,9 +462,41 @@ public class CustomerBUS {
         if (email.trim().length() > 254) {
             throw new ValidationException("Email không được vượt quá 254 ký tự.");
         }
+        if (email.trim().toLowerCase().endsWith("@gmail.co")) {
+            throw new ValidationException("Email gmail.co có thể thiếu .com. Vui lòng kiểm tra lại.");
+        }
         if (!EMAIL_PATTERN.matcher(email.trim()).matches()) {
             throw new ValidationException(
                 "Email '" + email + "' không đúng định dạng.");
         }
+    }
+
+    private void validateCccd(String cccd, String excludeId) {
+        if (cccd == null || cccd.isEmpty()) {
+            throw new ValidationException("CCCD không được để trống.");
+        }
+        if (!CCCD_PATTERN.matcher(cccd).matches()) {
+            throw new ValidationException("CCCD phải gồm đúng 12 chữ số.");
+        }
+    }
+
+    private String normalizeOptional(String value) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private RuntimeException mapCustomerSaveException(SQLException e) {
+        String message = e.getMessage() == null ? "" : e.getMessage().toLowerCase();
+        if (message.contains("phone") || message.contains("uq_customer_phone")) {
+            return new DuplicateRecordException("Số điện thoại đã tồn tại trong hệ thống.", e);
+        }
+        if (message.contains("email") || message.contains("uq_customer_email")) {
+            return new DuplicateRecordException("Email đã tồn tại trong hệ thống.", e);
+        }
+        if (message.contains("cccd") || message.contains("uq_customer_cccd")) {
+            return new DuplicateRecordException("CCCD đã tồn tại trong hệ thống.", e);
+        }
+        return new RuntimeException("Lỗi database khi lưu khách hàng. Vui lòng kiểm tra lại.", e);
     }
 }

@@ -20,6 +20,7 @@ public class RoomController {
     @FXML private TableView<Room> roomTable;
 
     @FXML private TableColumn<Room, String> colRoomId;
+    @FXML private TableColumn<Room, String> colRoomNumber;
     @FXML private TableColumn<Room, String> colRoomType;
     @FXML private TableColumn<Room, String> colRoomFloor;
     @FXML private TableColumn<Room, Double> colRoomPrice;
@@ -47,6 +48,8 @@ public class RoomController {
     private void setupColumns() {
     colRoomId.setCellValueFactory(d ->
         new SimpleStringProperty(d.getValue().getRoomId()));
+    colRoomNumber.setCellValueFactory(d ->
+        new SimpleStringProperty(d.getValue().getRoomNumber()));
     colRoomType.setCellValueFactory(d ->
         new SimpleStringProperty(d.getValue().getTypeName()));
     colRoomFloor.setCellValueFactory(d ->
