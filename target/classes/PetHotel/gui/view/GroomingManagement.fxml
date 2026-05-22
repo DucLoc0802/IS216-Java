@@ -98,13 +98,13 @@
                 </styleClass>
                 <columns>
                     <TableColumn fx:id="colGrId" prefWidth="70" text="Mã" />
-                    <TableColumn fx:id="colGrTime" prefWidth="80" text="Giờ" />
+                    <TableColumn fx:id="colGrTime" prefWidth="130" text="Giờ" />
                     <TableColumn fx:id="colGrPet" prefWidth="120" text="Thú Cưng" />
                     <TableColumn fx:id="colGrOwner" prefWidth="120" text="Chủ" />
                     <TableColumn fx:id="colGrService" prefWidth="150" text="Dịch Vụ" />
-                    <TableColumn fx:id="colGrStaff" prefWidth="160" text="Nhân Viên (ID - Tên)" />
+                    <TableColumn fx:id="colGrStaff" prefWidth="190" text="Nhân Viên Chăm Sóc" />
                     <TableColumn fx:id="colGrStatus" prefWidth="110" text="Trạng Thái" />
-                    <TableColumn fx:id="colGrAction" prefWidth="120" resizable="false" text="Thao Tác" />
+                    <TableColumn fx:id="colGrAction" minWidth="190" prefWidth="190" resizable="false" text="Thao Tác" />
                 </columns>
                 <placeholder>
                     <Label styleClass="table-empty" text="Không có lịch grooming" />
@@ -129,6 +129,10 @@
             <VBox spacing="4">
                 <Label styleClass="form-label" text="Dịch vụ" />
                 <Label fx:id="lblDetailService" style="-fx-font-weight: bold;" text="—" wrapText="true" />
+            </VBox>
+            <VBox spacing="4">
+                <Label styleClass="form-label" text="Nhân viên chăm sóc" />
+                <Label fx:id="lblDetailStaff" style="-fx-font-weight: bold;" text="—" wrapText="true" />
             </VBox>
             <VBox spacing="4">
                 <Label styleClass="form-label" text="Thời gian" />

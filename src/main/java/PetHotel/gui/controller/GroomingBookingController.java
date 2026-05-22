@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.text.Normalizer;
+import java.util.Locale;
 
 import PetHotel.bus.GroomingBUS;
 import PetHotel.model.AppUser;
@@ -38,13 +40,18 @@ public class GroomingBookingController {
 
     private AppUser currentUser;
     private final GroomingBUS groomingBUS = new GroomingBUS();
-    private ServiceCategory selectedServiceCategory;
+    private List<PetService> currentCategoryServices = List.of();
 
     private String currentBranchId = "BR001";
     private Runnable onSuccess;
 
     public void setCurrentBranchId(String currentBranchId) {
-        this.currentBranchId = currentBranchId;
+        if (currentBranchId != null && !currentBranchId.trim().isEmpty()) {
+            this.currentBranchId = currentBranchId.trim();
+        }
+        if (currentUser != null && cbEmployee != null) {
+            loadEmployees();
+        }
     }
 
     public void setOnSuccess(Runnable onSuccess) {
@@ -67,6 +74,7 @@ public class GroomingBookingController {
         loadData();
 
         cbCustomer.setOnAction(e -> loadPetsByCustomer());
+        cbPet.setOnAction(e -> refreshServicesForSelectedPet());
         cbServiceCategory.setOnAction(e -> loadServicesByCategory());
     }
 
@@ -86,21 +94,30 @@ public class GroomingBookingController {
             List<ServiceCategory> categories = groomingBUS.getGroomingServiceCategories(currentUser);
             SearchableComboBoxUtil.setup(cbServiceCategory, categories, this::categoryDisplayText);
 
-            List<Employee> employees = groomingBUS.getWorkingEmployeesByBranch(currentBranchId, currentUser);
-            SearchableComboBoxUtil.setup(cbEmployee, employees, this::employeeDisplayText);
+            loadEmployees();
 
         } catch (Exception e) {
             showError("Không thể tải dữ liệu: " + e.getMessage());
         }
     }
 
+    private void loadEmployees() {
+        try {
+            List<Employee> employees = groomingBUS.getWorkingEmployeesByBranch(currentBranchId, currentUser);
+            SearchableComboBoxUtil.setup(cbEmployee, employees, this::employeeDisplayText);
+        } catch (Exception e) {
+            showError("Không thể tải danh sách nhân viên chăm sóc: " + e.getMessage());
+        }
+    }
+
     private void loadPetsByCustomer() {
-        Customer customer = cbCustomer.getValue();
+        Customer customer = SearchableComboBoxUtil.getSelectedOrExactTextMatch(cbCustomer);
 
         if (customer == null) {
             cbPet.setValue(null);
             cbPet.getEditor().clear();
             SearchableComboBoxUtil.setup(cbPet, List.of(), this::petDisplayText);
+            refreshServicesForSelectedPet();
             return;
         }
 
@@ -109,15 +126,17 @@ public class GroomingBookingController {
             cbPet.getEditor().clear();
             List<Pet> pets = groomingBUS.getPetsByCustomer(customer.getCustomerId(), currentUser);
             SearchableComboBoxUtil.setup(cbPet, pets, this::petDisplayText);
+            refreshServicesForSelectedPet();
         } catch (Exception e) {
             showError("Không thể tải thú cưng: " + e.getMessage());
         }
     }
 
     private void loadServicesByCategory() {
-        ServiceCategory category = cbServiceCategory.getValue();
+        ServiceCategory category = SearchableComboBoxUtil.getSelectedOrExactTextMatch(cbServiceCategory);
 
         if (category == null) {
+            currentCategoryServices = List.of();
             cbService.setValue(null);
             cbService.getEditor().clear();
             SearchableComboBoxUtil.setup(cbService, List.of(), this::serviceDisplayText);
@@ -127,19 +146,36 @@ public class GroomingBookingController {
         try {
             cbService.setValue(null);
             cbService.getEditor().clear();
-            List<PetService> services = groomingBUS.getGroomingServicesByCategory(category.getServiceCategoryId(), currentUser);
-            SearchableComboBoxUtil.setup(cbService, services, this::serviceDisplayText);
+            currentCategoryServices = groomingBUS.getGroomingServicesByCategory(category.getServiceCategoryId(), currentUser);
+            refreshServicesForSelectedPet();
         } catch (Exception e) {
             showError("Không thể tải dịch vụ grooming: " + e.getMessage());
         }
     }
 
+    private void refreshServicesForSelectedPet() {
+        Pet selectedPet = SearchableComboBoxUtil.getSelectedOrExactTextMatch(cbPet);
+        PetService selectedService = SearchableComboBoxUtil.getSelectedOrExactTextMatch(cbService);
+
+        List<PetService> filteredServices = currentCategoryServices.stream()
+                .filter(service -> isServiceApplicableToPet(service, selectedPet))
+                .toList();
+
+        if (selectedService != null && !filteredServices.contains(selectedService)) {
+            cbService.setValue(null);
+            cbService.getEditor().clear();
+        }
+
+        SearchableComboBoxUtil.setup(cbService, filteredServices, this::serviceDisplayText);
+    }
+
     @FXML
     private void handleSave() {
         try {
-            Customer customer = cbCustomer.getValue();
-            Pet pet = cbPet.getValue();
-            PetService service = cbService.getValue();
+            Customer customer = SearchableComboBoxUtil.getSelectedOrExactTextMatch(cbCustomer);
+            Pet pet = SearchableComboBoxUtil.getSelectedOrExactTextMatch(cbPet);
+            PetService service = SearchableComboBoxUtil.getSelectedOrExactTextMatch(cbService);
+            Employee employee = SearchableComboBoxUtil.getSelectedOrExactTextMatch(cbEmployee);
             LocalDate date = dpScheduleDate.getValue();
             String timeText = txtScheduleTime.getText().trim();
 
@@ -155,6 +191,16 @@ public class GroomingBookingController {
 
             if (service == null) {
                 showWarning("Vui lòng chọn dịch vụ grooming.");
+                return;
+            }
+
+            if (!isServiceApplicableToPet(service, pet)) {
+                showWarning("Dịch vụ đã chọn không phù hợp với loài của thú cưng.");
+                return;
+            }
+
+            if (employee == null) {
+                showWarning("Vui lòng chọn nhân viên chăm sóc.");
                 return;
             }
 
@@ -180,7 +226,7 @@ public class GroomingBookingController {
                     customer.getCustomerId(),
                     pet.getPetId(),
                     service.getServiceId(),
-                    null,
+                    employee.getEmployeeId(),
                     currentBranchId,
                     date,
                     time,
@@ -242,7 +288,10 @@ public class GroomingBookingController {
     }
 
     private String serviceDisplayText(PetService service) {
-        return service == null ? "" : valueOrEmpty(service.getServiceName());
+        if (service == null) {
+            return "";
+        }
+        return joinParts(service.getServiceName(), service.getSpecies());
     }
 
     private String employeeDisplayText(Employee employee) {
@@ -266,5 +315,51 @@ public class GroomingBookingController {
 
     private String valueOrEmpty(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private boolean isServiceApplicableToPet(PetService service, Pet pet) {
+        if (service == null) {
+            return false;
+        }
+        if (pet == null) {
+            return true;
+        }
+
+        String serviceSpecies = normalizeSpecies(service.getSpecies());
+        String petSpecies = normalizeSpecies(pet.getSpecies());
+
+        if (serviceSpecies.isEmpty() || "ALL".equals(serviceSpecies)) {
+            return true;
+        }
+
+        return serviceSpecies.equals(petSpecies);
+    }
+
+    private String normalizeSpecies(String value) {
+        String normalized = normalizeText(value);
+        if (normalized.isEmpty()) {
+            return "";
+        }
+        if ("dog".equals(normalized) || "cho".equals(normalized)) {
+            return "DOG";
+        }
+        if ("cat".equals(normalized) || "meo".equals(normalized)) {
+            return "CAT";
+        }
+        if ("all".equals(normalized) || "tat ca".equals(normalized) || "both".equals(normalized)) {
+            return "ALL";
+        }
+        return normalized.toUpperCase(Locale.ROOT);
+    }
+
+    private String normalizeText(String value) {
+        if (value == null) {
+            return "";
+        }
+        return Normalizer.normalize(value.trim(), Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .replace('đ', 'd')
+                .replace('Đ', 'D')
+                .toLowerCase(Locale.ROOT);
     }
 }

@@ -153,7 +153,21 @@ public class GroomingBUS {
             throw new ValidationException("Bạn không có quyền cập nhật lịch grooming");
         }
 
-        bookingServiceDAO.updateStatus(bookingServiceId, newStatus);
+        if (bookingServiceId == null || bookingServiceId.trim().isEmpty()) {
+            throw new ValidationException("Mã lịch grooming không hợp lệ");
+        }
+
+        BookingService schedule = bookingServiceDAO.findById(bookingServiceId.trim());
+        if (schedule == null) {
+            throw new ValidationException("Không tìm thấy lịch grooming cần cập nhật");
+        }
+
+        if (BookingService.STATUS_IN_PROGRESS.equals(newStatus)
+                && (schedule.getEmployeeId() == null || schedule.getEmployeeId().trim().isEmpty())) {
+            throw new ValidationException("Chỉ có thể bắt đầu lịch grooming sau khi đã phân công nhân viên chăm sóc");
+        }
+
+        bookingServiceDAO.updateStatus(bookingServiceId.trim(), newStatus);
     }
 
     /**

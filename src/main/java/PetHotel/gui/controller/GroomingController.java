@@ -85,6 +85,7 @@ public class GroomingController {
     @FXML private Label lblDetailPet;
     @FXML private Label lblDetailPetSpecies;
     @FXML private Label lblDetailService;
+    @FXML private Label lblDetailStaff;
     @FXML private Label lblDetailTime;
     @FXML private TextArea txtDetailNote;
     @FXML private Label lblDetailAddress;
@@ -176,6 +177,8 @@ public class GroomingController {
     private void setupTableColumns() {
         groomingTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         groomingTable.setFixedCellSize(38);
+        colGrAction.setMinWidth(190);
+        colGrAction.setPrefWidth(190);
 
         colGrId.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getId()));
         colGrTime.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getTime()));
@@ -212,6 +215,9 @@ public class GroomingController {
                 btnStart.getStyleClass().addAll("action-btn", "action-btn-amber");
                 btnDone.getStyleClass().addAll("action-btn", "action-btn-success");
                 btnCancel.getStyleClass().addAll("action-btn", "action-btn-danger");
+                configureActionButton(btnStart, 86);
+                configureActionButton(btnDone, 106);
+                configureActionButton(btnCancel, 64);
                 
                 btnStart.setOnAction(e -> handleStatusChange(getTableRow().getItem(), BookingService.STATUS_IN_PROGRESS));
                 btnDone.setOnAction(e -> confirmCompleteTask(getTableRow().getItem()));
@@ -228,8 +234,9 @@ public class GroomingController {
                     HBox actions = new HBox(4);
                     actions.setStyle("-fx-alignment: CENTER;");
                     
-                    if (BookingService.STATUS_PENDING.equals(row.getStatus())
-                            || BookingService.STATUS_SCHEDULED.equals(row.getStatus())) {
+                    if ((BookingService.STATUS_PENDING.equals(row.getStatus())
+                            || BookingService.STATUS_SCHEDULED.equals(row.getStatus()))
+                            && row.hasAssignedStaff()) {
                         actions.getChildren().add(btnStart);
                     }
                     if (BookingService.STATUS_IN_PROGRESS.equals(row.getStatus())) {
@@ -243,6 +250,12 @@ public class GroomingController {
                 }
             }
         });
+    }
+
+    private void configureActionButton(Button button, double width) {
+        button.setMinWidth(width);
+        button.setPrefWidth(width);
+        button.setMaxWidth(width);
     }
 
     private void setupSelectionHandlers() {
@@ -383,6 +396,11 @@ public class GroomingController {
                     && !BookingService.STATUS_PENDING.equals(row.getStatus())
                     && !BookingService.STATUS_SCHEDULED.equals(row.getStatus())) {
                 showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Chỉ công việc đang chờ mới có thể bắt đầu");
+                return;
+            }
+
+            if (BookingService.STATUS_IN_PROGRESS.equals(newStatus) && !row.hasAssignedStaff()) {
+                showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Chỉ có thể bắt đầu sau khi đã phân công nhân viên chăm sóc");
                 return;
             }
 
@@ -652,12 +670,14 @@ public class GroomingController {
         lblDetailPet.setText(valueOrDash(row.getPetName()));
         lblDetailPetSpecies.setText(valueOrDash(row.getPetSpecies()));
         lblDetailService.setText(valueOrDash(row.getServiceName()));
+        lblDetailStaff.setText(valueOrDash(row.getStaffName()));
         lblDetailTime.setText(formatDetailTime(row));
         txtDetailNote.setText(valueOrEmpty(row.getNote()));
         lblDetailAddress.setText(valueOrDash(row.getCustomerAddress()));
 
-        boolean canStart = BookingService.STATUS_PENDING.equals(row.getStatus())
-                || BookingService.STATUS_SCHEDULED.equals(row.getStatus());
+        boolean canStart = row.hasAssignedStaff()
+                && (BookingService.STATUS_PENDING.equals(row.getStatus())
+                    || BookingService.STATUS_SCHEDULED.equals(row.getStatus()));
         boolean canComplete = BookingService.STATUS_IN_PROGRESS.equals(row.getStatus());
         boolean canUpdate = !BookingService.STATUS_DONE.equals(row.getStatus())
                 && !BookingService.STATUS_CANCELLED.equals(row.getStatus());
@@ -907,10 +927,6 @@ public class GroomingController {
             assignedStatsBar.setManaged(petCareStaff);
         }
 
-        if (colGrStaff != null && petCareStaff) {
-            colGrStaff.setVisible(false);
-        }
-
         if (colGrAction != null) {
             colGrAction.setVisible(true);
         }
@@ -973,11 +989,16 @@ public class GroomingController {
         public String getServiceName() { return serviceName; }
         public String getStaffName() { return staffName; }
         public String getStatus() { return status; }
+        public String getEmployeeId() { return bookingService.getEmployeeId(); }
         public OffsetDateTime getScheduledAt() { return bookingService.getScheduledAt(); }
         public String getPetSpecies() { return bookingService.getPetSpecies(); }
         public String getCustomerPhone() { return bookingService.getCustomerPhone(); }
         public String getCustomerAddress() { return bookingService.getCustomerAddress(); }
         public String getNote() { return bookingService.getNote(); }
+
+        public boolean hasAssignedStaff() {
+            return getEmployeeId() != null && !getEmployeeId().trim().isEmpty();
+        }
 
         public boolean matchesKeyword(String normalizedKeyword) {
             return normalizeForSearch(id).contains(normalizedKeyword)
