@@ -99,6 +99,7 @@ public class LoginController {
             showAlert(AlertType.ERROR, "Đăng nhập thất bại", e.getMessage());
         } catch (RuntimeException e) {
             // Lỗi hệ thống (DB, ...)
+            e.printStackTrace();
             showAlert(AlertType.ERROR, "Lỗi hệ thống", e.getMessage());
         }
     }

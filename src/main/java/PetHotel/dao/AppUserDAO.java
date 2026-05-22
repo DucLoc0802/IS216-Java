@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class AppUserDAO {
 
     private static final String SQL_FIND_BY_USERNAME =
         "SELECT " +
-        "    au.employee_id, au.password_hash, au.role_emp, au.user_name, " +
+        "    au.user_id, au.password_hash, au.role_emp, au.user_name, " +
         "    au.is_active, au.last_login, au.created_at, au.updated_at, " +
         "    e.employee_id   AS emp_id, " +
         "    e.branch_id, " +
@@ -36,12 +37,12 @@ public class AppUserDAO {
         "    e.status_code, " +
         "    e.note " +
         "FROM app_user au " +
-        "JOIN employee e ON au.employee_id = e.employee_id " +
+        "LEFT JOIN employee e ON au.user_id = e.user_id " +
         "WHERE LOWER(au.user_name) = LOWER(?)";
 
     private static final String SQL_FIND_BY_EMPLOYEE_ID =
         "SELECT " +
-        "    au.employee_id, au.password_hash, au.role_emp, au.user_name, " +
+        "    au.user_id, au.password_hash, au.role_emp, au.user_name, " +
         "    au.is_active, au.last_login, au.created_at, au.updated_at, " +
         "    e.employee_id   AS emp_id, " +
         "    e.branch_id, " +
@@ -52,12 +53,12 @@ public class AppUserDAO {
         "    e.status_code, " +
         "    e.note " +
         "FROM app_user au " +
-        "JOIN employee e ON au.employee_id = e.employee_id " +
-        "WHERE au.employee_id = ?";
+        "LEFT JOIN employee e ON au.user_id = e.user_id " +
+        "WHERE e.employee_id = ?";
 
     private static final String SQL_FIND_ALL =
         "SELECT " +
-        "    au.employee_id, au.password_hash, au.role_emp, au.user_name, " +
+        "    au.user_id, au.password_hash, au.role_emp, au.user_name, " +
         "    au.is_active, au.last_login, au.created_at, au.updated_at, " +
         "    e.employee_id   AS emp_id, " +
         "    e.branch_id, " +
@@ -68,12 +69,12 @@ public class AppUserDAO {
         "    e.status_code, " +
         "    e.note " +
         "FROM app_user au " +
-        "JOIN employee e ON au.employee_id = e.employee_id " +
+        "LEFT JOIN employee e ON au.user_id = e.user_id " +
         "ORDER BY au.created_at DESC";
 
     private static final String SQL_SEARCH =
         "SELECT " +
-        "    au.employee_id, au.password_hash, au.role_emp, au.user_name, " +
+        "    au.user_id, au.password_hash, au.role_emp, au.user_name, " +
         "    au.is_active, au.last_login, au.created_at, au.updated_at, " +
         "    e.employee_id   AS emp_id, " +
         "    e.branch_id, " +
@@ -84,27 +85,27 @@ public class AppUserDAO {
         "    e.status_code, " +
         "    e.note " +
         "FROM app_user au " +
-        "JOIN employee e ON au.employee_id = e.employee_id " +
+        "LEFT JOIN employee e ON au.user_id = e.user_id " +
         "WHERE (LOWER(au.user_name) LIKE LOWER(?) " +
         "    OR LOWER(e.full_name) LIKE LOWER(?) " +
         "    OR LOWER(e.email) LIKE LOWER(?)) " +
         "ORDER BY au.created_at DESC";
 
     private static final String SQL_INSERT =
-        "INSERT INTO app_user (employee_id, password_hash, role_emp, user_name, is_active) " +
+        "INSERT INTO app_user (user_id, password_hash, role_emp, user_name, is_active) " +
         "VALUES (?, ?, ?, ?, 1)";
 
     private static final String SQL_UPDATE_LAST_LOGIN =
-        "UPDATE app_user SET last_login = SYSTIMESTAMP, updated_at = SYSTIMESTAMP WHERE employee_id = ?";
+        "UPDATE app_user SET last_login = SYSTIMESTAMP, updated_at = SYSTIMESTAMP WHERE user_id = ?";
 
     private static final String SQL_CHANGE_PASSWORD =
-        "UPDATE app_user SET password_hash = ?, updated_at = SYSTIMESTAMP WHERE employee_id = ?";
+        "UPDATE app_user SET password_hash = ?, updated_at = SYSTIMESTAMP WHERE user_id = ?";
 
     private static final String SQL_SET_ACTIVE =
-        "UPDATE app_user SET is_active = ?, updated_at = SYSTIMESTAMP WHERE employee_id = ?";
+        "UPDATE app_user SET is_active = ?, updated_at = SYSTIMESTAMP WHERE user_id = ?";
 
     private static final String SQL_UPDATE_ROLE =
-        "UPDATE app_user SET role_emp = ?, updated_at = SYSTIMESTAMP WHERE employee_id = ?";
+        "UPDATE app_user SET role_emp = ?, updated_at = SYSTIMESTAMP WHERE user_id = ?";
 
     private static final String SQL_EXISTS_BY_USERNAME =
         "SELECT COUNT(*) FROM app_user WHERE LOWER(user_name) = LOWER(?)";
@@ -120,8 +121,8 @@ public class AppUserDAO {
     private static final String SQL_FIND_EMPLOYEES_WITHOUT_ACCOUNT =
         "SELECT e.employee_id, e.branch_id, e.full_name, e.salary, e.email, e.phone, e.hire_date, e.status_code, e.note " +
         "FROM employee e " +
-        "LEFT JOIN app_user au ON au.employee_id = e.employee_id " +
-        "WHERE au.employee_id IS NULL " +
+        "LEFT JOIN app_user au ON au.user_id = e.user_id " +
+        "WHERE au.user_id IS NULL " +
         "ORDER BY e.full_name, e.employee_id";
 
     // ── Public Methods ───────────────────────────────────────────
@@ -272,10 +273,7 @@ public class AppUserDAO {
                 employee.setEmail(rs.getString("email"));
                 employee.setPhone(rs.getString("phone"));
 
-                Timestamp hireDate = rs.getTimestamp("hire_date");
-                if (hireDate != null) {
-                    employee.setHireDate(hireDate.toInstant().atOffset(java.time.ZoneOffset.UTC));
-                }
+                employee.setHireDate(getOffsetDateTime(rs, "hire_date"));
 
                 employee.setStatusCode(rs.getString("status_code"));
                 employee.setNote(rs.getString("note"));
@@ -289,7 +287,7 @@ public class AppUserDAO {
 
     private AppUser mapRow(ResultSet rs) throws SQLException {
         AppUser user = new AppUser();
-        user.setEmployeeId(rs.getString("employee_id"));
+        user.setEmployeeId(rs.getString("user_id"));
         user.setPasswordHash(rs.getString("password_hash"));
 
         String roleDb = rs.getString("role_emp");
@@ -298,39 +296,36 @@ public class AppUserDAO {
         user.setUserName(rs.getString("user_name"));
         user.setActive(rs.getInt("is_active") == 1);
 
-        Timestamp lastLogin = rs.getTimestamp("last_login");
-        if (lastLogin != null) {
-            user.setLastLogin(lastLogin.toInstant().atOffset(java.time.ZoneOffset.UTC));
+        user.setLastLogin(getOffsetDateTime(rs, "last_login"));
+        user.setCreatedAt(getOffsetDateTime(rs, "created_at"));
+        user.setUpdatedAt(getOffsetDateTime(rs, "updated_at"));
+
+        String empId = rs.getString("emp_id");
+        if (empId != null) {
+            Employee employee = new Employee();
+            employee.setEmployeeId(empId);
+            employee.setBranchId(rs.getString("branch_id"));
+            employee.setFullName(rs.getString("full_name"));
+            employee.setEmail(rs.getString("email"));
+            employee.setPhone(rs.getString("phone"));
+
+            employee.setHireDate(getOffsetDateTime(rs, "hire_date"));
+
+            employee.setStatusCode(rs.getString("status_code"));
+            employee.setNote(rs.getString("note"));
+
+            user.setEmployee(employee);
         }
-
-        Timestamp createdAt = rs.getTimestamp("created_at");
-        if (createdAt != null) {
-            user.setCreatedAt(createdAt.toInstant().atOffset(java.time.ZoneOffset.UTC));
-        }
-
-        Timestamp updatedAt = rs.getTimestamp("updated_at");
-        if (updatedAt != null) {
-            user.setUpdatedAt(updatedAt.toInstant().atOffset(java.time.ZoneOffset.UTC));
-        }
-
-        // Employee fields
-        Employee employee = new Employee();
-        employee.setEmployeeId(rs.getString("emp_id"));
-        employee.setBranchId(rs.getString("branch_id"));
-        employee.setFullName(rs.getString("full_name"));
-        employee.setEmail(rs.getString("email"));
-        employee.setPhone(rs.getString("phone"));
-
-        Timestamp hireDate = rs.getTimestamp("hire_date");
-        if (hireDate != null) {
-            employee.setHireDate(hireDate.toInstant().atOffset(java.time.ZoneOffset.UTC));
-        }
-
-        employee.setStatusCode(rs.getString("status_code"));
-        employee.setNote(rs.getString("note"));
-
-        user.setEmployee(employee);
 
         return user;
+    }
+
+    private OffsetDateTime getOffsetDateTime(ResultSet rs, String column) throws SQLException {
+        try {
+            return rs.getObject(column, OffsetDateTime.class);
+        } catch (SQLException | AbstractMethodError e) {
+            Timestamp timestamp = rs.getTimestamp(column);
+            return timestamp == null ? null : timestamp.toInstant().atOffset(java.time.ZoneOffset.UTC);
+        }
     }
 }
