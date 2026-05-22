@@ -104,23 +104,7 @@ public class AddServiceController {
         // Tải danh sách categories
         try {
             List<ServiceCategory> categories = serviceBUS.getAllServiceCategories(currentUser);
-            ObservableList<ServiceCategory> categoryList = FXCollections.observableArrayList(categories);
-            cmbCategory.setItems(categoryList);
-            cmbCategory.setCellFactory(param -> new ListCell<ServiceCategory>() {
-                @Override
-                protected void updateItem(ServiceCategory item, boolean empty) {
-                    super.updateItem(item, empty);
-                    setText(empty || item == null ? null : item.getCategoryName());
-                }
-            });
-
-            cmbCategory.setButtonCell(new ListCell<ServiceCategory>() {
-                @Override
-                protected void updateItem(ServiceCategory item, boolean empty) {
-                    super.updateItem(item, empty);
-                    setText(empty || item == null ? null : item.getCategoryName());
-                }
-            });
+            SearchableComboBoxUtil.setup(cmbCategory, categories, ServiceCategory::getCategoryName);
         } catch (Exception e) {
             showError("Không thể tải danh sách loại dịch vụ: " + e.getMessage());
         }

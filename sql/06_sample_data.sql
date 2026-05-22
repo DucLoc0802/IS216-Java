@@ -135,3 +135,4 @@ insert into app_user (
 );
 
 COMMIT;
+

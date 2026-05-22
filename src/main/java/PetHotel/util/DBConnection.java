@@ -5,19 +5,20 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBConnection {
-    // Thông số kết nối 
+    // Thông số kết nối
     private static final String HOST = "localhost";
     private static final String PORT = "1521";
-    private static final String SERVICE_NAME = "xe"; 
+    private static final String SERVICE_NAME = "xe";
     // Sửa 2 dòng dưới đây:
-    private static final String USER = "system"; 
-    private static final String PASS = "123456"; 
+    private static final String USER = "system";
+    private static final String PASS = "123456";
     // Chuỗi URL kết nối chuẩn Oracle
     private static final String URL = "jdbc:oracle:thin:@//" + HOST + ":" + PORT + "/" + SERVICE_NAME;
+
     public static Connection getConnection() {
         try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
-            
+
             // 2. Tạo kết nối
             Connection conn = DriverManager.getConnection(URL, USER, PASS);
             return conn;
@@ -29,6 +30,7 @@ public class DBConnection {
         }
         return null;
     }
+
     public static void rollbackQuietly(Connection conn) {
         if (conn != null) {
             try {

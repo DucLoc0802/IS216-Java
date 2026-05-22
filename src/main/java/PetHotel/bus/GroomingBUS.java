@@ -77,6 +77,36 @@ public class GroomingBUS {
     }
 
     /**
+     * Lấy toàn bộ lịch grooming, không giới hạn ngày.
+     * @param employeeId null = tất cả
+     * @param status null = tất cả
+     * @param currentUser Người dùng hiện tại (để kiểm tra quyền)
+     */
+    public List<BookingService> getAllGroomingSchedules(
+        String employeeId,
+        String status,
+        AppUser currentUser
+    ) throws SQLException, ValidationException {
+
+        if (currentUser == null) {
+            throw new ValidationException("Chưa đăng nhập");
+        }
+
+        if (!currentUser.hasRole(Role.RECEPTIONIST)
+                && !currentUser.hasRole(Role.PET_CARE_STAFF)
+                && !currentUser.hasRole(Role.BRANCH_MANAGER)
+                && !currentUser.hasRole(Role.ADMIN)) {
+            throw new ValidationException("Bạn không có quyền xem lịch grooming");
+        }
+
+        if (currentUser.getRole() == Role.PET_CARE_STAFF) {
+            employeeId = currentUser.getEmployeeId();
+        }
+
+        return bookingServiceDAO.findAllAndFilter(employeeId, status);
+    }
+
+    /**
      * Đếm lịch grooming chờ xử lý hôm nay
      */
     public int getPendingCountToday() throws SQLException {
@@ -99,9 +129,18 @@ public class GroomingBUS {
     public void updateGroomingStatus(String bookingServiceId, String newStatus, AppUser currentUser)
             throws SQLException, ValidationException {
         
+        if (currentUser == null) {
+            throw new ValidationException("Chưa đăng nhập");
+        }
+
         // Kiểm tra quyền
         if (!isValidStatusTransition(newStatus)) {
             throw new ValidationException("Trạng thái không hợp lệ");
+        }
+
+        if (BookingService.STATUS_CANCELLED.equals(newStatus)) {
+            cancelGroomingSchedule(bookingServiceId, currentUser);
+            return;
         }
 
         // Lễ tân: có thể tạo/hủy
@@ -114,7 +153,58 @@ public class GroomingBUS {
             throw new ValidationException("Bạn không có quyền cập nhật lịch grooming");
         }
 
-        bookingServiceDAO.updateStatus(bookingServiceId, newStatus);
+        if (bookingServiceId == null || bookingServiceId.trim().isEmpty()) {
+            throw new ValidationException("Mã lịch grooming không hợp lệ");
+        }
+
+        BookingService schedule = bookingServiceDAO.findById(bookingServiceId.trim());
+        if (schedule == null) {
+            throw new ValidationException("Không tìm thấy lịch grooming cần cập nhật");
+        }
+
+        if (BookingService.STATUS_IN_PROGRESS.equals(newStatus)
+                && (schedule.getEmployeeId() == null || schedule.getEmployeeId().trim().isEmpty())) {
+            throw new ValidationException("Chỉ có thể bắt đầu lịch grooming sau khi đã phân công nhân viên chăm sóc");
+        }
+
+        bookingServiceDAO.updateStatus(bookingServiceId.trim(), newStatus);
+    }
+
+    /**
+     * Hủy lịch grooming khi khách thay đổi yêu cầu.
+     * Chỉ lễ tân, quản lý chi nhánh và admin được hủy lịch.
+     */
+    public void cancelGroomingSchedule(String bookingServiceId, AppUser currentUser)
+            throws SQLException, ValidationException {
+
+        if (currentUser == null) {
+            throw new ValidationException("Chưa đăng nhập");
+        }
+
+        if (!currentUser.hasRole(Role.RECEPTIONIST)
+                && !currentUser.hasRole(Role.BRANCH_MANAGER)
+                && !currentUser.hasRole(Role.ADMIN)) {
+            throw new ValidationException("Bạn không có quyền hủy lịch grooming");
+        }
+
+        if (bookingServiceId == null || bookingServiceId.trim().isEmpty()) {
+            throw new ValidationException("Mã lịch grooming không hợp lệ");
+        }
+
+        BookingService schedule = bookingServiceDAO.findById(bookingServiceId.trim());
+        if (schedule == null) {
+            throw new ValidationException("Không tìm thấy lịch grooming cần hủy");
+        }
+
+        if (BookingService.STATUS_DONE.equals(schedule.getStatus())) {
+            throw new ValidationException("Lịch grooming đã hoàn thành, không thể hủy");
+        }
+
+        if (BookingService.STATUS_CANCELLED.equals(schedule.getStatus())) {
+            throw new ValidationException("Lịch grooming đã được hủy trước đó");
+        }
+
+        bookingServiceDAO.updateStatus(bookingServiceId.trim(), BookingService.STATUS_CANCELLED);
     }
 
     /**
@@ -259,6 +349,11 @@ public void createGroomingSchedule(
 
     if (scheduleDate.isBefore(LocalDate.now())) {
         throw new ValidationException("Không thể đặt lịch grooming ở ngày quá khứ");
+    }
+
+    // Kiểm tra xem dịch vụ đã được kích hoạt chưa
+    if (!bookingServiceDAO.isServiceActive(serviceId.trim())) {
+        throw new ValidationException("Dịch vụ này hiện không khả dụng. Vui lòng chọn dịch vụ khác hoặc liên hệ quản lý chi nhánh.");
     }
 
     bookingServiceDAO.createGroomingSchedule(

@@ -65,6 +65,9 @@ public class ServiceController {
     private TableColumn<PetService, Integer> colDuration;
 
     @FXML
+    private TableColumn<PetService, Integer> colStatus;
+
+    @FXML
     private javafx.scene.control.Button btnAddService;
 
     @FXML
@@ -110,6 +113,27 @@ public class ServiceController {
         colSpecies.setCellValueFactory(new PropertyValueFactory<>("species"));
         colPrice.setCellValueFactory(new PropertyValueFactory<>("basePrice"));
         colDuration.setCellValueFactory(new PropertyValueFactory<>("durationMinutes"));
+
+        // Cột trạng thái với màu xanh (hoạt động) / đỏ (ngừng)
+        colStatus.setCellValueFactory(new PropertyValueFactory<>("isActive"));
+        colStatus.setCellFactory(column -> new javafx.scene.control.TableCell<PetService, Integer>() {
+            @Override
+            protected void updateItem(Integer isActive, boolean empty) {
+                super.updateItem(isActive, empty);
+                if (empty || isActive == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    if (isActive == 1) {
+                        setText("✓ Đang hoạt động");
+                        setStyle("-fx-text-fill: #2ecc71; -fx-font-weight: bold;");
+                    } else {
+                        setText("✗ Ngừng cung cấp");
+                        setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+                    }
+                }
+            }
+        });
 
         // Cột loại dịch vụ sẽ được set sau khi load category
         colCategory.setCellValueFactory(cellData -> {
@@ -178,10 +202,20 @@ public class ServiceController {
 
     /**
      * Tải tất cả dịch vụ từ CSDL
+     * - Branch Manager/Admin: Tải tất cả dịch vụ (active + inactive) để quản lý
+     * - Lễ tân: Chỉ tải dịch vụ đang hoạt động
      */
     private void loadAllServices() {
         try {
-            List<PetService> services = serviceBUS.getAllServices(currentUser);
+            List<PetService> services;
+            
+            // Kiểm tra quyền: Branch Manager/Admin được phép xem tất cả dịch vụ
+            if (currentUser.hasRole(Role.BRANCH_MANAGER) || currentUser.hasRole(Role.ADMIN)) {
+                services = serviceBUS.getAllServicesForManagement(currentUser);
+            } else {
+                services = serviceBUS.getAllServices(currentUser);
+            }
+            
             serviceList = FXCollections.observableArrayList(services);
             serviceTable.setItems(serviceList);
         } catch (Exception e) {

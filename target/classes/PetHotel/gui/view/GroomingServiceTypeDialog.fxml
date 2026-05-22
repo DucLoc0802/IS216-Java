@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="PetHotel.gui.controller.GroomingServiceTypeController"
+      spacing="16"
+      prefWidth="700"
+      prefHeight="500"
+      style="-fx-background-color: #fffaf5;">
+
+    <padding>
+        <Insets top="24" right="24" bottom="24" left="24"/>
+    </padding>
+
+    <!-- Header -->
+    <VBox spacing="8">
+        <Label text="Chọn Loại Dịch Vụ Grooming"
+               style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #3b2314;"/>
+        <Label text="Chọn một loại dịch vụ grooming mà bạn muốn đặt lịch"
+               style="-fx-font-size: 12px; -fx-text-fill: #666666;"/>
+    </VBox>
+
+    <!-- Service Categories List -->
+    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+                style="-fx-control-inner-background: transparent; -fx-border-style: none;">
+        <VBox fx:id="serviceListContainer"
+              spacing="12"
+              style="-fx-background-color: transparent;">
+            <padding>
+                <Insets top="0" right="8" bottom="0" left="0"/>
+            </padding>
+        </VBox>
+    </ScrollPane>
+
+    <!-- Buttons -->
+    <HBox spacing="12" alignment="CENTER_RIGHT">
+        <Button fx:id="btnCancel"
+                text="Hủy"
+                prefWidth="100"
+                style="-fx-font-size: 12px; -fx-padding: 10px;">
+            <styleClass>
+                <String>btn-secondary</String>
+            </styleClass>
+        </Button>
+    </HBox>
+
+</VBox>

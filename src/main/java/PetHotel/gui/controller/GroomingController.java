@@ -1,9 +1,15 @@
 package PetHotel.gui.controller;
 
 import java.sql.SQLException;
+import java.text.Normalizer;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 
 import PetHotel.bus.GroomingBUS;
 import PetHotel.dao.EmployeeDAO;
@@ -12,6 +18,7 @@ import PetHotel.model.AppUser;
 import PetHotel.model.BookingService;
 import PetHotel.model.Employee;
 import PetHotel.util.Role;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -21,12 +28,15 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -44,6 +54,8 @@ import javafx.stage.Stage;
  */
 public class GroomingController {
 
+    @FXML private Label titleLabel;
+    @FXML private Label subtitleLabel;
     @FXML private TextField txtSearch;
     @FXML private DatePicker selectedDate;
     @FXML private ComboBox<String> filterStaff;
@@ -51,6 +63,7 @@ public class GroomingController {
     @FXML private TableView<GroomingRow> groomingTable;
     @FXML private Button btnCreateGrooming;
     @FXML private Button btnAssignGroomingStaff;
+    @FXML private Button btnCancelGrooming;
     @FXML private Label panelTitle;
     @FXML private TableColumn<GroomingRow, String> colGrId;
     @FXML private TableColumn<GroomingRow, String> colGrTime;
@@ -60,15 +73,36 @@ public class GroomingController {
     @FXML private TableColumn<GroomingRow, String> colGrStaff;
     @FXML private TableColumn<GroomingRow, String> colGrStatus;
     @FXML private TableColumn<GroomingRow, Void> colGrAction;
-    
-    @FXML private VBox staffWorkloadList;
+
+    @FXML private HBox assignedStatsBar;
+    @FXML private Label lblTotalTasks;
+    @FXML private Label lblPendingTasks;
+    @FXML private Label lblInProgressTasks;
+    @FXML private Label lblCompletedTasks;
+
+    @FXML private VBox taskDetailPanel;
+    @FXML private Label lblDetailCustomer;
+    @FXML private Label lblDetailPet;
+    @FXML private Label lblDetailPetSpecies;
+    @FXML private Label lblDetailService;
+    @FXML private Label lblDetailStaff;
+    @FXML private Label lblDetailTime;
+    @FXML private TextArea txtDetailNote;
+    @FXML private Label lblDetailAddress;
+    @FXML private Button btnStartTask;
+    @FXML private Button btnCompleteTask;
+    @FXML private Button btnUpdateStatus;
+    @FXML private Button btnCloseDetails;
 
     private final GroomingBUS groomingBUS = new GroomingBUS();
     private final EmployeeDAO employeeDAO = new EmployeeDAO();
     private AppUser currentUser;
-    private DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("HH:mm");
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final DateTimeFormatter fullDateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private final ObservableList<GroomingRow> loadedRows = FXCollections.observableArrayList();
+    private final Map<String, String> staffFilterToId = new HashMap<>();
     private boolean viewAllSchedules = false;
+    private GroomingRow selectedGroomingRow;
 
     @FXML
     public void initialize() {
@@ -86,9 +120,14 @@ public class GroomingController {
         }
 
         setupTableColumns();
+        setupSelectionHandlers();
+        setupDetailButtons();
 
         selectedDate.setValue(LocalDate.now());
-        selectedDate.setOnAction(e -> loadGroomingSchedule());
+        selectedDate.setOnAction(e -> {
+            viewAllSchedules = false;
+            loadGroomingSchedule();
+        });
 
         ObservableList<String> statusList = FXCollections.observableArrayList(
             "Tất cả", "PENDING", "SCHEDULED", "IN_PROGRESS", "DONE", "CANCELLED"
@@ -97,9 +136,12 @@ public class GroomingController {
         filterGroomStatus.setValue("Tất cả");
         filterGroomStatus.setOnAction(e -> loadGroomingSchedule());
 
+        if (txtSearch != null) {
+            txtSearch.textProperty().addListener((obs, oldValue, newValue) -> applyClientFilter());
+        }
+
         loadStaffList();
         loadGroomingSchedule();
-        loadStaffWorkload();
     }
 
     // Mở màn hình phân công nhân viên grooming
@@ -119,7 +161,6 @@ public class GroomingController {
             stage.showAndWait();
 
             loadGroomingSchedule();
-            loadStaffWorkload();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -134,14 +175,36 @@ public class GroomingController {
      * Thiết lập các cột trong bảng
      */
     private void setupTableColumns() {
-        colGrId.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getId()));
-        colGrTime.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getTime()));
-        colGrPet.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getPetName()));
-        colGrOwner.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getOwnerName()));
-        colGrService.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getServiceName()));
-        colGrStaff.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getStaffName()));
-        colGrStatus.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getStatus()));
-        
+        groomingTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+        groomingTable.setFixedCellSize(38);
+        colGrAction.setMinWidth(190);
+        colGrAction.setPrefWidth(190);
+
+        colGrId.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getId()));
+        colGrTime.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getTime()));
+        colGrPet.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getPetName()));
+        colGrOwner.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getOwnerName()));
+        colGrService.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getServiceName()));
+        colGrStaff.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getStaffName()));
+        colGrStatus.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getStatus()));
+        colGrStatus.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String status, boolean empty) {
+                super.updateItem(status, empty);
+                if (empty || status == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+
+                Label badge = new Label(getStatusDisplayName(status));
+                badge.getStyleClass().add("status-badge");
+                badge.getStyleClass().add(statusStyleClass(status));
+                setGraphic(badge);
+                setText(null);
+            }
+        });
+
         // Action column
         colGrAction.setCellFactory(col -> new TableCell<GroomingRow, Void>() {
             private final Button btnStart = new Button("Bắt đầu");
@@ -149,13 +212,16 @@ public class GroomingController {
             private final Button btnCancel = new Button("Hủy");
 
             {
-                btnStart.setStyle("-fx-font-size: 11; -fx-padding: 4 8 4 8;");
-                btnDone.setStyle("-fx-font-size: 11; -fx-padding: 4 8 4 8;");
-                btnCancel.setStyle("-fx-font-size: 11; -fx-padding: 4 8 4 8;");
+                btnStart.getStyleClass().addAll("action-btn", "action-btn-amber");
+                btnDone.getStyleClass().addAll("action-btn", "action-btn-success");
+                btnCancel.getStyleClass().addAll("action-btn", "action-btn-danger");
+                configureActionButton(btnStart, 86);
+                configureActionButton(btnDone, 106);
+                configureActionButton(btnCancel, 64);
                 
-                btnStart.setOnAction(e -> handleStatusChange(getTableRow().getItem(), "IN_PROGRESS"));
-                btnDone.setOnAction(e -> handleStatusChange(getTableRow().getItem(), "DONE"));
-                btnCancel.setOnAction(e -> handleStatusChange(getTableRow().getItem(), "CANCELLED"));
+                btnStart.setOnAction(e -> handleStatusChange(getTableRow().getItem(), BookingService.STATUS_IN_PROGRESS));
+                btnDone.setOnAction(e -> confirmCompleteTask(getTableRow().getItem()));
+                btnCancel.setOnAction(e -> handleCancelGrooming(getTableRow().getItem()));
             }
 
             @Override
@@ -168,20 +234,54 @@ public class GroomingController {
                     HBox actions = new HBox(4);
                     actions.setStyle("-fx-alignment: CENTER;");
                     
-                    if ("PENDING".equals(row.getStatus()) || "SCHEDULED".equals(row.getStatus())) {
+                    if ((BookingService.STATUS_PENDING.equals(row.getStatus())
+                            || BookingService.STATUS_SCHEDULED.equals(row.getStatus()))
+                            && row.hasAssignedStaff()) {
                         actions.getChildren().add(btnStart);
                     }
-                    if ("IN_PROGRESS".equals(row.getStatus())) {
+                    if (BookingService.STATUS_IN_PROGRESS.equals(row.getStatus())) {
                         actions.getChildren().add(btnDone);
                     }
-                    if (!"DONE".equals(row.getStatus()) && !"CANCELLED".equals(row.getStatus())) {
+                    if (canCancelGrooming() && isCancelableStatus(row.getStatus())) {
                         actions.getChildren().add(btnCancel);
                     }
                     
-                    setGraphic(actions);
+                    setGraphic(actions.getChildren().isEmpty() ? null : actions);
                 }
             }
         });
+    }
+
+    private void configureActionButton(Button button, double width) {
+        button.setMinWidth(width);
+        button.setPrefWidth(width);
+        button.setMaxWidth(width);
+    }
+
+    private void setupSelectionHandlers() {
+        groomingTable.getSelectionModel().selectedItemProperty().addListener((obs, oldRow, newRow) -> {
+            selectedGroomingRow = newRow;
+            updateCancelButtonState();
+            showTaskDetails(newRow);
+        });
+    }
+
+    private void setupDetailButtons() {
+        if (btnStartTask != null) {
+            btnStartTask.setOnAction(e -> handleStatusChange(selectedGroomingRow, BookingService.STATUS_IN_PROGRESS));
+        }
+
+        if (btnCompleteTask != null) {
+            btnCompleteTask.setOnAction(e -> confirmCompleteTask(selectedGroomingRow));
+        }
+
+        if (btnUpdateStatus != null) {
+            btnUpdateStatus.setOnAction(e -> handleUpdateStatus());
+        }
+
+        if (btnCloseDetails != null) {
+            btnCloseDetails.setOnAction(e -> hideTaskDetails());
+        }
     }
 
     /**
@@ -189,13 +289,26 @@ public class GroomingController {
      */
     private void loadStaffList() {
         try {
-            // Lấy danh sách nhân viên có role PET_CARE_STAFF (role_emp = '2')
+            if (filterStaff == null) {
+                return;
+            }
+            if (isPetCareStaff()) {
+                filterStaff.setItems(FXCollections.observableArrayList("Tất cả"));
+                filterStaff.setValue("Tất cả");
+                return;
+            }
+
             ObservableList<String> staffList = FXCollections.observableArrayList();
+            staffFilterToId.clear();
             staffList.add("Tất cả");
-            
-            // Tạm thời sử dụng giá trị mẫu
-            staffList.addAll("Nhân viên 1", "Nhân viên 2", "Nhân viên 3");
-            
+
+            List<Employee> employees = groomingBUS.getWorkingEmployeesByBranch(getCurrentBranchId(), currentUser);
+            for (Employee employee : employees) {
+                String displayText = employeeDisplayText(employee);
+                staffList.add(displayText);
+                staffFilterToId.put(displayText, employee.getEmployeeId());
+            }
+
             filterStaff.setItems(staffList);
             filterStaff.setValue("Tất cả");
             filterStaff.setOnAction(e -> loadGroomingSchedule());
@@ -241,36 +354,22 @@ public class GroomingController {
             if (currentUser.hasRole(Role.RECEPTIONIST)
                     || currentUser.hasRole(Role.BRANCH_MANAGER)
                     || currentUser.hasRole(Role.ADMIN)) {
-                staffId = null;
+                staffId = getSelectedStaffId();
             }
 
-            System.out.println("DEBUG load grooming:");
-            System.out.println("role = " + currentUser.getRole());
-            System.out.println("dateStr = " + dateStr);
-            System.out.println("staffId = " + staffId);
-            System.out.println("status = " + status);
-
-            List<BookingService> bookingServices =
-                    groomingBUS.getGroomingScheduleByDate(dateStr, staffId, status, currentUser);
-
-            System.out.println("DEBUG grooming size = " + bookingServices.size());
+            List<BookingService> bookingServices = viewAllSchedules
+                    ? groomingBUS.getAllGroomingSchedules(staffId, status, currentUser)
+                    : groomingBUS.getGroomingScheduleByDate(dateStr, staffId, status, currentUser);
 
             ObservableList<GroomingRow> rows = FXCollections.observableArrayList();
 
             for (BookingService bs : bookingServices) {
-                System.out.println(
-                    "DEBUG row = " + bs.getBookingServiceId()
-                    + " | pet=" + bs.getPetName()
-                    + " | customer=" + bs.getCustomerName()
-                    + " | service=" + bs.getServiceName()
-                    + " | emp=" + bs.getEmployeeId()
-                    + " | status=" + bs.getStatus()
-                );
-
-                rows.add(new GroomingRow(bs, employeeDAO));
+                rows.add(new GroomingRow(bs, employeeDAO, viewAllSchedules));
             }
 
-            groomingTable.setItems(rows);
+            loadedRows.setAll(rows);
+            applyClientFilter();
+            updateCancelButtonState();
 
         } catch (ValidationException e) {
             showAlert(Alert.AlertType.WARNING, "Cảnh báo", e.getMessage());
@@ -284,36 +383,40 @@ public class GroomingController {
     }
 
     /**
-     * Tải khối lượng công việc nhân viên hôm nay
-     */
-    private void loadStaffWorkload() {
-        try {
-            staffWorkloadList.getChildren().clear();
-            
-            // Tạm thời hiển thị thông tin mẫu
-            
-            Label lblLoading = new Label("Đang tải...");
-            staffWorkloadList.getChildren().add(lblLoading);
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
      * Xử lý thay đổi trạng thái
      */
     private void handleStatusChange(GroomingRow row, String newStatus) {
         try {
-            if (row == null) return;
+            if (row == null) {
+                showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng chọn công việc grooming");
+                return;
+            }
+
+            if (BookingService.STATUS_IN_PROGRESS.equals(newStatus)
+                    && !BookingService.STATUS_PENDING.equals(row.getStatus())
+                    && !BookingService.STATUS_SCHEDULED.equals(row.getStatus())) {
+                showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Chỉ công việc đang chờ mới có thể bắt đầu");
+                return;
+            }
+
+            if (BookingService.STATUS_IN_PROGRESS.equals(newStatus) && !row.hasAssignedStaff()) {
+                showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Chỉ có thể bắt đầu sau khi đã phân công nhân viên chăm sóc");
+                return;
+            }
+
+            if (BookingService.STATUS_DONE.equals(newStatus)
+                    && !BookingService.STATUS_IN_PROGRESS.equals(row.getStatus())) {
+                showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Chỉ công việc đang thực hiện mới có thể hoàn thành");
+                return;
+            }
             
             groomingBUS.updateGroomingStatus(row.getId(), newStatus, currentUser);
             
             showAlert(Alert.AlertType.INFORMATION, "Thành công", 
-                "Cập nhật trạng thái thành: " + newStatus);
+                "Cập nhật trạng thái thành: " + getStatusDisplayName(newStatus));
             
             loadGroomingSchedule();
-            loadStaffWorkload();
+            hideTaskDetails();
             
         } catch (ValidationException e) {
             showAlert(Alert.AlertType.WARNING, "Cảnh báo", e.getMessage());
@@ -323,12 +426,93 @@ public class GroomingController {
         }
     }
 
+    private void handleCancelGrooming(GroomingRow row) {
+        if (row == null) {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng chọn lịch grooming cần hủy");
+            return;
+        }
+
+        if (!canCancelGrooming()) {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Bạn không có quyền hủy lịch grooming");
+            return;
+        }
+
+        if (!isCancelableStatus(row.getStatus())) {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Chỉ có thể hủy lịch chưa hoàn thành hoặc chưa bị hủy");
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Hủy lịch grooming");
+        confirm.setHeaderText("Xác nhận hủy lịch " + row.getId());
+        confirm.setContentText(
+                "Thú cưng: " + row.getPetName()
+                + "\nKhách hàng: " + row.getOwnerName()
+                + "\nDịch vụ: " + row.getServiceName()
+                + "\nThời gian: " + row.getTime()
+                + "\n\nLịch sẽ được chuyển sang trạng thái CANCELLED."
+        );
+
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.OK) {
+            return;
+        }
+
+        try {
+            groomingBUS.cancelGroomingSchedule(row.getId(), currentUser);
+
+            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã hủy lịch grooming " + row.getId());
+
+            loadGroomingSchedule();
+            hideTaskDetails();
+
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", e.getMessage());
+        } catch (SQLException e) {
+            showAlert(Alert.AlertType.ERROR, "Lỗi Database", e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private boolean canCancelGrooming() {
+        return currentUser != null
+                && (currentUser.hasRole(Role.RECEPTIONIST)
+                    || currentUser.hasRole(Role.BRANCH_MANAGER)
+                    || currentUser.hasRole(Role.ADMIN));
+    }
+
+    private boolean isCancelableStatus(String status) {
+        return BookingService.STATUS_PENDING.equals(status)
+                || BookingService.STATUS_SCHEDULED.equals(status)
+                || BookingService.STATUS_IN_PROGRESS.equals(status);
+    }
+
+    private void updateCancelButtonState() {
+        if (btnCancelGrooming == null) {
+            return;
+        }
+
+        GroomingRow selectedRow = groomingTable.getSelectionModel().getSelectedItem();
+        btnCancelGrooming.setDisable(!(canCancelGrooming()
+                && selectedRow != null
+                && isCancelableStatus(selectedRow.getStatus())));
+    }
+
     /**
      * Lấy staff ID từ tên
      */
     private String getStaffIdFromName(String staffName) {
-        // TODO: Implement mapping from name to ID
-        return null;
+        if (staffName == null || "Tất cả".equals(staffName)) {
+            return null;
+        }
+        return staffFilterToId.get(staffName);
+    }
+
+    private String getSelectedStaffId() {
+        if (filterStaff == null) {
+            return null;
+        }
+        return getStaffIdFromName(filterStaff.getValue());
     }
 
     @FXML
@@ -341,11 +525,10 @@ public class GroomingController {
             Parent root = loader.load();
 
             GroomingBookingController controller = loader.getController();
-            controller.setCurrentBranchId("BR001");
+            controller.setCurrentBranchId(getCurrentBranchId());
 
             controller.setOnSuccess(() -> {
                 loadGroomingSchedule();
-                loadStaffWorkload();
             });
 
             Stage stage = new Stage();
@@ -361,13 +544,22 @@ public class GroomingController {
     }
 
     @FXML
+    public void onCancelSelectedGrooming(ActionEvent event) {
+        handleCancelGrooming(groomingTable.getSelectionModel().getSelectedItem());
+    }
+
+    @FXML
     public void onPrevDay(ActionEvent event) {
+        viewAllSchedules = false;
         selectedDate.setValue(selectedDate.getValue().minusDays(1));
+        loadGroomingSchedule();
     }
 
     @FXML
     public void onNextDay(ActionEvent event) {
+        viewAllSchedules = false;
         selectedDate.setValue(selectedDate.getValue().plusDays(1));
+        loadGroomingSchedule();
     }
 
     @FXML
@@ -379,13 +571,310 @@ public class GroomingController {
 
     @FXML
     public void onViewAllSchedules(ActionEvent event) {
-        viewAllSchedules = false;
+        viewAllSchedules = true;
 
         if (selectedDate.getValue() == null) {
             selectedDate.setValue(LocalDate.now());
         }
 
+        if (filterStaff != null) {
+            filterStaff.setValue("Tất cả");
+        }
+        if (filterGroomStatus != null) {
+            filterGroomStatus.setValue("Tất cả");
+        }
+
         loadGroomingSchedule();
+    }
+
+    @FXML
+    public void onSearch(ActionEvent event) {
+        applyClientFilter();
+    }
+
+    @FXML
+    public void onClearFilter(ActionEvent event) {
+        if (txtSearch != null) {
+            txtSearch.clear();
+        }
+        if (filterGroomStatus != null) {
+            filterGroomStatus.setValue("Tất cả");
+        }
+        if (filterStaff != null) {
+            filterStaff.setValue("Tất cả");
+        }
+        selectedDate.setValue(LocalDate.now());
+        viewAllSchedules = false;
+        loadGroomingSchedule();
+    }
+
+    private void applyClientFilter() {
+        if (groomingTable == null) {
+            return;
+        }
+
+        String keyword = txtSearch == null ? "" : txtSearch.getText();
+        String normalizedKeyword = normalizeForSearch(keyword);
+        ObservableList<GroomingRow> displayRows = FXCollections.observableArrayList();
+
+        if (normalizedKeyword.isEmpty()) {
+            displayRows.setAll(loadedRows);
+        } else {
+            for (GroomingRow row : loadedRows) {
+                if (row.matchesKeyword(normalizedKeyword)) {
+                    displayRows.add(row);
+                }
+            }
+        }
+
+        groomingTable.setItems(displayRows);
+        updateAssignedStats(displayRows);
+    }
+
+    private void updateAssignedStats(List<GroomingRow> rows) {
+        if (!isPetCareStaff() || assignedStatsBar == null) {
+            return;
+        }
+
+        int pending = 0;
+        int inProgress = 0;
+        int done = 0;
+
+        for (GroomingRow row : rows) {
+            if (BookingService.STATUS_PENDING.equals(row.getStatus())
+                    || BookingService.STATUS_SCHEDULED.equals(row.getStatus())) {
+                pending++;
+            } else if (BookingService.STATUS_IN_PROGRESS.equals(row.getStatus())) {
+                inProgress++;
+            } else if (BookingService.STATUS_DONE.equals(row.getStatus())) {
+                done++;
+            }
+        }
+
+        lblTotalTasks.setText(String.valueOf(rows.size()));
+        lblPendingTasks.setText(String.valueOf(pending));
+        lblInProgressTasks.setText(String.valueOf(inProgress));
+        lblCompletedTasks.setText(String.valueOf(done));
+    }
+
+    private void showTaskDetails(GroomingRow row) {
+        if (row == null || taskDetailPanel == null) {
+            hideTaskDetails();
+            return;
+        }
+
+        taskDetailPanel.setVisible(true);
+        taskDetailPanel.setManaged(true);
+
+        lblDetailCustomer.setText(valueOrDash(row.getOwnerName()));
+        lblDetailPet.setText(valueOrDash(row.getPetName()));
+        lblDetailPetSpecies.setText(valueOrDash(row.getPetSpecies()));
+        lblDetailService.setText(valueOrDash(row.getServiceName()));
+        lblDetailStaff.setText(valueOrDash(row.getStaffName()));
+        lblDetailTime.setText(formatDetailTime(row));
+        txtDetailNote.setText(valueOrEmpty(row.getNote()));
+        lblDetailAddress.setText(valueOrDash(row.getCustomerAddress()));
+
+        boolean canStart = row.hasAssignedStaff()
+                && (BookingService.STATUS_PENDING.equals(row.getStatus())
+                    || BookingService.STATUS_SCHEDULED.equals(row.getStatus()));
+        boolean canComplete = BookingService.STATUS_IN_PROGRESS.equals(row.getStatus());
+        boolean canUpdate = !BookingService.STATUS_DONE.equals(row.getStatus())
+                && !BookingService.STATUS_CANCELLED.equals(row.getStatus());
+
+        btnStartTask.setDisable(!canStart);
+        btnCompleteTask.setDisable(!canComplete);
+        btnUpdateStatus.setDisable(!canUpdate);
+    }
+
+    private void hideTaskDetails() {
+        if (taskDetailPanel != null) {
+            taskDetailPanel.setVisible(false);
+            taskDetailPanel.setManaged(false);
+        }
+        selectedGroomingRow = null;
+        if (groomingTable != null) {
+            groomingTable.getSelectionModel().clearSelection();
+        }
+    }
+
+    private void handleUpdateStatus() {
+        if (selectedGroomingRow == null) {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng chọn công việc grooming");
+            return;
+        }
+
+        if (BookingService.STATUS_DONE.equals(selectedGroomingRow.getStatus())
+                || BookingService.STATUS_CANCELLED.equals(selectedGroomingRow.getStatus())) {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Công việc đã kết thúc, không thể cập nhật tiếp");
+            return;
+        }
+
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(
+                getStatusChoiceDefault(selectedGroomingRow.getStatus()),
+                "Chờ thực hiện",
+                "Đang thực hiện",
+                "Hoàn thành"
+        );
+
+        dialog.setTitle("Cập nhật trạng thái grooming");
+        dialog.setHeaderText("Cập nhật trạng thái cho công việc " + selectedGroomingRow.getId());
+        dialog.setContentText("Chọn trạng thái mới:");
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isEmpty()) {
+            return;
+        }
+
+        String newStatus = convertDisplayNameToStatus(result.get());
+        if (newStatus == null) {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Trạng thái không hợp lệ");
+            return;
+        }
+
+        if (BookingService.STATUS_DONE.equals(newStatus)) {
+            confirmCompleteTask(selectedGroomingRow);
+            return;
+        }
+
+        handleStatusChange(selectedGroomingRow, newStatus);
+    }
+
+    private void confirmCompleteTask(GroomingRow row) {
+        if (row == null) {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng chọn công việc grooming");
+            return;
+        }
+
+        if (!BookingService.STATUS_IN_PROGRESS.equals(row.getStatus())) {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Chỉ công việc đang thực hiện mới có thể hoàn thành");
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Xác nhận hoàn thành grooming");
+        confirm.setHeaderText("Xác nhận công việc grooming đã hoàn tất?");
+        confirm.setContentText(
+                "Mã công việc: " + row.getId()
+                + "\nThú cưng: " + row.getPetName()
+                + "\nDịch vụ: " + row.getServiceName()
+        );
+
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            handleStatusChange(row, BookingService.STATUS_DONE);
+        }
+    }
+
+    private String getStatusDisplayName(String status) {
+        if (BookingService.STATUS_PENDING.equals(status)) {
+            return "Chờ phân công";
+        }
+        if (BookingService.STATUS_SCHEDULED.equals(status)) {
+            return "Chờ thực hiện";
+        }
+        if (BookingService.STATUS_IN_PROGRESS.equals(status)) {
+            return "Đang thực hiện";
+        }
+        if (BookingService.STATUS_DONE.equals(status)) {
+            return "Hoàn thành";
+        }
+        if (BookingService.STATUS_CANCELLED.equals(status)) {
+            return "Đã hủy";
+        }
+        return valueOrDash(status);
+    }
+
+    private String convertDisplayNameToStatus(String displayName) {
+        if ("Chờ thực hiện".equals(displayName)) {
+            return BookingService.STATUS_SCHEDULED;
+        }
+        if ("Đang thực hiện".equals(displayName)) {
+            return BookingService.STATUS_IN_PROGRESS;
+        }
+        if ("Hoàn thành".equals(displayName)) {
+            return BookingService.STATUS_DONE;
+        }
+        return null;
+    }
+
+    private String getStatusChoiceDefault(String status) {
+        if (BookingService.STATUS_IN_PROGRESS.equals(status)) {
+            return "Đang thực hiện";
+        }
+        return "Chờ thực hiện";
+    }
+
+    private String statusStyleClass(String status) {
+        if (BookingService.STATUS_IN_PROGRESS.equals(status)) {
+            return "status-inprogress";
+        }
+        if (BookingService.STATUS_DONE.equals(status)) {
+            return "status-done";
+        }
+        if (BookingService.STATUS_CANCELLED.equals(status)) {
+            return "status-cancelled";
+        }
+        return "status-pending";
+    }
+
+    private String formatDetailTime(GroomingRow row) {
+        if (row.getScheduledAt() == null) {
+            return "—";
+        }
+        return row.getScheduledAt().format(fullDateTimeFormatter);
+    }
+
+    private String valueOrDash(String value) {
+        return value == null || value.trim().isEmpty() ? "—" : value.trim();
+    }
+
+    private String valueOrEmpty(String value) {
+        return value == null ? "" : value;
+    }
+
+    private boolean isPetCareStaff() {
+        return currentUser != null && currentUser.hasRole(Role.PET_CARE_STAFF);
+    }
+
+    private String getCurrentBranchId() {
+        if (currentUser != null
+                && currentUser.getEmployee() != null
+                && currentUser.getEmployee().getBranchId() != null
+                && !currentUser.getEmployee().getBranchId().trim().isEmpty()) {
+            return currentUser.getEmployee().getBranchId().trim();
+        }
+
+        String branchId = SessionManager.getInstance().getBranchId();
+        if (branchId != null && !branchId.trim().isEmpty()) {
+            return branchId.trim();
+        }
+
+        return "BR001";
+    }
+
+    private String employeeDisplayText(Employee employee) {
+        if (employee == null) {
+            return "";
+        }
+        String employeeId = employee.getEmployeeId() == null ? "" : employee.getEmployeeId().trim();
+        String fullName = employee.getFullName() == null ? "" : employee.getFullName().trim();
+        if (employeeId.isEmpty()) {
+            return fullName;
+        }
+        if (fullName.isEmpty()) {
+            return employeeId;
+        }
+        return employeeId + " - " + fullName;
+    }
+
+    private static String normalizeForSearch(String value) {
+        if (value == null) {
+            return "";
+        }
+        String normalized = Normalizer.normalize(value.trim(), Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
+        return normalized.toLowerCase(Locale.ROOT);
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {
@@ -398,15 +887,19 @@ public class GroomingController {
 
     // Thiết lập UI theo role người dùng
     private void setupRoleUI() {
-        System.out.println("DEBUG role = " + currentUser.getRole());
-        System.out.println("DEBUG btnCreateGrooming = " + btnCreateGrooming);
-        System.out.println("DEBUG btnAssignGroomingStaff = " + btnAssignGroomingStaff);
-
         boolean canCreateGrooming =
                 currentUser.hasRole(Role.RECEPTIONIST);
 
         boolean canAssignStaff =
                 currentUser.hasRole(Role.BRANCH_MANAGER);
+
+        boolean canCancelGrooming = canCancelGrooming();
+        boolean petCareStaff = isPetCareStaff();
+
+        if (titleLabel != null && subtitleLabel != null && petCareStaff) {
+            titleLabel.setText("Grooming");
+            subtitleLabel.setText("Công việc grooming được phân công cho bạn");
+        }
 
         if (btnCreateGrooming != null) {
             btnCreateGrooming.setVisible(canCreateGrooming);
@@ -418,14 +911,31 @@ public class GroomingController {
             btnAssignGroomingStaff.setManaged(canAssignStaff);
         }
 
-        if (colGrAction != null && currentUser.hasRole(Role.PET_CARE_STAFF)) {
-            colGrAction.setVisible(false);
+        if (btnCancelGrooming != null) {
+            btnCancelGrooming.setVisible(canCancelGrooming);
+            btnCancelGrooming.setManaged(canCancelGrooming);
+            btnCancelGrooming.setDisable(true);
+        }
+
+        if (filterStaff != null && petCareStaff) {
+            filterStaff.setVisible(false);
+            filterStaff.setManaged(false);
+        }
+
+        if (assignedStatsBar != null) {
+            assignedStatsBar.setVisible(petCareStaff);
+            assignedStatsBar.setManaged(petCareStaff);
+        }
+
+        if (colGrAction != null) {
+            colGrAction.setVisible(true);
         }
     }
     /**
      * Inner class: GroomingRow — Dữ liệu hiển thị trong bảng
      */
     public static class GroomingRow {
+        private final BookingService bookingService;
         private String id;
         private String time;
         private String petName;
@@ -435,10 +945,17 @@ public class GroomingController {
         private String status;
 
         public GroomingRow(BookingService bs, EmployeeDAO employeeDAO) {
+            this(bs, employeeDAO, false);
+        }
+
+        public GroomingRow(BookingService bs, EmployeeDAO employeeDAO, boolean showDate) {
+            this.bookingService = bs;
             this.id = bs.getBookingServiceId();
 
             this.time = bs.getScheduledAt() != null
-                    ? bs.getScheduledAt().format(DateTimeFormatter.ofPattern("HH:mm"))
+                    ? bs.getScheduledAt().format(showDate
+                            ? DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+                            : DateTimeFormatter.ofPattern("HH:mm"))
                     : "";
 
             this.petName = bs.getPetName() != null ? bs.getPetName() : "—";
@@ -472,5 +989,27 @@ public class GroomingController {
         public String getServiceName() { return serviceName; }
         public String getStaffName() { return staffName; }
         public String getStatus() { return status; }
+        public String getEmployeeId() { return bookingService.getEmployeeId(); }
+        public OffsetDateTime getScheduledAt() { return bookingService.getScheduledAt(); }
+        public String getPetSpecies() { return bookingService.getPetSpecies(); }
+        public String getCustomerPhone() { return bookingService.getCustomerPhone(); }
+        public String getCustomerAddress() { return bookingService.getCustomerAddress(); }
+        public String getNote() { return bookingService.getNote(); }
+
+        public boolean hasAssignedStaff() {
+            return getEmployeeId() != null && !getEmployeeId().trim().isEmpty();
+        }
+
+        public boolean matchesKeyword(String normalizedKeyword) {
+            return normalizeForSearch(id).contains(normalizedKeyword)
+                    || normalizeForSearch(time).contains(normalizedKeyword)
+                    || normalizeForSearch(petName).contains(normalizedKeyword)
+                    || normalizeForSearch(ownerName).contains(normalizedKeyword)
+                    || normalizeForSearch(serviceName).contains(normalizedKeyword)
+                    || normalizeForSearch(staffName).contains(normalizedKeyword)
+                    || normalizeForSearch(status).contains(normalizedKeyword)
+                    || normalizeForSearch(getPetSpecies()).contains(normalizedKeyword)
+                    || normalizeForSearch(getCustomerPhone()).contains(normalizedKeyword);
+        }
     }
 }

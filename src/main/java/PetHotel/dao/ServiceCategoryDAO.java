@@ -11,6 +11,7 @@ import java.util.List;
 
 import PetHotel.model.ServiceCategory;
 import PetHotel.util.DBConnection;
+import PetHotel.util.IDGenerator;
 
 /**
  * ServiceCategoryDAO — Quản lý dữ liệu loại dịch vụ từ bảng CATEGORY_SERVICES.
@@ -88,6 +89,10 @@ public class ServiceCategoryDAO {
         String sql =
             "INSERT INTO category_services (service_category_id, category_name, note, created_at, updated_at) " +
             "VALUES (?, ?, ?, SYSTIMESTAMP, SYSTIMESTAMP)";
+
+        if(categoryId == null || categoryId.trim().isEmpty()) {
+            categoryId = IDGenerator.nextServiceCategoryId();
+        }
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
