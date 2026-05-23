@@ -8,6 +8,7 @@ public class PetService {
     private String species;
     private double basePrice;
     private int durationMinutes;
+    private int isActive;
 
     public String getServiceId() {
         return serviceId;
@@ -55,6 +56,18 @@ public class PetService {
 
     public void setDurationMinutes(int durationMinutes) {
         this.durationMinutes = durationMinutes;
+    }
+
+    public int getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(int isActive) {
+        this.isActive = isActive;
+    }
+
+    public boolean isActive() {
+        return isActive == 1;
     }
 
     @Override

@@ -48,7 +48,13 @@ public class MainController {
         // Vừa đăng nhập vào, load ngay trang tổng quan (dashboard-home.fxml)
         AppUser currentUser = SessionManager.getInstance().getCurrentUser();
         if (currentUser != null && currentUser.getRole() == Role.PET_CARE_STAFF) {
-            showPetManagement(null);
+            loadView("GroomingManagement.fxml");
+            if (topbarController != null) {
+                topbarController.setTitle("Grooming", "Công việc grooming được phân công");
+            }
+            if (sidebarController != null) {
+                sidebarController.setActiveGroomingMenu();
+            }
         } else {
             loadView("DashboardHome.fxml");
         }
