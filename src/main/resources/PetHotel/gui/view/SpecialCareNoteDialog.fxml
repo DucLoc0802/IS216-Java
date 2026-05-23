@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+  SpecialCareNoteDialog.fxml — UC-BOOK-08: Ghi chú yêu cầu chăm sóc đặc biệt
+  Controller: PetHotel.gui.controller.SpecialCareNoteController
+-->
+
+<VBox maxWidth="520" prefWidth="520" spacing="0"
+      styleClass="form-root"
+      stylesheets="@../css/style.css"
+      xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="PetHotel.gui.controller.SpecialCareNoteController">
+
+    <!-- HEADER -->
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="form-header">
+        <VBox spacing="2">
+            <Label styleClass="form-header-title" text="Ghi Chú Chăm Sóc Đặc Biệt" />
+            <Label styleClass="form-header-subtitle" text="Ghi nhận yêu cầu chăm sóc trong quá trình lưu trú" />
+        </VBox>
+        <Region HBox.hgrow="ALWAYS" />
+        <Button onAction="#onCancel" styleClass="form-close-btn" text="✕" />
+    </HBox>
+
+    <!-- BODY -->
+    <VBox spacing="16" styleClass="form-body">
+
+        <!-- Thông tin booking -->
+        <Label styleClass="form-section-title" text="Thông Tin Booking" />
+
+        <HBox spacing="14">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Mã Booking" />
+                <Label fx:id="lblBookingId" styleClass="form-detail-value" text="—" />
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Trạng Thái" />
+                <Label fx:id="lblStatus" styleClass="form-detail-value" text="—" />
+            </VBox>
+        </HBox>
+
+        <HBox spacing="14">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Khách Hàng" />
+                <Label fx:id="lblCustomer" styleClass="form-detail-value" text="—" />
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Thú Cưng" />
+                <Label fx:id="lblPet" styleClass="form-detail-value" text="—" />
+            </VBox>
+        </HBox>
+
+        <Separator styleClass="form-divider" />
+
+        <!-- Ghi chú chăm sóc -->
+        <Label styleClass="form-section-title" text="Yêu Cầu Chăm Sóc Đặc Biệt" />
+
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Ghi chú / Yêu cầu *" />
+            <TextArea fx:id="txtNote"
+                      styleClass="form-area"
+                      prefRowCount="5"
+                      wrapText="true"
+                      promptText="VD: Thú cưng cần uống thuốc 2 lần/ngày, dị ứng với thức ăn X, cần chú ý hành vi..." />
+            <Label styleClass="form-hint" text="Ghi rõ yêu cầu để nhân viên chăm sóc thực hiện đúng" />
+        </VBox>
+
+        <!-- ERROR -->
+        <Label fx:id="lblError" styleClass="form-error" text="" wrapText="true" visible="false" />
+
+    </VBox>
+
+    <!-- FOOTER -->
+    <HBox alignment="CENTER_RIGHT" spacing="10" styleClass="form-footer">
+        <Button fx:id="btnCancel" onAction="#onCancel" styleClass="btn-secondary" text="Hủy" />
+        <Button onAction="#onSave" styleClass="btn-primary" text="Lưu Ghi Chú" />
+    </HBox>
+</VBox>

@@ -1,6 +1,7 @@
 package PetHotel.bus;
 
 import PetHotel.dao.BookingDAO;
+import PetHotel.dao.RoomDAO;
 import PetHotel.exception.ValidationException;
 import PetHotel.model.Booking;
 
@@ -11,6 +12,7 @@ import java.util.List;
 public class BookingBUS {
 
     private final BookingDAO bookingDAO = new BookingDAO();
+    private final RoomDAO roomDAO = new RoomDAO();
 
     // ── UC-BOOK-03: Tra cứu booking ──────────────────────────────
 
@@ -33,6 +35,10 @@ public class BookingBUS {
     // ── UC-BOOK-02: Tạo booking mới ──────────────────────────────
 
     public void createBooking(Booking booking, String roomId) {
+        createBooking(booking, roomId, null);
+    }
+
+    public void createBooking(Booking booking, String roomId, String petId) {
         if (booking.getCustomerId() == null || booking.getCustomerId().trim().isEmpty())
             throw new ValidationException("Vui lòng chọn khách hàng.");
         if (roomId == null || roomId.trim().isEmpty())
@@ -50,7 +56,11 @@ public class BookingBUS {
             booking.setDepositAmount(BigDecimal.ZERO);
 
         try {
-            bookingDAO.insert(booking, roomId, null);
+            bookingDAO.insert(booking, roomId, petId, null);
+            // Nếu có thú cưng → tự động cập nhật trạng thái phòng sang IN_USE
+            if (petId != null && !petId.trim().isEmpty()) {
+                new RoomBUS().autoUpdateRoomStatus(roomId);
+            }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi tạo booking.", e);
         }
@@ -63,6 +73,11 @@ public class BookingBUS {
             throw new ValidationException("Mã booking không hợp lệ.");
         try {
             bookingDAO.updateStatus(bookingId, "CHECKED_IN");
+            // Tự động cập nhật trạng thái phòng thành IN_USE (có thú cưng check-in)
+            String roomId = bookingDAO.findRoomIdByBookingId(bookingId);
+            if (roomId != null) {
+                new RoomBUS().autoUpdateRoomStatus(roomId);
+            }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi check-in.", e);
         }
@@ -74,7 +89,12 @@ public class BookingBUS {
         if (bookingId == null || bookingId.trim().isEmpty())
             throw new ValidationException("Mã booking không hợp lệ.");
         try {
+            String roomId = bookingDAO.findRoomIdByBookingId(bookingId);
             bookingDAO.updateStatus(bookingId, "CHECKED_OUT");
+            // Tự động cập nhật trạng thái phòng (nếu hết thú cưng → AVAILABLE)
+            if (roomId != null) {
+                new RoomBUS().autoUpdateRoomStatus(roomId);
+            }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi check-out.", e);
         }
@@ -86,9 +106,31 @@ public class BookingBUS {
         if (bookingId == null || bookingId.trim().isEmpty())
             throw new ValidationException("Mã booking không hợp lệ.");
         try {
+            String roomId = bookingDAO.findRoomIdByBookingId(bookingId);
             bookingDAO.updateStatus(bookingId, "CANCELLED");
+            // Tự động cập nhật trạng thái phòng (nếu hết thú cưng → AVAILABLE)
+            if (roomId != null) {
+                new RoomBUS().autoUpdateRoomStatus(roomId);
+            }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi hủy booking.", e);
+        }
+    }
+
+    // ── UC-BOOK-08: Xóa booking (xóa khỏi DB) ───────────────────
+
+    public void deleteBooking(String bookingId) {
+        if (bookingId == null || bookingId.trim().isEmpty())
+            throw new ValidationException("Mã booking không hợp lệ.");
+        try {
+            String roomId = bookingDAO.findRoomIdByBookingId(bookingId);
+            bookingDAO.delete(bookingId);
+            // Tự động cập nhật trạng thái phòng (nếu hết thú cưng → AVAILABLE)
+            if (roomId != null) {
+                new RoomBUS().autoUpdateRoomStatus(roomId);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi xóa booking.", e);
         }
     }
 }

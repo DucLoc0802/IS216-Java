@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+  EditRoomDialog.fxml — UC-ROOM-04: Sửa thông tin phòng
+  Controller: PetHotel.gui.controller.EditRoomController
+-->
+
+<VBox maxWidth="500" prefWidth="500" spacing="0"
+      styleClass="form-root"
+      stylesheets="@../css/style.css"
+      xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="PetHotel.gui.controller.EditRoomController">
+
+    <!-- HEADER -->
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="form-header">
+        <VBox spacing="2">
+            <Label styleClass="form-header-title" text="Sửa Thông Tin Phòng" />
+            <Label fx:id="lblSubtitle" styleClass="form-header-subtitle" text="Cập nhật thông tin phòng lưu trú" />
+        </VBox>
+        <Region HBox.hgrow="ALWAYS" />
+        <Button onAction="#onCancel" styleClass="form-close-btn" text="✕" />
+    </HBox>
+
+    <!-- BODY -->
+    <VBox spacing="16" styleClass="form-body">
+
+        <Label styleClass="form-section-title" text="Thông Tin Phòng" />
+
+        <HBox spacing="14">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Số Phòng *" />
+                <TextField fx:id="txtRoomNumber" styleClass="form-field" promptText="VD: 101, 202..." />
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Trạng Thái *" />
+                <ComboBox fx:id="cbStatus" styleClass="form-combo" maxWidth="1.7976931348623157E308" />
+            </VBox>
+        </HBox>
+
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Loại Phòng *" />
+            <ComboBox fx:id="cbRoomType" styleClass="form-combo" maxWidth="1.7976931348623157E308" />
+        </VBox>
+
+        <!-- ERROR -->
+        <Label fx:id="lblError" styleClass="form-error" text="" wrapText="true" visible="false" />
+
+    </VBox>
+
+    <!-- FOOTER -->
+    <HBox alignment="CENTER_RIGHT" spacing="10" styleClass="form-footer">
+        <Button fx:id="btnCancel" onAction="#onCancel" styleClass="btn-secondary" text="Hủy" />
+        <Button onAction="#onSave" styleClass="btn-primary" text="Lưu Thay Đổi" />
+    </HBox>
+</VBox>

@@ -25,38 +25,60 @@
 
 -- 1. Chống trùng lịch đặt phòng
 CREATE OR REPLACE TRIGGER booking_room_no_overlap
-BEFORE INSERT OR UPDATE ON booking_room
-FOR EACH ROW
-DECLARE
-    v_conflict_booking_id       booking.booking_id%TYPE;
-    v_conflict_booking_room_id  booking_room.booking_room_id%TYPE;
-BEGIN
-    -- Chọn mã booking và booking_room bị trùng để báo lỗi
-    SELECT br.booking_id, br.booking_room_id
-    INTO v_conflict_booking_id, v_conflict_booking_room_id
-    FROM booking_room br
-    JOIN booking b_old
-        ON br.booking_id = b_old.booking_id
-    JOIN booking b_new
-        ON b_new.booking_id = :NEW.booking_id
-    WHERE br.room_id = :NEW.room_id
-      AND br.booking_room_id <> :NEW.booking_room_id
-      AND b_old.status <> 'CANCELLED'
-      AND b_new.status <> 'CANCELLED'
-      AND b_new.checkin_expected_at < b_old.checkout_expected_at
-      AND b_new.checkout_expected_at > b_old.checkin_expected_at
-      AND ROWNUM = 1;
+FOR INSERT OR UPDATE ON booking_room
+COMPOUND TRIGGER
 
-    -- Phát hiện trùng lịch đặt phòng
-    RAISE_APPLICATION_ERROR(
-        -20001,
-        'Booking room schedule overlap detected. Conflicting booking_id = ' ||
-        v_conflict_booking_id || ', booking_room_id = ' || v_conflict_booking_room_id
-    );
+   -- Kiểu dữ liệu lưu tạm (booking_id, room_id, booking_room_id)
+   TYPE t_row IS RECORD (
+      booking_id       booking.booking_id%TYPE,
+      room_id          room.room_id%TYPE,
+      booking_room_id  booking_room.booking_room_id%TYPE
+   );
+   TYPE t_rows IS TABLE OF t_row INDEX BY PLS_INTEGER;
+   g_rows t_rows;
 
-EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-        NULL;
+   --Trước mỗi dòng: lưu lại các giá trị của dòng sắp thay đổi
+   BEFORE EACH ROW IS
+   BEGIN
+      g_rows(g_rows.COUNT + 1).booking_id      := :NEW.booking_id;
+      g_rows(g_rows.COUNT).room_id             := :NEW.room_id;
+      g_rows(g_rows.COUNT).booking_room_id     := :NEW.booking_room_id;
+   END BEFORE EACH ROW;
+
+   --Sau khi tất cả các dòng đã được xử lý: kiểm tra trùng lịch
+   AFTER STATEMENT IS
+      v_conflict_booking_id       booking.booking_id%TYPE;
+      v_conflict_booking_room_id  booking_room.booking_room_id%TYPE;
+   BEGIN
+      FOR i IN 1 .. g_rows.COUNT LOOP
+         BEGIN
+            SELECT br.booking_id, br.booking_room_id
+            INTO v_conflict_booking_id, v_conflict_booking_room_id
+            FROM booking_room br
+            JOIN booking b_old ON br.booking_id = b_old.booking_id
+            JOIN booking b_new ON b_new.booking_id = g_rows(i).booking_id
+            WHERE br.room_id = g_rows(i).room_id
+              AND br.booking_room_id <> g_rows(i).booking_room_id
+              AND b_old.status <> 'CANCELLED'
+              AND b_new.status <> 'CANCELLED'
+              AND b_new.checkin_expected_at < b_old.checkout_expected_at
+              AND b_new.checkout_expected_at > b_old.checkin_expected_at
+              AND ROWNUM = 1;
+
+            -- Nếu tìm thấy xung đột
+            RAISE_APPLICATION_ERROR(
+                -20001,
+                'Booking room schedule overlap detected. Conflicting booking_id = ' ||
+                v_conflict_booking_id || ', booking_room_id = ' || v_conflict_booking_room_id
+            );
+
+         EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+               NULL;  -- Không xung đột, tiếp tục
+         END;
+      END LOOP;
+   END AFTER STATEMENT;
+
 END;
 /
 

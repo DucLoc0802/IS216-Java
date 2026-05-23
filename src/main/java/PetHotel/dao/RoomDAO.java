@@ -26,6 +26,14 @@ public class RoomDAO {
         "  AND (? = 'ALL' OR t.type_name = ?) " +
         "ORDER BY r.room_number";
 
+    private static final String SQL_FIND_BY_BOOKING =
+        "SELECT r.room_id, r.branch_id, r.type_room_id, r.room_number, r.status, r.created_at, " +
+        "       t.type_name, t.base_price_per_day, t.max_pets, t.max_weight_kg " +
+        "FROM booking_room br " +
+        "JOIN room r ON br.room_id = r.room_id " +
+        "JOIN type_room t ON r.type_room_id = t.type_room_id " +
+        "WHERE br.booking_id = ?";
+
     private static final String SQL_INSERT =
         "INSERT INTO room (room_id, branch_id, type_room_id, room_number, status, created_at) " +
         "VALUES (?, ?, ?, ?, ?, SYSTIMESTAMP)";
@@ -50,14 +58,66 @@ public class RoomDAO {
     private static final String SQL_COUNT_BY_STATUS =
         "SELECT status, COUNT(*) as cnt FROM room GROUP BY status";
 
+    private static final String SQL_FIND_CURRENT_PETS_BY_ROOM =
+        "SELECT LISTAGG(p.pet_name, ', ') WITHIN GROUP (ORDER BY p.pet_name) AS pet_names " +
+        "FROM booking_room_pet brp " +
+        "JOIN booking_room br ON brp.booking_room_id = br.booking_room_id " +
+        "JOIN booking b ON br.booking_id = b.booking_id " +
+        "JOIN pet p ON brp.pet_id = p.pet_id " +
+        "WHERE br.room_id = ? " +
+        "  AND b.status IN ('CHECKED_IN', 'PENDING', 'CONFIRMED')";
+
     // ── Public Methods ───────────────────────────────────────────
+
+    public Room findByBookingId(String bookingId) throws SQLException {
+    String sql = "SELECT r.room_id, r.room_number, r.status, " +
+                 "       tr.type_name, tr.base_price_per_day " +
+                 "FROM room r " +
+                 "JOIN booking_room br ON r.room_id = br.room_id " +
+                 "JOIN type_room tr ON r.type_room_id = tr.type_room_id " +
+                 "WHERE br.booking_id = ?";
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, bookingId);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                Room room = new Room();
+                room.setRoomId(rs.getString("room_id"));
+                room.setRoomNumber(rs.getString("room_number"));
+                room.setStatus(rs.getString("status"));
+                room.setTypeName(rs.getString("type_name"));
+                room.setBasePricePerDay(rs.getDouble("base_price_per_day"));
+                return room;
+            }
+        }
+    }
+    return null;
+}
+
+    public String findCurrentPetNamesByRoomId(String roomId) throws SQLException {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_FIND_CURRENT_PETS_BY_ROOM)) {
+            ps.setString(1, roomId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String names = rs.getString("pet_names");
+                    return names != null ? names.trim() : null;
+                }
+            }
+        }
+        return null;
+    }
 
     public List<Room> findAll() throws SQLException {
         List<Room> list = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(SQL_FIND_ALL);
              ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) list.add(mapRow(rs));
+            while (rs.next()) {
+                Room room = mapRow(rs);
+                room.setCurrentPetNames(findCurrentPetNamesByRoomId(room.getRoomId()));
+                list.add(room);
+            }
         }
         return list;
     }
@@ -79,7 +139,11 @@ public class RoomDAO {
             ps.setString(7, typeParam);
 
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(mapRow(rs));
+                while (rs.next()) {
+                    Room room = mapRow(rs);
+                    room.setCurrentPetNames(findCurrentPetNamesByRoomId(room.getRoomId()));
+                    list.add(room);
+                }
             }
         }
         return list;
