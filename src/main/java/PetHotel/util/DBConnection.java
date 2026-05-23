@@ -21,14 +21,16 @@ public class DBConnection {
 
             // 2. Tạo kết nối
             Connection conn = DriverManager.getConnection(URL, USER, PASS);
+            if (conn == null || conn.isClosed()) {
+                throw new SQLException("Không tạo được kết nối Oracle.");
+            }
             return conn;
-        } catch (ClassNotFoundException e) {
-            System.err.println("Lỗi: Không tìm thấy Driver!");
         } catch (SQLException e) {
-            System.err.println("Lỗi: Không thể kết nối. Kiểm tra URL/User/Pass!");
-            e.printStackTrace();
+            throw new SQLException(
+                    "Không kết nối được database. Vui lòng kiểm tra Oracle service, JDBC URL, username/password. "
+                            + "URL=" + URL + ", user=" + USER + ". " + e.getMessage(),
+                    e);
         }
-        return null;
     }
 
     public static void rollbackQuietly(Connection conn) {
@@ -36,17 +38,11 @@ public class DBConnection {
             try {
                 conn.rollback();
             } catch (SQLException e) {
-                // Bỏ qua lỗi rollback, không muốn che exception gốc
                 System.err.println("[DBConnection] Rollback failed: " + e.getMessage());
             }
         }
     }
 
-    /**
-     * Đóng connection an toàn — dùng trong finally block.
-     *
-     * @param conn connection cần đóng (có thể null)
-     */
     public static void closeQuietly(Connection conn) {
         if (conn != null) {
             try {

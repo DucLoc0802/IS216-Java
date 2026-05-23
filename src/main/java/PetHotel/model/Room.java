@@ -16,6 +16,9 @@ public class Room {
     private int maxPets;
     private double maxWeightKg;
 
+    // Thú cưng đang ở trong phòng (hiển thị ở cột thú cưng hiện tại)
+    private String currentPetNames;
+
     // ── Getters & Setters ────────────────────────────────────────
 
     public String getRoomId() { return roomId; }
@@ -47,4 +50,7 @@ public class Room {
 
     public double getMaxWeightKg() { return maxWeightKg; }
     public void setMaxWeightKg(double maxWeightKg) { this.maxWeightKg = maxWeightKg; }
+
+    public String getCurrentPetNames() { return currentPetNames; }
+    public void setCurrentPetNames(String currentPetNames) { this.currentPetNames = currentPetNames; }
 }

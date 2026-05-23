@@ -134,5 +134,29 @@ insert into app_user (
     NULL
 );
 
+-- =========================================================
+-- TYPE_ROOM (Loại phòng & Giá)
+-- =========================================================
+INSERT INTO type_room (type_room_id, type_name, note, max_pets, max_weight_kg, base_price_per_day, is_active)
+VALUES ('TYPE01', 'STANDARD', N'Phòng tiêu chuẩn', 1, 15, 200000, 1);
+INSERT INTO type_room (type_room_id, type_name, note, max_pets, max_weight_kg, base_price_per_day, is_active)
+VALUES ('TYPE02', 'PREMIUM', N'Phòng VIP đầy đủ tiện nghi', 2, 30, 350000, 1);
+INSERT INTO type_room (type_room_id, type_name, note, max_pets, max_weight_kg, base_price_per_day, is_active)
+VALUES ('TYPE03', 'SUITE', N'Phòng Suite cao cấp', 3, 50, 500000, 1);
+
+-- =========================================================
+-- ROOM (Phòng)
+-- =========================================================
+INSERT INTO room (room_id, branch_id, type_room_id, room_number, status)
+VALUES ('R001', 'BR001', 'TYPE01', '101', 'AVAILABLE');
+INSERT INTO room (room_id, branch_id, type_room_id, room_number, status)
+VALUES ('R002', 'BR001', 'TYPE01', '102', 'AVAILABLE');
+INSERT INTO room (room_id, branch_id, type_room_id, room_number, status)
+VALUES ('R003', 'BR001', 'TYPE02', '201', 'AVAILABLE');
+INSERT INTO room (room_id, branch_id, type_room_id, room_number, status)
+VALUES ('R004', 'BR001', 'TYPE02', '202', 'AVAILABLE');
+INSERT INTO room (room_id, branch_id, type_room_id, room_number, status)
+VALUES ('R005', 'BR001', 'TYPE03', '301', 'AVAILABLE');
+
 COMMIT;
 

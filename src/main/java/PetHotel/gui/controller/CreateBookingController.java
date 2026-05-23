@@ -2,9 +2,11 @@ package PetHotel.gui.controller;
 
 import PetHotel.bus.BookingBUS;
 import PetHotel.dao.CustomerDAO;
+import PetHotel.dao.PetDAO;
 import PetHotel.dao.RoomDAO;
 import PetHotel.model.Booking;
 import PetHotel.model.Customer;
+import PetHotel.model.Pet;
 import PetHotel.model.Room;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -33,6 +35,7 @@ public class CreateBookingController {
 
     private final BookingBUS bookingBUS = new BookingBUS();
     private final CustomerDAO customerDAO = new CustomerDAO();
+    private final PetDAO petDAO = new PetDAO();
     private final RoomDAO roomDAO = new RoomDAO();
     private Runnable onSaveCallback;
 
@@ -71,9 +74,25 @@ public class CreateBookingController {
     }
 
     private void loadPets() {
-        // TODO: load pet theo customer_id sau khi có PetDAO
-        cbPet.setItems(FXCollections.observableArrayList("Chưa có thú cưng"));
-        cbPet.setValue("Chưa có thú cưng");
+        Customer selected = cbCustomer.getValue();
+        if (selected == null) {
+            cbPet.setItems(FXCollections.observableArrayList());
+            cbPet.setValue(null);
+            return;
+        }
+        try {
+            List<Pet> pets = petDAO.findByCustomerId(selected.getCustomerId());
+            if (pets.isEmpty()) {
+                cbPet.setItems(FXCollections.observableArrayList());
+                cbPet.setValue(null);
+            } else {
+                cbPet.setItems(FXCollections.observableArrayList(
+                    pets.stream().map(Pet::getPetName).toArray(String[]::new)));
+                cbPet.setValue(null);
+            }
+        } catch (Exception e) {
+            lblError.setText("Lỗi tải thú cưng: " + e.getMessage());
+        }
     }
 
     private void loadRoomTypes() {
@@ -137,7 +156,20 @@ public class CreateBookingController {
             booking.setDepositAmount(depositStr.isEmpty() ?
                 BigDecimal.ZERO : new BigDecimal(depositStr));
 
-            bookingBUS.createBooking(booking, cbRoom.getValue().getRoomId());
+            // Get selected pet name → look up petId from selected customer's pets
+            String petName = cbPet.getValue();
+            String petId = null;
+            if (petName != null && !petName.isEmpty()) {
+                List<Pet> pets = petDAO.findByCustomerId(cbCustomer.getValue().getCustomerId());
+                for (Pet p : pets) {
+                    if (petName.equals(p.getPetName())) {
+                        petId = p.getPetId();
+                        break;
+                    }
+                }
+            }
+
+            bookingBUS.createBooking(booking, cbRoom.getValue().getRoomId(), petId);
 
             if (onSaveCallback != null) onSaveCallback.run();
             closeDialog();
