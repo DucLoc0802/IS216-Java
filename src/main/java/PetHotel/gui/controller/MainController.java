@@ -1,4 +1,4 @@
-﻿package PetHotel.gui.controller;
+package PetHotel.gui.controller;
 
 import PetHotel.bus.AuthBUS;
 import PetHotel.model.AppUser;
