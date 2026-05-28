@@ -950,6 +950,20 @@
     -fx-alignment: CENTER_LEFT;
 }
 
+.invoice-table .table-row-cell {
+    -fx-cell-size: 60px;
+}
+
+.invoice-table .table-cell {
+    -fx-padding: 7 12 7 12;
+    -fx-border-color: transparent #18A8E5 transparent transparent;
+    -fx-border-width: 0 1 0 0;
+}
+
+.invoice-table .column-header .label {
+    -fx-padding: 0 12 0 12;
+}
+
 .table-empty {
     -fx-text-fill: -ph-text-muted;
     -fx-font-size: 13px;
