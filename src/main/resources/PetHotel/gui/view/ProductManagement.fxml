@@ -174,7 +174,7 @@
                     <Label styleClass="detail-key" text="Mức tối thiểu" GridPane.columnIndex="0" GridPane.rowIndex="4" />
                     <Label fx:id="detailProdMin" styleClass="detail-value" text="—" GridPane.columnIndex="1" GridPane.rowIndex="4" />
 
-                    <Label styleClass="detail-key" text="Nhà cung cấp" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+                    <Label styleClass="detail-key" text="Nguồn nhập" GridPane.columnIndex="0" GridPane.rowIndex="5" />
                     <Label fx:id="detailProdSupplier" styleClass="detail-value" text="—" GridPane.columnIndex="1" GridPane.rowIndex="5" />
 
                     <Label styleClass="detail-key" text="Mô tả" GridPane.columnIndex="0" GridPane.rowIndex="6" />

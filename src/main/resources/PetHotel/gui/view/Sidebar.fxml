@@ -131,10 +131,10 @@
                 </HBox>
             </VBox>
 
-            <VBox fx:id="menuSupplier" onMouseClicked="#onMenu" styleClass="menu-item" userData="supplier">
+            <VBox fx:id="menuSupplier" managed="false" visible="false" onMouseClicked="#onMenu" styleClass="menu-item" userData="supplier">
                 <HBox alignment="CENTER_LEFT" spacing="12">
                     <Label styleClass="menu-icon" text="🏢" />
-                    <Label styleClass="menu-label" text="Nhà Cung Cấp" />
+                    <Label styleClass="menu-label" text="" />
                 </HBox>
             </VBox>
 

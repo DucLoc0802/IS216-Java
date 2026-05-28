@@ -97,6 +97,18 @@ public class IDGenerator {
         return nextId("BK", "SELECT MAX(booking_id) FROM booking");
     }
 
+    public static synchronized String nextGoodsReceiptId() throws SQLException {
+        return nextId("GR", "SELECT MAX(goods_receipt_id) FROM goods_receipt");
+    }
+
+    public static synchronized String nextStockAuditId() throws SQLException {
+        return nextId("SA", "SELECT MAX(stock_audit_id) FROM stock_audit");
+    }
+
+    public static synchronized String nextMaterialWasteId() throws SQLException {
+        return nextId("MW", "SELECT MAX(material_waste_id) FROM material_waste");
+    }
+
     /**
      * Logic chung: lấy max hiện tại, tách số, +1, format lại.
      *

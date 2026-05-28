@@ -22,10 +22,12 @@
             </VBox>
         </HBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="Nhập Hàng"          styleClass="action-btn action-btn-primary"
+        <Button fx:id="btnAddImportTop" text="Nhập Hàng"          styleClass="action-btn action-btn-primary"
                 onAction="#onAddImport"/>
-        <Button text="Điều Chỉnh Tồn Kho" styleClass="action-btn action-btn-amber"
+        <Button fx:id="btnAdjustStockTop" text="Điều Chỉnh Tồn Kho" styleClass="action-btn action-btn-amber"
                 onAction="#onAdjustStock"/>
+        <Button fx:id="btnRecordWasteTop" text="Ghi Nhận Tiêu Hao" styleClass="action-btn action-btn-outline"
+                onAction="#onRecordWaste"/>
     </HBox>
 
     <HBox spacing="14">
@@ -81,7 +83,7 @@
         </VBox>
     </HBox>
 
-    <VBox styleClass="content-panel alert-panel" spacing="12">
+    <VBox fx:id="lowStockAlertPanel" styleClass="content-panel alert-panel" spacing="12">
         <HBox alignment="CENTER_LEFT">
             <HBox alignment="CENTER_LEFT" spacing="8">
                 <Region styleClass="section-header-line"/>
@@ -211,7 +213,7 @@
                     <TableColumn fx:id="colImportUnit"     text="ĐVT"             prefWidth="70"/>
                     <TableColumn fx:id="colImportPrice"    text="Đơn Giá Nhập"   prefWidth="120"/>
                     <TableColumn fx:id="colImportTotal"    text="Tổng Tiền"       prefWidth="120"/>
-                    <TableColumn fx:id="colImportSupplier" text="Nhà Cung Cấp"   prefWidth="150"/>
+                    <TableColumn fx:id="colImportSupplier" text="Nguồn Nhập"     prefWidth="150"/>
                     <TableColumn fx:id="colImportNote"     text="Ghi Chú"         prefWidth="130"/>
                 </columns>
                 <placeholder>
