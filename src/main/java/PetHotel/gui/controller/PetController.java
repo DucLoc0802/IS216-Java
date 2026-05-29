@@ -104,7 +104,7 @@ public class PetController {
         petTable.setFixedCellSize(36);
         colPetId.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getPetId()));
         colPetName.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getPetName()));
-        colPetSpecies.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getSpecies() + " / " + valueOrDash(d.getValue().getBreed())));
+        colPetSpecies.setCellValueFactory(d -> new SimpleStringProperty(displaySpecies(d.getValue().getSpecies()) + " / " + valueOrDash(d.getValue().getBreed())));
         colPetOwner.setCellValueFactory(d -> new SimpleStringProperty(ownerNameByCustomerId.getOrDefault(d.getValue().getCustomerId(), "Chưa liên kết")));
         colPetHealth.setCellValueFactory(d -> new SimpleStringProperty(healthTableLabel(d.getValue().getPetId())));
     }
@@ -418,13 +418,11 @@ public class PetController {
         GridPane petInfo = formGrid();
         addInfo(petInfo, 0, "Mã thú cưng", pet.getPetId());
         addInfo(petInfo, 1, "Tên thú cưng", pet.getPetName());
-        addInfo(petInfo, 2, "Loài", pet.getSpecies());
+        addInfo(petInfo, 2, "Loài", displaySpecies(pet.getSpecies()));
         addInfo(petInfo, 3, "Giống", valueOrDash(pet.getBreed()));
-        addInfo(petInfo, 4, "Ngày sinh", "Chưa có cột trong DB");
-        addInfo(petInfo, 5, "Cân nặng", pet.getWeightKg() == null ? "Chưa ghi nhận cân nặng" : pet.getWeightKg() + " kg");
-        addInfo(petInfo, 6, "Màu lông", "Chưa có cột trong DB");
-        addInfo(petInfo, 7, "Trạng thái", "Đang hoạt động");
-        addInfo(petInfo, 8, "Ghi chú đặc biệt", valueOrDash(pet.getSpecialNote()));
+        addInfo(petInfo, 4, "Cân nặng", pet.getWeightKg() == null ? "Chưa ghi nhận cân nặng" : pet.getWeightKg() + " kg");
+        addInfo(petInfo, 5, "Trạng thái", "Đang hoạt động");
+        addInfo(petInfo, 6, "Ghi chú đặc biệt", valueOrDash(pet.getSpecialNote()));
 
         GridPane ownerHealth = formGrid();
         addInfo(ownerHealth, 0, "Chủ sở hữu", ownerText);
@@ -452,7 +450,7 @@ public class PetController {
         });
 
         VBox root = new VBox(16,
-                profileHeader(pet.getPetName(), pet.getSpecies() + " / " + valueOrDash(pet.getBreed()) + " · " + healthLabel(latest), initials(pet.getPetName())),
+                profileHeader(pet.getPetName(), displaySpecies(pet.getSpecies()) + " / " + valueOrDash(pet.getBreed()) + " · " + healthLabel(latest), initials(pet.getPetName())),
                 columns,
                 footer(health, history, close));
         root.getStyleClass().add("ph-modal-root");
@@ -752,6 +750,15 @@ public class PetController {
 
     private String valueOrDash(String value) {
         return value == null || value.isBlank() ? "-" : value;
+    }
+
+    private String displaySpecies(String species) {
+        if (species == null || species.isBlank()) return "-";
+        return switch (species.trim().toUpperCase()) {
+            case "DOG" -> "Chó";
+            case "CAT" -> "Mèo";
+            default -> species;
+        };
     }
 
     private void showInfo(String title, String message) {

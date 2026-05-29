@@ -14,6 +14,7 @@ import java.util.Map;
 
 import PetHotel.model.Invoice;
 import PetHotel.model.InvoiceDetail;
+import PetHotel.model.Payment;
 import PetHotel.util.DBConnection;
 
 public class InvoiceDAO {
@@ -22,21 +23,24 @@ public class InvoiceDAO {
     "SELECT " +
     "o.order_id AS invoice_id, " +
     "o.customer_id, " +
-    "(SELECT MIN(COALESCE(bs.booking_id, br.booking_id)) " +
-    "   FROM order_details od " +
-    "   LEFT JOIN booking_services bs ON od.booking_service_id = bs.booking_service_id " +
-    "   LEFT JOIN booking_room br ON od.booking_room_id = br.booking_room_id " +
-    "  WHERE od.order_id = o.order_id) AS booking_id, " +
+    "c.full_name AS customer_name, " +
+    "o.booking_id, " +
     "o.grand_total AS total_amount, " +
     "o.created_at, " +
     "o.status " +
     "FROM orders o " +
+    "LEFT JOIN customer c ON c.customer_id = o.customer_id " +
     "WHERE (? IS NULL OR o.order_id = ?) " +
     "  AND (? IS NULL OR o.customer_id = ?) " +
     "  AND (? IS NULL OR o.created_at >= ?) " +
     "  AND (? IS NULL OR o.created_at <= ?) " +
+    "  AND (? IS NULL OR o.status = ?) " +
     "ORDER BY o.created_at DESC, o.order_id DESC";
     public List<Invoice> searchInvoices(String invoiceId, String customerId, Date fromDate, Date toDate) throws SQLException {
+        return searchInvoices(invoiceId, customerId, fromDate, toDate, null);
+    }
+
+    public List<Invoice> searchInvoices(String invoiceId, String customerId, Date fromDate, Date toDate, String status) throws SQLException {
         List<Invoice> invoices = new ArrayList<>();
 
         try (Connection conn = DBConnection.getConnection();
@@ -76,6 +80,14 @@ public class InvoiceDAO {
                 ps.setNull(i++, Types.TIMESTAMP);
             }
 
+            if (status != null && !status.trim().isEmpty()) {
+                ps.setString(i++, status.trim());
+                ps.setString(i++, status.trim());
+            } else {
+                ps.setNull(i++, Types.VARCHAR);
+                ps.setNull(i++, Types.VARCHAR);
+            }
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     invoices.add(mapRow(rs));
@@ -90,11 +102,40 @@ public class InvoiceDAO {
         Invoice invoice = new Invoice();
         invoice.setId(rs.getString("invoice_id"));
         invoice.setCustomerId(rs.getString("customer_id"));
+        invoice.setCustomerName(rs.getString("customer_name"));
         invoice.setBookingId(rs.getString("booking_id"));
         invoice.setCreateDate(rs.getTimestamp("created_at"));
         invoice.setTotalAmount(rs.getDouble("total_amount"));
         invoice.setStatus(rs.getString("status"));
         return invoice;
+    }
+
+    public Invoice getInvoiceById(String orderId) throws SQLException {
+        String sql =
+            "SELECT " +
+            "o.order_id AS invoice_id, " +
+            "o.customer_id, " +
+            "c.full_name AS customer_name, " +
+            "o.booking_id, " +
+            "o.grand_total AS total_amount, " +
+            "o.created_at, " +
+            "o.status " +
+            "FROM orders o " +
+            "LEFT JOIN customer c ON c.customer_id = o.customer_id " +
+            "WHERE o.order_id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
+            }
+        }
+
+        return null;
     }
 
     public String generateNextOrderId() throws SQLException {
@@ -153,9 +194,11 @@ public class InvoiceDAO {
     public Map<String, Invoice> findBookingOptions() throws SQLException {
         Map<String, Invoice> bookings = new LinkedHashMap<>();
         String sql =
-            "SELECT booking_id, customer_id, branch_id " +
-            "FROM booking " +
-            "ORDER BY booking_id";
+            "SELECT b.booking_id, b.customer_id, b.branch_id " +
+            "FROM booking b " +
+            "WHERE b.status <> 'CANCELLED' " +
+            "AND NOT EXISTS (SELECT 1 FROM orders o WHERE o.booking_id = b.booking_id) " +
+            "ORDER BY b.booking_id";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -188,6 +231,8 @@ public class InvoiceDAO {
             "LEFT JOIN booking_room br ON br.booking_id = b.booking_id " +
             "LEFT JOIN room r ON r.room_id = br.room_id " +
             "LEFT JOIN type_room tr ON tr.type_room_id = r.type_room_id " +
+            "WHERE b.status <> 'CANCELLED' " +
+            "AND NOT EXISTS (SELECT 1 FROM orders o WHERE o.booking_id = b.booking_id) " +
             "GROUP BY b.booking_id, b.checkin_expected_at, b.checkout_expected_at " +
             "ORDER BY b.booking_id";
 
@@ -418,6 +463,93 @@ public double getTotalPaidByOrderId(String orderId) throws SQLException {
     return 0;
 }
 
+public List<Payment> getPaymentsByOrderId(String orderId) throws SQLException {
+    return searchPaymentHistory(orderId, null, null, null, null);
+}
+
+public List<Payment> searchPaymentHistory(String keyword, String method, String status, Date fromDate, Date toDate)
+        throws SQLException {
+    List<Payment> payments = new ArrayList<>();
+    String sql =
+        "SELECT " +
+        "p.payment_id, p.order_id, o.customer_id, c.full_name AS customer_name, " +
+        "p.payment_method, p.amount, p.status, p.paid_at " +
+        "FROM payments p " +
+        "LEFT JOIN orders o ON o.order_id = p.order_id " +
+        "LEFT JOIN customer c ON c.customer_id = o.customer_id " +
+        "WHERE (? IS NULL OR LOWER(p.payment_id) LIKE LOWER(?) OR LOWER(p.order_id) LIKE LOWER(?)) " +
+        "  AND (? IS NULL OR p.payment_method = ?) " +
+        "  AND (? IS NULL OR p.status = ?) " +
+        "  AND (? IS NULL OR p.paid_at >= ?) " +
+        "  AND (? IS NULL OR p.paid_at <= ?) " +
+        "ORDER BY p.paid_at DESC, p.payment_id DESC";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        int i = 1;
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String pattern = "%" + keyword.trim() + "%";
+            ps.setString(i++, pattern);
+            ps.setString(i++, pattern);
+            ps.setString(i++, pattern);
+        } else {
+            ps.setNull(i++, Types.VARCHAR);
+            ps.setNull(i++, Types.VARCHAR);
+            ps.setNull(i++, Types.VARCHAR);
+        }
+
+        if (method != null && !method.trim().isEmpty()) {
+            ps.setString(i++, method.trim());
+            ps.setString(i++, method.trim());
+        } else {
+            ps.setNull(i++, Types.VARCHAR);
+            ps.setNull(i++, Types.VARCHAR);
+        }
+
+        if (status != null && !status.trim().isEmpty()) {
+            ps.setString(i++, status.trim());
+            ps.setString(i++, status.trim());
+        } else {
+            ps.setNull(i++, Types.VARCHAR);
+            ps.setNull(i++, Types.VARCHAR);
+        }
+
+        if (fromDate != null) {
+            ps.setTimestamp(i++, new Timestamp(fromDate.getTime()));
+            ps.setTimestamp(i++, new Timestamp(fromDate.getTime()));
+        } else {
+            ps.setNull(i++, Types.TIMESTAMP);
+            ps.setNull(i++, Types.TIMESTAMP);
+        }
+
+        if (toDate != null) {
+            ps.setTimestamp(i++, new Timestamp(toDate.getTime()));
+            ps.setTimestamp(i++, new Timestamp(toDate.getTime()));
+        } else {
+            ps.setNull(i++, Types.TIMESTAMP);
+            ps.setNull(i++, Types.TIMESTAMP);
+        }
+
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Payment payment = new Payment();
+                payment.setPaymentId(rs.getString("payment_id"));
+                payment.setOrderId(rs.getString("order_id"));
+                payment.setCustomerId(rs.getString("customer_id"));
+                payment.setCustomerName(rs.getString("customer_name"));
+                payment.setPaymentMethod(rs.getString("payment_method"));
+                payment.setAmount(rs.getDouble("amount"));
+                payment.setStatus(rs.getString("status"));
+                payment.setPaidAt(rs.getTimestamp("paid_at"));
+                payments.add(payment);
+            }
+        }
+    }
+
+    return payments;
+}
+
 public boolean updateOrderStatus(String orderId, String status) throws SQLException {
     String sql = "UPDATE orders SET status = ? WHERE order_id = ?";
 
@@ -431,7 +563,18 @@ public boolean updateOrderStatus(String orderId, String status) throws SQLExcept
 }
 
 public boolean cancelInvoice(String orderId) throws SQLException {
-    return updateOrderStatus(orderId, "CANCELLED");
+    String sql =
+        "UPDATE orders " +
+        "SET status = 'CANCELLED' " +
+        "WHERE order_id = ? " +
+        "AND status IN ('PENDING', 'PARTIAL')";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        ps.setString(1, orderId);
+        return ps.executeUpdate() > 0;
+    }
 }
 
 public List<Invoice> getBranchInvoices(String branchId) throws SQLException {

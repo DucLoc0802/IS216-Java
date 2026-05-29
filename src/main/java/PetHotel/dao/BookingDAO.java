@@ -20,16 +20,20 @@ public class BookingDAO {
         "       b.status, b.deposit_amount, b.special_note, " +
         "       b.created_at, b.updated_at, " +
         "       c.full_name AS customer_name, " +
-        "       COALESCE(p.pet_name, " +
-        "           (SELECT MIN(p2.pet_name) FROM pet p2 WHERE p2.customer_id = b.customer_id)" +
+        "       COALESCE(" +
+        "           (SELECT LISTAGG(p.pet_name, ', ') WITHIN GROUP (ORDER BY p.pet_name) " +
+        "               FROM booking_room_pet brp " +
+        "               JOIN pet p ON brp.pet_id = p.pet_id " +
+        "               JOIN booking_room br2 ON brp.booking_room_id = br2.booking_room_id " +
+        "               WHERE br2.booking_id = b.booking_id), " +
+        "           (SELECT LISTAGG(p3.pet_name, ', ') WITHIN GROUP (ORDER BY p3.pet_name) " +
+        "               FROM pet p3 WHERE p3.customer_id = b.customer_id)" +
         "       ) AS pet_name, " +
         "       r.room_number " +
         "FROM booking b " +
         "LEFT JOIN customer c ON b.customer_id = c.customer_id " +
         "LEFT JOIN booking_room br ON b.booking_id = br.booking_id " +
         "LEFT JOIN room r ON br.room_id = r.room_id " +
-        "LEFT JOIN booking_room_pet brp ON br.booking_room_id = brp.booking_room_id " +
-        "LEFT JOIN pet p ON brp.pet_id = p.pet_id " +
         "ORDER BY b.created_at DESC";
 
     private static final String SQL_SEARCH =
@@ -38,20 +42,31 @@ public class BookingDAO {
         "       b.status, b.deposit_amount, b.special_note, " +
         "       b.created_at, b.updated_at, " +
         "       c.full_name AS customer_name, " +
-        "       COALESCE(p.pet_name, " +
-        "           (SELECT MIN(p2.pet_name) FROM pet p2 WHERE p2.customer_id = b.customer_id)" +
+        "       COALESCE(" +
+        "           (SELECT LISTAGG(p.pet_name, ', ') WITHIN GROUP (ORDER BY p.pet_name) " +
+        "               FROM booking_room_pet brp " +
+        "               JOIN pet p ON brp.pet_id = p.pet_id " +
+        "               JOIN booking_room br2 ON brp.booking_room_id = br2.booking_room_id " +
+        "               WHERE br2.booking_id = b.booking_id), " +
+        "           (SELECT LISTAGG(p3.pet_name, ', ') WITHIN GROUP (ORDER BY p3.pet_name) " +
+        "               FROM pet p3 WHERE p3.customer_id = b.customer_id)" +
         "       ) AS pet_name, " +
         "       r.room_number " +
         "FROM booking b " +
         "LEFT JOIN customer c ON b.customer_id = c.customer_id " +
         "LEFT JOIN booking_room br ON b.booking_id = br.booking_id " +
         "LEFT JOIN room r ON br.room_id = r.room_id " +
-        "LEFT JOIN booking_room_pet brp ON br.booking_room_id = brp.booking_room_id " +
-        "LEFT JOIN pet p ON brp.pet_id = p.pet_id " +
         "WHERE (LOWER(b.booking_id) LIKE LOWER(?) " +
         "   OR LOWER(c.full_name) LIKE LOWER(?) " +
-        "   OR LOWER(COALESCE(p.pet_name, " +
-        "       (SELECT MIN(p3.pet_name) FROM pet p3 WHERE p3.customer_id = b.customer_id))) LIKE LOWER(?)) " +
+        "   OR LOWER(COALESCE(" +
+        "       (SELECT LISTAGG(p2.pet_name, ', ') WITHIN GROUP (ORDER BY p2.pet_name) " +
+        "           FROM booking_room_pet brp2 " +
+        "           JOIN pet p2 ON brp2.pet_id = p2.pet_id " +
+        "           JOIN booking_room br3 ON brp2.booking_room_id = br3.booking_room_id " +
+        "           WHERE br3.booking_id = b.booking_id), " +
+        "       (SELECT LISTAGG(p4.pet_name, ', ') WITHIN GROUP (ORDER BY p4.pet_name) " +
+        "           FROM pet p4 WHERE p4.customer_id = b.customer_id)" +
+        "   )) LIKE LOWER(?)) " +
         "  AND (? = 'ALL' OR b.status = ?) " +
         "ORDER BY b.created_at DESC";
 
@@ -108,6 +123,7 @@ public class BookingDAO {
         boolean own = (conn == null);
         Connection c = own ? DBConnection.getConnection() : conn;
         try {
+            if (own) c.setAutoCommit(false);
             PreparedStatement ps = c.prepareStatement(SQL_INSERT);
             ps.setString(1, booking.getBookingId());
             ps.setString(2, booking.getCustomerId());
@@ -141,8 +157,14 @@ public class BookingDAO {
             }
 
             if (own) c.commit();
+        } catch (SQLException e) {
+            if (own) try { c.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            throw e;
         } finally {
-            if (own) DBConnection.closeQuietly(c);
+            if (own) {
+                try { c.setAutoCommit(true); } catch (SQLException ex) { ex.printStackTrace(); }
+                DBConnection.closeQuietly(c);
+            }
         }
     }
 
@@ -321,6 +343,48 @@ public class BookingDAO {
         }
     }
 
+    private static final String SQL_NEXT_BOOKING_ID =
+        "SELECT NVL(MAX(TO_NUMBER(SUBSTR(booking_id, 4))), 0) + 1 FROM booking " +
+        "WHERE REGEXP_LIKE(booking_id, '^BKD[0-9]+$')";
+
+    public int getNextBookingNumber() throws SQLException {
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(SQL_NEXT_BOOKING_ID);
+            ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : 1;
+        }
+    }
+
+    public String findBookingRoomId(String bookingId) throws SQLException {
+        String sql = "SELECT booking_room_id FROM booking_room WHERE booking_id = ? AND ROWNUM = 1";
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, bookingId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getString("booking_room_id") : null;
+            }
+        }
+    }
+
+    public void insertBookingRoomPet(String bookingRoomId, String petId) throws SQLException {
+        String sql = "INSERT INTO booking_room_pet (booking_room_id, pet_id, assigned_at) " +
+                    "VALUES (?, ?, SYSTIMESTAMP)";
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, bookingRoomId);
+                ps.setString(2, petId);
+                ps.executeUpdate();
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        }
+    }
+
     // ── Private Helpers ──────────────────────────────────────────
 
     private Booking mapRow(ResultSet rs) throws SQLException {
@@ -354,4 +418,3 @@ public class BookingDAO {
         return b;
     }
 }
-    

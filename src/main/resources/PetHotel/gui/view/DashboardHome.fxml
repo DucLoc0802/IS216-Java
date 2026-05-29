@@ -22,6 +22,8 @@
         <HBox alignment="CENTER_LEFT" spacing="8" styleClass="dashboard-panel-header">
             <Region styleClass="section-header-line" />
             <Label styleClass="section-header" text="Tổng Quan Hôm Nay" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button onAction="#onRefreshDashboard" styleClass="action-btn action-btn-outline" text="Refresh" />
         </HBox>
 
         <GridPane hgap="10" vgap="10" styleClass="dashboard-stat-grid dashboard-stat-strip">

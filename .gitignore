@@ -1,6 +1,12 @@
 target/
+exports/
 *.class
+*.log
+
 .vscode/
 .idea/
 .DS_Store
 DBConnection.java
+*.iml
+Thumbs.db
+.env

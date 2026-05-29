@@ -40,6 +40,14 @@ public class Invoice {
         this.id = id;
     }
 
+    public String getOrderId() {
+        return id;
+    }
+
+    public void setOrderId(String orderId) {
+        this.id = orderId;
+    }
+
     public String getCustomerId() {
         return customerId;
     }
@@ -88,6 +96,14 @@ public class Invoice {
         this.createDate = createDate;
     }
 
+    public Date getCreatedDate() {
+        return createDate;
+    }
+
+    public void setCreatedDate(Date createdDate) {
+        this.createDate = createdDate;
+    }
+
     public double getSubtotal() {
         return subtotal;
     }
@@ -102,6 +118,14 @@ public class Invoice {
 
     public void setTotalAmount(double totalAmount) {
         this.totalAmount = totalAmount;
+    }
+
+    public double getGrandTotal() {
+        return totalAmount;
+    }
+
+    public void setGrandTotal(double grandTotal) {
+        this.totalAmount = grandTotal;
     }
 
     public String getStatus() {

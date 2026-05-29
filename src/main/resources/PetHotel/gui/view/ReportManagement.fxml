@@ -1,667 +1,321 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.geometry.*?>
-<?import javafx.collections.FXCollections?>
-<?import java.lang.String?>
-<?import javafx.scene.chart.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 
-<VBox spacing="20" styleClass="main-content"
-      stylesheets="@../css/style.css"
+<VBox spacing="18" styleClass="main-content" stylesheets="@../css/style.css"
       xmlns="http://javafx.com/javafx/25"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="PetHotel.gui.controller.ReportController">
 
-    <HBox alignment="CENTER_LEFT" spacing="12">
-        <HBox alignment="CENTER_LEFT" spacing="8">
-            <Region styleClass="section-header-line"/>
-            <VBox spacing="2">
-                <Label text="Báo Cáo &amp; Thống Kê" styleClass="section-header"/>
-                <Label text="Tổng quan kinh doanh · Phân tích dữ liệu · Xuất báo cáo"
-                       style="-fx-font-size:11px; -fx-text-fill:-ph-text-muted;"/>
-            </VBox>
-        </HBox>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Button text="Xuất Báo Cáo" styleClass="action-btn action-btn-outline"
-                onAction="#onExportReport"/>
-        <Button text="Báo Cáo Định Kỳ" styleClass="action-btn action-btn-amber"
-                onAction="#onScheduleReport"/>
-    </HBox>
-
-    <HBox styleClass="report-period-selector" alignment="CENTER_LEFT" spacing="14">
-        <Label text="Kỳ:" styleClass="filter-label"/>
-        <HBox spacing="4"
-              style="-fx-background-color:#FAF5F0; -fx-background-radius:7px; -fx-padding:3;">
-            <Button fx:id="btnPeriodToday"  text="Hôm Nay"  styleClass="period-btn"
-                    onAction="#onPeriodToday"/>
-            <Button fx:id="btnPeriodWeek"   text="Tuần Này" styleClass="period-btn"
-                    onAction="#onPeriodWeek"/>
-            <Button fx:id="btnPeriodMonth"  text="Tháng Này" styleClass="period-btn period-btn-active"
-                    onAction="#onPeriodMonth"/>
-            <Button fx:id="btnPeriodQuarter" text="Quý Này" styleClass="period-btn"
-                    onAction="#onPeriodQuarter"/>
-            <Button fx:id="btnPeriodYear"   text="Năm Nay"  styleClass="period-btn"
-                    onAction="#onPeriodYear"/>
-            <Button fx:id="btnPeriodCustom" text="Tùy Chọn" styleClass="period-btn"
-                    onAction="#onPeriodCustom"/>
-        </HBox>
-
-        <HBox fx:id="customDateRow" alignment="CENTER_LEFT" spacing="8"
-              visible="false" managed="false">
-            <Label text="Từ:" styleClass="filter-label"/>
-            <DatePicker fx:id="dateFrom" styleClass="filter-combo" prefWidth="140"/>
-            <Label text="Đến:" styleClass="filter-label"/>
-            <DatePicker fx:id="dateTo"   styleClass="filter-combo" prefWidth="140"/>
-            <Button text="Áp dụng" styleClass="action-btn action-btn-primary"
-                    onAction="#onApplyCustomPeriod" style="-fx-padding:6 14 6 14;"/>
-        </HBox>
-
-        <Region HBox.hgrow="ALWAYS"/>
-
-        <Label text="Chi nhánh:" styleClass="filter-label"/>
-        <ComboBox fx:id="filterBranch" styleClass="filter-combo" prefWidth="160"
-                  promptText="Tất cả chi nhánh"/>
-        <Button text="Cập Nhật" styleClass="action-btn action-btn-primary"
-                onAction="#onRefreshReport" style="-fx-padding:7 16 7 16;"/>
-    </HBox>
-
-    <!-- ======================================================= -->
-    <!-- 1. CONTAINER BÁO CÁO CỦA QUẢN LÝ CHI NHÁNH              -->
-    <!-- ======================================================= -->
-    <VBox fx:id="managerReportContainer" spacing="20" VBox.vgrow="ALWAYS" visible="false" managed="false">
-        <VBox spacing="10">
-            <HBox alignment="CENTER_LEFT" spacing="8">
-                <Region styleClass="section-header-line"/>
-                <Label text="Tổng Quan KPI" styleClass="section-header"/>
-                <Label fx:id="kpiPeriodLabel" text="— Tháng 5/2026"
-                       style="-fx-font-size:12px; -fx-text-fill:-ph-text-muted; -fx-padding:2 0 0 4;"/>
-            </HBox>
-            <HBox spacing="14">
-                <VBox styleClass="stat-card stat-card-amber" HBox.hgrow="ALWAYS">
-                    <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label text="" styleClass="stat-icon"/>
-                        <VBox spacing="2">
-                            <Label text="Tổng Doanh Thu" styleClass="stat-label"/>
-                            <Label fx:id="kpiRevenue" text="—" styleClass="stat-value"/>
-                        </VBox>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <VBox alignment="CENTER_RIGHT">
-                            <Label fx:id="kpiRevenueDelta" text="" styleClass="stat-delta stat-delta-up"/>
-                            <Label text="so kỳ trước" styleClass="stat-delta-desc"/>
-                        </VBox>
-                    </HBox>
-                    <Label text="Doanh thu trong kỳ" styleClass="stat-sublabel"/>
-                </VBox>
-
-                <VBox styleClass="stat-card stat-card-brown" HBox.hgrow="ALWAYS">
-                    <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label text="" styleClass="stat-icon"/>
-                        <VBox spacing="2">
-                            <Label text="Tổng Booking" styleClass="stat-label"/>
-                            <Label fx:id="kpiBooking" text="—" styleClass="stat-value"/>
-                        </VBox>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <VBox alignment="CENTER_RIGHT">
-                            <Label fx:id="kpiBookingDelta" text="" styleClass="stat-delta stat-delta-up"/>
-                            <Label text="so kỳ trước" styleClass="stat-delta-desc"/>
-                        </VBox>
-                    </HBox>
-                    <Label text="Số lượt đặt phòng" styleClass="stat-sublabel"/>
-                </VBox>
-
-                <VBox styleClass="stat-card stat-card-green" HBox.hgrow="ALWAYS">
-                    <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label text="" styleClass="stat-icon"/>
-                        <VBox spacing="2">
-                            <Label text="Công Suất Phòng" styleClass="stat-label"/>
-                            <Label fx:id="kpiOccupancy" text="—" styleClass="stat-value"/>
-                        </VBox>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <VBox alignment="CENTER_RIGHT">
-                            <Label fx:id="kpiOccupancyDelta" text="" styleClass="stat-delta stat-delta-up"/>
-                            <Label text="so kỳ trước" styleClass="stat-delta-desc"/>
-                        </VBox>
-                    </HBox>
-                    <Label text="Trung bình trong kỳ" styleClass="stat-sublabel"/>
-                </VBox>
-
-                <VBox styleClass="stat-card stat-card-purple" HBox.hgrow="ALWAYS">
-                    <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label text="" styleClass="stat-icon"/>
-                        <VBox spacing="2">
-                            <Label text="Dịch Vụ Grooming" styleClass="stat-label"/>
-                            <Label fx:id="kpiGrooming" text="—" styleClass="stat-value"/>
-                        </VBox>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <VBox alignment="CENTER_RIGHT">
-                            <Label fx:id="kpiGroomingDelta" text="" styleClass="stat-delta stat-delta-up"/>
-                            <Label text="so kỳ trước" styleClass="stat-delta-desc"/>
-                        </VBox>
-                    </HBox>
-                    <Label text="Lượt grooming trong kỳ" styleClass="stat-sublabel"/>
-                </VBox>
-
-                <VBox styleClass="stat-card stat-card-blue" HBox.hgrow="ALWAYS">
-                    <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label text="" styleClass="stat-icon"/>
-                        <VBox spacing="2">
-                            <Label text="Khách Hàng Mới" styleClass="stat-label"/>
-                            <Label fx:id="kpiNewCustomers" text="—" styleClass="stat-value"/>
-                        </VBox>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <VBox alignment="CENTER_RIGHT">
-                            <Label fx:id="kpiCustDelta" text="" styleClass="stat-delta stat-delta-up"/>
-                            <Label text="so kỳ trước" styleClass="stat-delta-desc"/>
-                        </VBox>
-                    </HBox>
-                    <Label text="Khách đăng ký mới" styleClass="stat-sublabel"/>
-                </VBox>
-            </HBox>
+    <HBox alignment="CENTER_LEFT" spacing="8">
+        <Region styleClass="section-header-line" />
+        <VBox spacing="2">
+            <Label styleClass="section-header" text="Báo Cáo &amp; Thống Kê" />
+            <Label text="Doanh thu, booking, công suất phòng, kho và toàn chuỗi"
+                   style="-fx-font-size: 11px; -fx-text-fill: -ph-text-muted;" />
         </VBox>
+    </HBox>
 
-        <HBox spacing="18">
-            <VBox styleClass="content-panel" HBox.hgrow="ALWAYS" spacing="12">
-                <HBox alignment="CENTER_LEFT">
-                    <HBox alignment="CENTER_LEFT" spacing="8">
-                        <Region styleClass="section-header-line"/>
-                        <Label text="Doanh Thu Theo Thời Gian" styleClass="panel-title"/>
-                    </HBox>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <ComboBox fx:id="revenueChartGroupBy" styleClass="filter-combo" prefWidth="120"
-                              promptText="Theo ngày">
-                        <items>
-                            <FXCollections fx:factory="observableArrayList">
-                                <String fx:value="Theo ngày"/>
-                                <String fx:value="Theo tuần"/>
-                                <String fx:value="Theo tháng"/>
-                            </FXCollections>
-                        </items>
-                    </ComboBox>
-                </HBox>
-                <VBox fx:id="revenueChartArea" styleClass="chart-placeholder"
-                      prefHeight="220" alignment="CENTER" spacing="10">
-                    <Label text="" styleClass="chart-placeholder-icon"/>
-                    <Label text="Biểu đồ doanh thu&#10;sẽ hiển thị tại đây"
-                           styleClass="chart-placeholder-label" textAlignment="CENTER"/>
-                    <Label text="(Bind AreaChart từ ReportController)"
-                           style="-fx-font-size:10px; -fx-text-fill:-ph-text-muted;"/>
-                </VBox>
-            </VBox>
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
+        <Label text="Loại thống kê:" styleClass="filter-label" />
+        <ComboBox fx:id="cbbReportType" prefWidth="140" styleClass="filter-combo" />
+        <Label text="Từ ngày:" styleClass="filter-label" />
+        <DatePicker fx:id="dpFromDate" prefWidth="140" styleClass="filter-combo" />
+        <Label text="Đến ngày:" styleClass="filter-label" />
+        <DatePicker fx:id="dpToDate" prefWidth="140" styleClass="filter-combo" />
+        <Button onAction="#onFilterReport" styleClass="action-btn action-btn-primary" text="Lọc" />
+        <Button onAction="#onResetReport" styleClass="action-btn action-btn-outline" text="Tháng hiện tại" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Button onAction="#onExportReport" styleClass="action-btn action-btn-amber" text="Xuất file" />
+    </HBox>
 
-            <VBox styleClass="content-panel" prefWidth="380" minWidth="340" spacing="12">
-                <HBox alignment="CENTER_LEFT" spacing="8">
-                    <Region styleClass="section-header-line"/>
-                    <Label text="Công Suất Phòng" styleClass="panel-title"/>
-                </HBox>
-                <VBox fx:id="occupancyChartArea" styleClass="chart-placeholder"
-                      prefHeight="220" alignment="CENTER" spacing="10">
-                    <Label text="" styleClass="chart-placeholder-icon"/>
-                    <Label text="Biểu đồ công suất phòng&#10;sẽ hiển thị tại đây"
-                           styleClass="chart-placeholder-label" textAlignment="CENTER"/>
-                    <Label text="(Bind BarChart từ ReportController)"
-                           style="-fx-font-size:10px; -fx-text-fill:-ph-text-muted;"/>
-                </VBox>
-            </VBox>
-        </HBox>
+    <HBox spacing="14">
+        <VBox styleClass="stat-card stat-card-amber" HBox.hgrow="ALWAYS">
+            <Label fx:id="lblSummaryTitle1" text="Chỉ số 1" styleClass="stat-label" />
+            <Label fx:id="lblSummaryValue1" text="—" styleClass="stat-value" />
+            <Label fx:id="lblSummaryNote1" text="Theo báo cáo đang chọn" styleClass="stat-sublabel" />
+        </VBox>
+        <VBox styleClass="stat-card stat-card-green" HBox.hgrow="ALWAYS">
+            <Label fx:id="lblSummaryTitle2" text="Chỉ số 2" styleClass="stat-label" />
+            <Label fx:id="lblSummaryValue2" text="—" styleClass="stat-value" />
+            <Label fx:id="lblSummaryNote2" text="Theo báo cáo đang chọn" styleClass="stat-sublabel" />
+        </VBox>
+        <VBox styleClass="stat-card stat-card-brown" HBox.hgrow="ALWAYS">
+            <Label fx:id="lblSummaryTitle3" text="Chỉ số 3" styleClass="stat-label" />
+            <Label fx:id="lblSummaryValue3" text="—" styleClass="stat-value" />
+            <Label fx:id="lblSummaryNote3" text="Theo báo cáo đang chọn" styleClass="stat-sublabel" />
+        </VBox>
+        <VBox styleClass="stat-card stat-card-red" HBox.hgrow="ALWAYS">
+            <Label fx:id="lblSummaryTitle4" text="Chỉ số 4" styleClass="stat-label" />
+            <Label fx:id="lblSummaryValue4" text="—" styleClass="stat-value" />
+            <Label fx:id="lblSummaryNote4" text="Theo báo cáo đang chọn" styleClass="stat-sublabel" />
+        </VBox>
+    </HBox>
 
-        <HBox spacing="18">
-            <VBox styleClass="content-panel" HBox.hgrow="ALWAYS" spacing="12">
-                <HBox alignment="CENTER_LEFT">
-                    <HBox alignment="CENTER_LEFT" spacing="8">
-                        <Region styleClass="section-header-line"/>
-                        <Label text="Sản Phẩm Bán Chạy" styleClass="panel-title"/>
-                    </HBox>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="Xem thêm →" styleClass="panel-link-btn" onAction="#onViewProductReport"/>
-                </HBox>
-
-                <TableView fx:id="topProductTable" styleClass="data-table" prefHeight="240">
-                    <columns>
-                        <TableColumn fx:id="colRank"        text="#"             prefWidth="40"  resizable="false"/>
-                        <TableColumn fx:id="colProdName"    text="Tên Sản Phẩm" prefWidth="200"/>
-                        <TableColumn fx:id="colProdCat"     text="Danh Mục"     prefWidth="120"/>
-                        <TableColumn fx:id="colProdSold"    text="Đã Bán"       prefWidth="90"/>
-                        <TableColumn fx:id="colProdRevenue" text="Doanh Thu"    prefWidth="120"/>
-                    </columns>
-                    <placeholder>
-                        <Label text="Chưa có dữ liệu" styleClass="table-empty"/>
-                    </placeholder>
-                </TableView>
-            </VBox>
-
-            <VBox prefWidth="370" minWidth="340" spacing="14">
-                <VBox styleClass="content-panel" spacing="12">
-                    <HBox alignment="CENTER_LEFT" spacing="8">
-                        <Region styleClass="section-header-line"/>
-                        <Label text="Thống Kê Tồn Kho" styleClass="panel-title"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Button text="Xem chi tiết →" styleClass="panel-link-btn"
-                                onAction="#onViewInventoryReport"/>
-                    </HBox>
-                    <HBox spacing="8">
-                        <VBox styleClass="room-stat-box room-stat-available" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="3">
-                            <Label fx:id="invStatOk"       text="—" styleClass="room-stat-num"/>
-                            <Label text="Đủ Hàng"      styleClass="room-stat-label"/>
-                        </VBox>
-                        <VBox styleClass="room-stat-box room-stat-cleaning" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="3">
-                            <Label fx:id="invStatLow"      text="—" styleClass="room-stat-num"/>
-                            <Label text="Tồn Thấp"     styleClass="room-stat-label"/>
-                        </VBox>
-                        <VBox styleClass="room-stat-box room-stat-occupied" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="3">
-                            <Label fx:id="invStatCritical" text="—" styleClass="room-stat-num"/>
-                            <Label text="Nguy Hiểm"    styleClass="room-stat-label"/>
-                        </VBox>
-                    </HBox>
-                </VBox>
-
-                <VBox styleClass="content-panel" spacing="12" VBox.vgrow="ALWAYS">
-                    <HBox alignment="CENTER_LEFT" spacing="8">
-                        <Region styleClass="section-header-line"/>
-                        <Label text="Báo Cáo Định Kỳ &amp; Gần Đây" styleClass="panel-title"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Button text="+ Thêm lịch" styleClass="panel-link-btn"
-                                onAction="#onScheduleReport"/>
-                    </HBox>
-
-                    <ScrollPane fitToWidth="true" prefHeight="190"
-                                style="-fx-background:transparent; -fx-background-color:transparent;">
-                        <VBox fx:id="reportTaskList" spacing="8">
-                            <HBox styleClass="report-task-item" alignment="CENTER_LEFT" spacing="12">
-                                <Label text="" style="-fx-font-size:18px;"/>
-                                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                                    <Label text="Báo Cáo Doanh Thu Tháng 4" styleClass="report-task-name"/>
-                                    <Label text="Tạo lúc: 01/05/2026  ·  Toàn chuỗi" styleClass="report-task-meta"/>
-                                </VBox>
-                                <Button text="Tải" styleClass="action-btn action-btn-outline"
-                                        onAction="#onDownloadReport"
-                                        style="-fx-padding:5 10 5 10;"/>
-                            </HBox>
-                            <HBox styleClass="report-task-item" alignment="CENTER_LEFT" spacing="12">
-                                <Label text="" style="-fx-font-size:18px;"/>
-                                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                                    <Label text="Thống Kê Booking Tuần 17" styleClass="report-task-name"/>
-                                    <Label text="Tạo lúc: 28/04/2026  ·  Chi nhánh Q.1" styleClass="report-task-meta"/>
-                                </VBox>
-                                <Button text="Tải" styleClass="action-btn action-btn-outline"
-                                        onAction="#onDownloadReport"
-                                        style="-fx-padding:5 10 5 10;"/>
-                            </HBox>
-                            <HBox styleClass="report-task-item" alignment="CENTER_LEFT" spacing="12">
-                                <Label text="" style="-fx-font-size:18px;"/>
-                                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                                    <Label text="Công Suất Phòng Quý 1" styleClass="report-task-name"/>
-                                    <Label text="Tự động  ·  01/04/2026  ·  Toàn chuỗi" styleClass="report-task-meta"/>
-                                </VBox>
-                                <Button text="Tải" styleClass="action-btn action-btn-outline"
-                                        onAction="#onDownloadReport"
-                                        style="-fx-padding:5 10 5 10;"/>
-                            </HBox>
-                            <HBox styleClass="report-task-item" alignment="CENTER_LEFT" spacing="12">
-                                <Label text="" style="-fx-font-size:18px;"/>
-                                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                                    <Label text="Báo Cáo Toàn Chuỗi — CEO Q1" styleClass="report-task-name"/>
-                                    <Label text="Tự động  ·  01/04/2026  ·  Dành cho CEO" styleClass="report-task-meta"/>
-                                </VBox>
-                                <Button text="Tải" styleClass="action-btn action-btn-outline"
-                                        onAction="#onDownloadReport"
-                                        style="-fx-padding:5 10 5 10;"/>
-                            </HBox>
-                        </VBox>
-                    </ScrollPane>
-                </VBox>
-            </VBox>
-        </HBox>
-    </VBox>
-
-    <!-- ======================================================= -->
-    <!-- 2. CONTAINER BÁO CÁO DÀNH RIÊNG CHO CEO                 -->
-    <!-- ======================================================= -->
-    <TabPane fx:id="ceoReportTabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS" visible="false" managed="false" styleClass="report-tab-pane">
+    <TabPane fx:id="tabPaneReport" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
         <tabs>
-            <!-- 1. TỔNG QUAN -->
-            <Tab text="Tổng quan">
-                <content>
-                    <ScrollPane fitToWidth="true" style="-fx-background:transparent; -fx-background-color:transparent;">
-                        <VBox spacing="20" style="-fx-padding: 15;">
-                            <!-- KPI Cards -->
-                            <GridPane hgap="12" vgap="12">
-                                <columnConstraints>
-                                    <ColumnConstraints percentWidth="25.0"/>
-                                    <ColumnConstraints percentWidth="25.0"/>
-                                    <ColumnConstraints percentWidth="25.0"/>
-                                    <ColumnConstraints percentWidth="25.0"/>
-                                </columnConstraints>
-                                <rowConstraints>
-                                    <RowConstraints minHeight="82" prefHeight="82"/>
-                                    <RowConstraints minHeight="82" prefHeight="82"/>
-                                </rowConstraints>
-                                <children>
-                                    <VBox styleClass="stat-card, stat-card-amber" GridPane.columnIndex="0" GridPane.rowIndex="0" spacing="4">
-                                        <Label text="Tổng Doanh Thu" styleClass="stat-label"/>
-                                        <Label fx:id="ceoKpiRevenue" text="320.000.000 VNĐ" styleClass="stat-value"/>
-                                        <Label text="Toàn bộ chuỗi chi nhánh" styleClass="stat-sublabel"/>
-                                    </VBox>
-                                    <VBox styleClass="stat-card, stat-card-brown" GridPane.columnIndex="1" GridPane.rowIndex="0" spacing="4">
-                                        <Label text="Tổng Booking" styleClass="stat-label"/>
-                                        <Label fx:id="ceoKpiBooking" text="845" styleClass="stat-value"/>
-                                        <Label text="Lượt đặt phòng toàn chuỗi" styleClass="stat-sublabel"/>
-                                    </VBox>
-                                    <VBox styleClass="stat-card, stat-card-green" GridPane.columnIndex="2" GridPane.rowIndex="0" spacing="4">
-                                        <Label text="Số Chi Nhánh" styleClass="stat-label"/>
-                                        <Label fx:id="ceoKpiBranchCount" text="5" styleClass="stat-value"/>
-                                        <Label text="Chi nhánh đang hoạt động" styleClass="stat-sublabel"/>
-                                    </VBox>
-                                    <VBox styleClass="stat-card, stat-card-purple" GridPane.columnIndex="3" GridPane.rowIndex="0" spacing="4">
-                                        <Label text="Đang Lưu Trú" styleClass="stat-label"/>
-                                        <Label fx:id="ceoKpiPets" text="96 thú cưng" styleClass="stat-value"/>
-                                        <Label text="Thú cưng lưu trú tại phòng" styleClass="stat-sublabel"/>
-                                    </VBox>
-                                    
-                                    <VBox styleClass="stat-card, stat-card-blue" GridPane.columnIndex="0" GridPane.rowIndex="1" spacing="4">
-                                        <Label text="Tổng Khách Hàng" styleClass="stat-label"/>
-                                        <Label fx:id="ceoKpiCustomers" text="1.240" styleClass="stat-value"/>
-                                        <Label text="Khách hàng đăng ký" styleClass="stat-sublabel"/>
-                                    </VBox>
-                                    <VBox styleClass="stat-card, stat-card-red" GridPane.columnIndex="1" GridPane.rowIndex="1" spacing="4">
-                                        <Label text="Còn Phải Thu" styleClass="stat-label"/>
-                                        <Label fx:id="ceoKpiDebt" text="24.000.000 VNĐ" styleClass="stat-value"/>
-                                        <Label text="Tổng công nợ hóa đơn" styleClass="stat-sublabel"/>
-                                    </VBox>
-                                    <VBox styleClass="stat-card, stat-card-green" GridPane.columnIndex="2" GridPane.rowIndex="1" spacing="4">
-                                        <Label text="Công Suất Phòng" styleClass="stat-label"/>
-                                        <Label fx:id="ceoKpiOccupancy" text="78%" styleClass="stat-value"/>
-                                        <Label text="Công suất buồng trung bình" styleClass="stat-sublabel"/>
-                                    </VBox>
-                                    <VBox styleClass="stat-card, stat-card-amber" GridPane.columnIndex="3" GridPane.rowIndex="1" spacing="4">
-                                        <Label text="Top Doanh Thu" styleClass="stat-label"/>
-                                        <Label fx:id="ceoKpiTopBranch" text="Pet Hotel Q.1" styleClass="stat-value"/>
-                                        <Label text="Chi nhánh doanh thu cao nhất" styleClass="stat-sublabel"/>
-                                    </VBox>
-                                </children>
-                            </GridPane>
-                            
-                            <!-- Overview Charts & Ranking -->
-                            <HBox spacing="14">
-                                <VBox styleClass="content-panel" HBox.hgrow="ALWAYS" spacing="10">
-                                    <Label text="Doanh Thu Theo Chi Nhánh" styleClass="panel-title"/>
-                                    <BarChart fx:id="ceoOverviewRevenueChart" prefHeight="220" legendVisible="false">
-                                        <xAxis><CategoryAxis fx:id="ceoOverviewRevX"/></xAxis>
-                                        <yAxis><NumberAxis label="Doanh thu (VNĐ)"/></yAxis>
-                                    </BarChart>
-                                </VBox>
-                                <VBox styleClass="content-panel" prefWidth="380" spacing="10">
-                                    <Label text="Cơ Cấu Doanh Thu Chuỗi" styleClass="panel-title"/>
-                                    <PieChart fx:id="ceoOverviewRevenuePie" prefHeight="220"/>
-                                </VBox>
-                            </HBox>
-                            
-                            <VBox styleClass="content-panel" spacing="10">
-                                <Label text="Bảng Xếp Hạng Hiệu Suất Chi Nhánh" styleClass="panel-title"/>
-                                <TableView fx:id="ceoOverviewTable" styleClass="data-table, report-table" prefHeight="220">
-                                    <columns>
-                                        <TableColumn fx:id="ceoColOverBranch" text="Chi Nhánh" prefWidth="200"/>
-                                        <TableColumn fx:id="ceoColOverRevenue" text="Doanh Thu" prefWidth="150"/>
-                                        <TableColumn fx:id="ceoColOverBooking" text="Booking" prefWidth="100"/>
-                                        <TableColumn fx:id="ceoColOverRoom" text="Công Suất Phòng" prefWidth="140"/>
-                                        <TableColumn fx:id="ceoColOverDebt" text="Còn Phải Thu" prefWidth="130"/>
-                                        <TableColumn fx:id="ceoColOverStatus" text="Trạng Thái" prefWidth="130"/>
-                                    </columns>
-                                </TableView>
+            <Tab fx:id="tabOverview" text="Tổng quan">
+                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="report-scroll">
+                    <VBox spacing="14" styleClass="content-panel">
+                        <GridPane hgap="12" vgap="12">
+                            <columnConstraints>
+                                <ColumnConstraints percentWidth="25" />
+                                <ColumnConstraints percentWidth="25" />
+                                <ColumnConstraints percentWidth="25" />
+                                <ColumnConstraints percentWidth="25" />
+                            </columnConstraints>
+                            <VBox styleClass="report-metric-card" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <Label text="Tổng booking hôm nay" styleClass="report-metric-label" />
+                                <Label fx:id="lblOverviewTodayBooking" text="0" styleClass="report-metric-value" />
                             </VBox>
-                        </VBox>
-                    </ScrollPane>
-                </content>
-            </Tab>
-            
-            <!-- 2. CHI NHÁNH -->
-            <Tab text="Chi Nhánh">
-                <content>
-                    <ScrollPane fitToWidth="true" style="-fx-background:transparent; -fx-background-color:transparent;">
-                        <VBox spacing="20" style="-fx-padding: 15;">
-                            <HBox spacing="14">
-                                <VBox styleClass="content-panel" HBox.hgrow="ALWAYS" spacing="10">
-                                    <Label text="So Sánh Lượng Booking Theo Chi Nhánh" styleClass="panel-title"/>
-                                    <BarChart fx:id="ceoBranchBookingChart" prefHeight="220" legendVisible="false">
-                                        <xAxis><CategoryAxis fx:id="ceoBranchBookX"/></xAxis>
-                                        <yAxis><NumberAxis label="Số lượng Booking"/></yAxis>
-                                    </BarChart>
-                                </VBox>
-                                <VBox styleClass="content-panel" HBox.hgrow="ALWAYS" spacing="10">
-                                    <Label text="Công Suất Phòng Từng Chi Nhánh" styleClass="panel-title"/>
-                                    <BarChart fx:id="ceoBranchOccupancyChart" prefHeight="220" legendVisible="false">
-                                        <xAxis><CategoryAxis fx:id="ceoBranchOccX"/></xAxis>
-                                        <yAxis><NumberAxis label="Tỷ lệ %"/></yAxis>
-                                    </BarChart>
-                                </VBox>
-                            </HBox>
-                            <VBox styleClass="content-panel" spacing="10">
-                                <Label text="So Sánh Chi Tiết Chỉ Số Vận Hành" styleClass="panel-title"/>
-                                <TableView fx:id="ceoBranchTable" styleClass="data-table, report-table" prefHeight="260">
-                                    <columns>
-                                        <TableColumn fx:id="ceoColBranchName" text="Chi Nhánh" prefWidth="200"/>
-                                        <TableColumn fx:id="ceoColBranchRevenue" text="Doanh Thu" prefWidth="140"/>
-                                        <TableColumn fx:id="ceoColBranchBooking" text="Booking" prefWidth="90"/>
-                                        <TableColumn fx:id="ceoColBranchOccupancy" text="Công Suất" prefWidth="110"/>
-                                        <TableColumn fx:id="ceoColBranchDebt" text="Công Nợ" prefWidth="110"/>
-                                        <TableColumn fx:id="ceoColBranchLowStock" text="Tồn Kho Thấp" prefWidth="110"/>
-                                        <TableColumn fx:id="ceoColBranchStatus" text="Trạng Thái" prefWidth="120"/>
-                                    </columns>
-                                </TableView>
+                            <VBox styleClass="report-metric-card" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <Label text="Booking đang lưu trú" styleClass="report-metric-label" />
+                                <Label fx:id="lblOverviewCheckedIn" text="0" styleClass="report-metric-value" />
                             </VBox>
-                        </VBox>
-                    </ScrollPane>
-                </content>
-            </Tab>
-            
-            <!-- 3. DOANH THU -->
-            <Tab text="Doanh Thu">
-                <content>
-                    <ScrollPane fitToWidth="true" style="-fx-background:transparent; -fx-background-color:transparent;">
-                        <VBox spacing="20" style="-fx-padding: 15;">
-                            <HBox spacing="14">
-                                <VBox styleClass="content-panel" HBox.hgrow="ALWAYS" spacing="10">
-                                    <Label text="Doanh Thu Toàn Chuỗi Theo Tháng" styleClass="panel-title"/>
-                                    <BarChart fx:id="ceoRevenueMonthlyChart" prefHeight="220" legendVisible="false">
-                                        <xAxis><CategoryAxis fx:id="ceoRevMonthX"/></xAxis>
-                                        <yAxis><NumberAxis label="Doanh thu (VNĐ)"/></yAxis>
-                                    </BarChart>
-                                </VBox>
-                                <VBox styleClass="content-panel" prefWidth="380" spacing="10">
-                                    <Label text="Đóng Góp Doanh Thu Chi Nhánh" styleClass="panel-title"/>
-                                    <PieChart fx:id="ceoRevenueBranchPie" prefHeight="220"/>
-                                </VBox>
-                            </HBox>
-                            <VBox styleClass="content-panel" spacing="10">
-                                <Label text="Báo Cáo Doanh Thu Và Thanh Toán Chi Tiết" styleClass="panel-title"/>
-                                <TableView fx:id="ceoRevenueTable" styleClass="data-table, report-table" prefHeight="260">
-                                    <columns>
-                                        <TableColumn fx:id="ceoColRevBranch" text="Chi Nhánh" prefWidth="200"/>
-                                        <TableColumn fx:id="ceoColRevTotal" text="Tổng Doanh Thu" prefWidth="180"/>
-                                        <TableColumn fx:id="ceoColRevPaid" text="Đã Thanh Toán" prefWidth="180"/>
-                                        <TableColumn fx:id="ceoColRevDebt" text="Còn Lại" prefWidth="150"/>
-                                        <TableColumn fx:id="ceoColRevInvoices" text="Số Hóa Đơn" prefWidth="140"/>
-                                    </columns>
-                                </TableView>
+                            <VBox styleClass="report-metric-card" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                <Label text="Booking sắp check-in" styleClass="report-metric-label" />
+                                <Label fx:id="lblOverviewUpcomingCheckIn" text="0" styleClass="report-metric-value" />
                             </VBox>
-                        </VBox>
-                    </ScrollPane>
-                </content>
-            </Tab>
-            
-            <!-- 4. BOOKING -->
-            <Tab text="Booking">
-                <content>
-                    <ScrollPane fitToWidth="true" style="-fx-background:transparent; -fx-background-color:transparent;">
-                        <VBox spacing="20" style="-fx-padding: 15;">
-                            <HBox spacing="14">
-                                <VBox styleClass="content-panel" HBox.hgrow="ALWAYS" spacing="10">
-                                    <Label text="Tỷ Lệ Booking Thành Công / Hủy Theo Chi Nhánh" styleClass="panel-title"/>
-                                    <BarChart fx:id="ceoBookingBranchChart" prefHeight="220">
-                                        <xAxis><CategoryAxis fx:id="ceoBookBranchX"/></xAxis>
-                                        <yAxis><NumberAxis label="Lượt Booking"/></yAxis>
-                                    </BarChart>
-                                </VBox>
-                                <VBox styleClass="content-panel" prefWidth="380" spacing="10">
-                                    <Label text="Trạng Thái Booking Toàn Chuỗi" styleClass="panel-title"/>
-                                    <PieChart fx:id="ceoBookingStatusPie" prefHeight="220"/>
-                                </VBox>
-                            </HBox>
-                            <VBox styleClass="content-panel" spacing="10">
-                                <Label text="Chi Tiết Trạng Thái Booking Chi Nhánh" styleClass="panel-title"/>
-                                <TableView fx:id="ceoBookingTable" styleClass="data-table, report-table" prefHeight="260">
-                                    <columns>
-                                        <TableColumn fx:id="ceoColBookBranch" text="Chi Nhánh" prefWidth="180"/>
-                                        <TableColumn fx:id="ceoColBookTotal" text="Tổng Booking" prefWidth="110"/>
-                                        <TableColumn fx:id="ceoColBookPending" text="Chờ Xác Nhận" prefWidth="110"/>
-                                        <TableColumn fx:id="ceoColBookConfirmed" text="Đã Xác Nhận" prefWidth="110"/>
-                                        <TableColumn fx:id="ceoColBookIn" text="Đang Lưu Trú" prefWidth="110"/>
-                                        <TableColumn fx:id="ceoColBookOut" text="Đã Trả Phòng" prefWidth="110"/>
-                                        <TableColumn fx:id="ceoColBookCancel" text="Đã Hủy" prefWidth="110"/>
-                                    </columns>
-                                </TableView>
+                            <VBox styleClass="report-metric-card" GridPane.columnIndex="3" GridPane.rowIndex="0">
+                                <Label text="Booking sắp check-out" styleClass="report-metric-label" />
+                                <Label fx:id="lblOverviewUpcomingCheckOut" text="0" styleClass="report-metric-value" />
                             </VBox>
-                        </VBox>
-                    </ScrollPane>
-                </content>
-            </Tab>
-            
-            <!-- 5. DỊCH VỤ -->
-            <Tab text="Dịch Vụ">
-                <content>
-                    <ScrollPane fitToWidth="true" style="-fx-background:transparent; -fx-background-color:transparent;">
-                        <VBox spacing="20" style="-fx-padding: 15;">
-                            <HBox spacing="14">
-                                <VBox styleClass="content-panel" HBox.hgrow="ALWAYS" spacing="10">
-                                    <Label text="Top Dịch Vụ Theo Lượt Sử Dụng Toàn Hệ Thống" styleClass="panel-title"/>
-                                    <BarChart fx:id="ceoServicePopularityChart" prefHeight="220" legendVisible="false">
-                                        <xAxis><CategoryAxis fx:id="ceoServPopX"/></xAxis>
-                                        <yAxis><NumberAxis label="Số lượt dùng"/></yAxis>
-                                    </BarChart>
-                                </VBox>
-                                <VBox styleClass="content-panel" prefWidth="380" spacing="10">
-                                    <Label text="Đóng Góp Doanh Thu Dịch Vụ" styleClass="panel-title"/>
-                                    <PieChart fx:id="ceoServiceRevenuePie" prefHeight="220"/>
-                                </VBox>
-                            </HBox>
-                            <VBox styleClass="content-panel" spacing="10">
-                                <Label text="Báo Cáo Hiệu Quả Doanh Thu Dịch Vụ" styleClass="panel-title"/>
-                                <TableView fx:id="ceoServiceTable" styleClass="data-table, report-table" prefHeight="260">
-                                    <columns>
-                                        <TableColumn fx:id="ceoColServName" text="Tên Dịch Vụ" prefWidth="220"/>
-                                        <TableColumn fx:id="ceoColServCount" text="Tổng Lượt Sử Dụng" prefWidth="150"/>
-                                        <TableColumn fx:id="ceoColServRevenue" text="Doanh Thu" prefWidth="180"/>
-                                        <TableColumn fx:id="ceoColServTopBranch" text="Chi Nhánh Ưu Chuộng Nhất" prefWidth="250"/>
-                                    </columns>
-                                </TableView>
+                            <VBox styleClass="report-metric-card report-metric-money" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                <Label text="Tổng doanh thu" styleClass="report-metric-label" />
+                                <Label fx:id="lblOverviewRevenue" text="0 VNĐ" styleClass="report-metric-value" />
                             </VBox>
-                        </VBox>
-                    </ScrollPane>
-                </content>
-            </Tab>
-            
-            <!-- 6. PHÒNG -->
-            <Tab text="Phòng">
-                <content>
-                    <ScrollPane fitToWidth="true" style="-fx-background:transparent; -fx-background-color:transparent;">
-                        <VBox spacing="20" style="-fx-padding: 15;">
-                            <HBox spacing="14">
-                                <VBox styleClass="content-panel" HBox.hgrow="ALWAYS" spacing="10">
-                                    <Label text="Công Suất Sử Dụng Phòng Trung Bình" styleClass="panel-title"/>
-                                    <BarChart fx:id="ceoRoomOccupancyChart" prefHeight="220" legendVisible="false">
-                                        <xAxis><CategoryAxis fx:id="ceoRoomOccX"/></xAxis>
-                                        <yAxis><NumberAxis label="Tỷ lệ %"/></yAxis>
-                                    </BarChart>
-                                </VBox>
-                                <VBox styleClass="content-panel" prefWidth="380" spacing="10">
-                                    <Label text="Cơ Cấu Trạng Thái Phòng Toàn Chuỗi" styleClass="panel-title"/>
-                                    <PieChart fx:id="ceoRoomStatusPie" prefHeight="220"/>
-                                </VBox>
-                            </HBox>
-                            <VBox styleClass="content-panel" spacing="10">
-                                <Label text="Thống Kê Hiện Trạng Phòng Chi Nhánh" styleClass="panel-title"/>
-                                <TableView fx:id="ceoRoomTable" styleClass="data-table, report-table" prefHeight="260">
-                                    <columns>
-                                        <TableColumn fx:id="ceoColRoomBranch" text="Chi Nhánh" prefWidth="200"/>
-                                        <TableColumn fx:id="ceoColRoomTotal" text="Tổng Phòng" prefWidth="120"/>
-                                        <TableColumn fx:id="ceoColRoomInUse" text="Đang Sử Dụng" prefWidth="120"/>
-                                        <TableColumn fx:id="ceoColRoomVacant" text="Còn Trống" prefWidth="120"/>
-                                        <TableColumn fx:id="ceoColRoomMaint" text="Bảo Trì" prefWidth="120"/>
-                                        <TableColumn fx:id="ceoColRoomRate" text="Công Suất" prefWidth="120"/>
-                                    </columns>
-                                </TableView>
+                            <VBox styleClass="report-metric-card" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                <Label text="Đã thanh toán" styleClass="report-metric-label" />
+                                <Label fx:id="lblOverviewPaid" text="0 VNĐ" styleClass="report-metric-value" />
                             </VBox>
-                        </VBox>
-                    </ScrollPane>
-                </content>
-            </Tab>
-            
-            <!-- 7. KHO -->
-            <Tab text="Kho">
-                <content>
-                    <ScrollPane fitToWidth="true" style="-fx-background:transparent; -fx-background-color:transparent;">
-                        <VBox spacing="20" style="-fx-padding: 15;">
-                            <VBox styleClass="content-panel" spacing="10">
-                                <Label text="Số Sản Phẩm Cảnh Báo Tồn Kho Thấp Theo Chi Nhánh" styleClass="panel-title"/>
-                                <BarChart fx:id="ceoInventoryAlertChart" prefHeight="220" legendVisible="false">
-                                    <xAxis><CategoryAxis fx:id="ceoInvAlertX"/></xAxis>
-                                    <yAxis><NumberAxis label="Số lượng sản phẩm"/></yAxis>
+                            <VBox styleClass="report-metric-card" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                                <Label text="Còn phải thu" styleClass="report-metric-label" />
+                                <Label fx:id="lblOverviewRemaining" text="0 VNĐ" styleClass="report-metric-value" />
+                            </VBox>
+                            <VBox styleClass="report-metric-card" GridPane.columnIndex="3" GridPane.rowIndex="1">
+                                <Label text="Công suất phòng" styleClass="report-metric-label" />
+                                <Label fx:id="lblOverviewRoomUsage" text="0%" styleClass="report-metric-value" />
+                            </VBox>
+                        </GridPane>
+
+                        <HBox spacing="12">
+                            <VBox spacing="8" styleClass="report-chart-panel" HBox.hgrow="ALWAYS">
+                                <Label text="Booking theo ngày" styleClass="report-chart-title" />
+                                <BarChart fx:id="chartOverviewBookingByDay" animated="false" legendVisible="false" styleClass="report-chart" VBox.vgrow="ALWAYS">
+                                    <xAxis><CategoryAxis side="BOTTOM" /></xAxis>
+                                    <yAxis><NumberAxis side="LEFT" /></yAxis>
                                 </BarChart>
                             </VBox>
-                            <VBox styleClass="content-panel" spacing="10">
-                                <Label text="Bảng Cảnh Báo Hàng Hóa Cạn Kiệt" styleClass="panel-title"/>
-                                <TableView fx:id="ceoInventoryTable" styleClass="data-table, report-table" prefHeight="260">
-                                    <columns>
-                                        <TableColumn fx:id="ceoColInvBranch" text="Chi Nhánh" prefWidth="180"/>
-                                        <TableColumn fx:id="ceoColInvProd" text="Sản Phẩm" prefWidth="200"/>
-                                        <TableColumn fx:id="ceoColInvStock" text="Tồn Hiện Tại" prefWidth="110"/>
-                                        <TableColumn fx:id="ceoColInvMin" text="Mức Tối Thiểu" prefWidth="110"/>
-                                        <TableColumn fx:id="ceoColInvUnit" text="Đơn Vị" prefWidth="100"/>
-                                        <TableColumn fx:id="ceoColInvStatus" text="Trạng Thái" prefWidth="120"/>
-                                    </columns>
-                                </TableView>
+                            <VBox spacing="8" styleClass="report-chart-panel" HBox.hgrow="ALWAYS">
+                                <Label text="Tỷ lệ booking theo trạng thái" styleClass="report-chart-title" />
+                                <PieChart fx:id="pieOverviewBookingStatus" labelsVisible="false" legendVisible="true" styleClass="report-chart" VBox.vgrow="ALWAYS" />
                             </VBox>
-                        </VBox>
-                    </ScrollPane>
-                </content>
+                        </HBox>
+                    </VBox>
+                </ScrollPane>
             </Tab>
-            
-            <!-- 8. NHÂN VIÊN -->
-            <Tab text="Nhân Viên">
-                <content>
-                    <ScrollPane fitToWidth="true" style="-fx-background:transparent; -fx-background-color:transparent;">
-                        <VBox spacing="20" style="-fx-padding: 15;">
-                            <HBox spacing="14">
-                                <VBox styleClass="content-panel" HBox.hgrow="ALWAYS" spacing="10">
-                                    <Label text="Số Lượng Nhân Sự Theo Chi Nhánh" styleClass="panel-title"/>
-                                    <BarChart fx:id="ceoStaffCountChart" prefHeight="220" legendVisible="false">
-                                        <xAxis><CategoryAxis fx:id="ceoStaffBranchX"/></xAxis>
-                                        <yAxis><NumberAxis label="Số lượng nhân viên"/></yAxis>
-                                    </BarChart>
-                                </VBox>
-                                <VBox styleClass="content-panel" prefWidth="380" spacing="10">
-                                    <Label text="Cơ Cấu Vai Trò Nhân Sự Toàn Chuỗi" styleClass="panel-title"/>
-                                    <PieChart fx:id="ceoStaffRolePie" prefHeight="220"/>
-                                </VBox>
-                            </HBox>
-                            <VBox styleClass="content-panel" spacing="10">
-                                <Label text="Bảng Phân Phối Nhân Sự Chi Nhánh" styleClass="panel-title"/>
-                                <TableView fx:id="ceoStaffTable" styleClass="data-table, report-table" prefHeight="260">
-                                    <columns>
-                                        <TableColumn fx:id="ceoColStaffBranch" text="Chi Nhánh" prefWidth="180"/>
-                                        <TableColumn fx:id="ceoColStaffTotal" text="Tổng Nhân Viên" prefWidth="130"/>
-                                        <TableColumn fx:id="ceoColStaffReception" text="Lễ Tân" prefWidth="120"/>
-                                        <TableColumn fx:id="ceoColStaffCare" text="Chăm Sóc" prefWidth="120"/>
-                                        <TableColumn fx:id="ceoColStaffManager" text="Quản Lý Chi Nhánh" prefWidth="140"/>
-                                        <TableColumn fx:id="ceoColStaffStatus" text="Trạng Thái Nhân Lực" prefWidth="150"/>
-                                    </columns>
-                                </TableView>
-                            </VBox>
+
+            <Tab fx:id="tabRevenue" text="Doanh thu">
+                <VBox spacing="12" styleClass="content-panel">
+                    <HBox spacing="12">
+                        <VBox spacing="8" styleClass="report-chart-panel" HBox.hgrow="ALWAYS">
+                            <Label text="Doanh thu theo thời gian" styleClass="report-chart-title" />
+                            <BarChart fx:id="chartRevenueByPeriod" animated="false" legendVisible="false" styleClass="report-chart" VBox.vgrow="ALWAYS">
+                                <xAxis><CategoryAxis side="BOTTOM" /></xAxis>
+                                <yAxis><NumberAxis side="LEFT" /></yAxis>
+                            </BarChart>
                         </VBox>
-                    </ScrollPane>
-                </content>
+                        <VBox spacing="8" styleClass="report-chart-panel" HBox.hgrow="ALWAYS">
+                            <Label text="Cơ cấu doanh thu theo nguồn" styleClass="report-chart-title" />
+                            <PieChart fx:id="pieRevenueSource" labelsVisible="false" legendVisible="true" styleClass="report-chart" VBox.vgrow="ALWAYS" />
+                        </VBox>
+                    </HBox>
+                    <TableView fx:id="tableRevenue" styleClass="data-table" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colRevenuePeriod" prefWidth="170" text="Thời gian" />
+                            <TableColumn fx:id="colRevenueInvoiceCount" prefWidth="120" text="Số hóa đơn" />
+                            <TableColumn fx:id="colRevenueTotal" prefWidth="170" text="Tổng doanh thu" />
+                            <TableColumn fx:id="colRevenuePaid" prefWidth="170" text="Đã thanh toán" />
+                            <TableColumn fx:id="colRevenueRemaining" prefWidth="170" text="Còn lại" />
+                        </columns>
+                        <placeholder><Label text="Chưa có dữ liệu" /></placeholder>
+                    </TableView>
+                </VBox>
+            </Tab>
+
+            <Tab fx:id="tabBooking" text="Booking">
+                <VBox spacing="12" styleClass="content-panel">
+                    <HBox spacing="12">
+                        <VBox spacing="8" styleClass="report-chart-panel" HBox.hgrow="ALWAYS">
+                            <Label text="Số booking theo thời gian" styleClass="report-chart-title" />
+                            <BarChart fx:id="chartBookingByPeriod" animated="false" legendVisible="false" styleClass="report-chart" VBox.vgrow="ALWAYS">
+                                <xAxis><CategoryAxis side="BOTTOM" /></xAxis>
+                                <yAxis><NumberAxis side="LEFT" /></yAxis>
+                            </BarChart>
+                        </VBox>
+                        <VBox spacing="8" styleClass="report-chart-panel" HBox.hgrow="ALWAYS">
+                            <Label text="Tỷ lệ booking theo trạng thái" styleClass="report-chart-title" />
+                            <PieChart fx:id="pieBookingStatus" labelsVisible="false" legendVisible="true" styleClass="report-chart" VBox.vgrow="ALWAYS" />
+                        </VBox>
+                    </HBox>
+                    <TableView fx:id="tableBooking" styleClass="data-table" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colBookingPeriod" prefWidth="170" text="Thời gian" />
+                            <TableColumn fx:id="colBookingCount" prefWidth="130" text="Tổng booking" />
+                            <TableColumn fx:id="colBookingNew" prefWidth="140" text="Booking mới" />
+                            <TableColumn fx:id="colBookingCompleted" prefWidth="160" text="Hoàn thành" />
+                            <TableColumn fx:id="colBookingCancelled" prefWidth="140" text="Đã hủy" />
+                            <TableColumn fx:id="colBookingPending" prefWidth="130" text="Pending" />
+                            <TableColumn fx:id="colBookingConfirmed" prefWidth="140" text="Confirmed" />
+                            <TableColumn fx:id="colBookingCheckedIn" prefWidth="140" text="Checked-in" />
+                            <TableColumn fx:id="colBookingCheckedOut" prefWidth="140" text="Checked-out" />
+                        </columns>
+                        <placeholder><Label text="Chưa có dữ liệu" /></placeholder>
+                    </TableView>
+                </VBox>
+            </Tab>
+
+            <Tab fx:id="tabService" text="Dịch vụ">
+                <VBox spacing="12" styleClass="content-panel">
+                    <HBox spacing="12">
+                        <VBox spacing="8" styleClass="report-chart-panel" HBox.hgrow="ALWAYS">
+                            <Label text="Top 5 dịch vụ được sử dụng nhiều nhất" styleClass="report-chart-title" />
+                            <BarChart fx:id="chartServiceUsage" animated="false" legendVisible="false" styleClass="report-chart" VBox.vgrow="ALWAYS">
+                                <xAxis><CategoryAxis side="BOTTOM" /></xAxis>
+                                <yAxis><NumberAxis side="LEFT" /></yAxis>
+                            </BarChart>
+                        </VBox>
+                        <VBox spacing="8" styleClass="report-chart-panel" HBox.hgrow="ALWAYS">
+                            <Label text="Doanh thu theo dịch vụ" styleClass="report-chart-title" />
+                            <BarChart fx:id="chartServiceRevenue" animated="false" legendVisible="false" styleClass="report-chart" VBox.vgrow="ALWAYS">
+                                <xAxis><CategoryAxis side="BOTTOM" /></xAxis>
+                                <yAxis><NumberAxis side="LEFT" /></yAxis>
+                            </BarChart>
+                        </VBox>
+                    </HBox>
+                    <TableView fx:id="tableService" styleClass="data-table" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colServiceName" prefWidth="240" text="Dịch vụ" />
+                            <TableColumn fx:id="colServiceUsageCount" prefWidth="150" text="Số lượt sử dụng" />
+                            <TableColumn fx:id="colServiceRevenue" prefWidth="170" text="Doanh thu" />
+                            <TableColumn fx:id="colServiceUsageRate" prefWidth="150" text="Tỷ lệ sử dụng" />
+                        </columns>
+                        <placeholder><Label text="Chưa có dữ liệu" /></placeholder>
+                    </TableView>
+                </VBox>
+            </Tab>
+
+            <Tab fx:id="tabRoomUsage" text="Công suất phòng">
+                <VBox spacing="12" styleClass="content-panel">
+                    <HBox spacing="12">
+                        <VBox spacing="8" styleClass="report-chart-panel" HBox.hgrow="ALWAYS">
+                            <Label text="Công suất theo loại phòng" styleClass="report-chart-title" />
+                            <BarChart fx:id="chartRoomUsageByType" animated="false" legendVisible="false" styleClass="report-chart" VBox.vgrow="ALWAYS">
+                                <xAxis><CategoryAxis side="BOTTOM" /></xAxis>
+                                <yAxis><NumberAxis side="LEFT" /></yAxis>
+                            </BarChart>
+                        </VBox>
+                        <VBox spacing="8" styleClass="report-chart-panel" HBox.hgrow="ALWAYS">
+                            <Label text="Tỷ lệ trạng thái phòng" styleClass="report-chart-title" />
+                            <PieChart fx:id="pieRoomStatus" labelsVisible="false" legendVisible="true" styleClass="report-chart" VBox.vgrow="ALWAYS" />
+                        </VBox>
+                    </HBox>
+                    <TableView fx:id="tableRoomType" styleClass="data-table" prefHeight="190">
+                        <columns>
+                            <TableColumn fx:id="colRoomTypeName" prefWidth="180" text="Loại phòng" />
+                            <TableColumn fx:id="colRoomTypeTotal" prefWidth="120" text="Tổng phòng" />
+                            <TableColumn fx:id="colRoomTypeInUse" prefWidth="140" text="Đang sử dụng" />
+                            <TableColumn fx:id="colRoomTypeAvailable" prefWidth="120" text="Còn trống" />
+                            <TableColumn fx:id="colRoomTypeMaintenance" prefWidth="120" text="Bảo trì" />
+                            <TableColumn fx:id="colRoomTypeUsageRate" prefWidth="140" text="Tỷ lệ sử dụng" />
+                        </columns>
+                        <placeholder><Label text="Chưa có dữ liệu" /></placeholder>
+                    </TableView>
+                    <TableView fx:id="tableRoomUsage" styleClass="data-table" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colRoomPeriod" prefWidth="170" text="Thời gian" />
+                            <TableColumn fx:id="colRoomTotal" prefWidth="130" text="Tổng phòng" />
+                            <TableColumn fx:id="colRoomInUse" prefWidth="150" text="Đang sử dụng" />
+                            <TableColumn fx:id="colRoomAvailable" prefWidth="130" text="Còn trống" />
+                            <TableColumn fx:id="colRoomUsageRate" prefWidth="150" text="Tỷ lệ sử dụng (%)" />
+                        </columns>
+                        <placeholder><Label text="Chưa có dữ liệu" /></placeholder>
+                    </TableView>
+                </VBox>
+            </Tab>
+
+            <Tab fx:id="tabInventory" text="Kho">
+                <VBox spacing="12" styleClass="content-panel">
+                    <HBox spacing="12">
+                        <VBox spacing="8" styleClass="report-chart-panel" HBox.hgrow="ALWAYS">
+                            <Label text="Top sản phẩm được sử dụng nhiều nhất" styleClass="report-chart-title" />
+                            <BarChart fx:id="chartInventoryTopUsage" animated="false" legendVisible="false" styleClass="report-chart" VBox.vgrow="ALWAYS">
+                                <xAxis><CategoryAxis side="BOTTOM" /></xAxis>
+                                <yAxis><NumberAxis side="LEFT" /></yAxis>
+                            </BarChart>
+                        </VBox>
+                        <VBox spacing="8" styleClass="report-chart-panel" HBox.hgrow="ALWAYS">
+                            <Label text="Sản phẩm sắp hết" styleClass="report-chart-title" />
+                            <BarChart fx:id="chartInventoryLowStock" animated="false" legendVisible="false" styleClass="report-chart" VBox.vgrow="ALWAYS">
+                                <xAxis><CategoryAxis side="BOTTOM" /></xAxis>
+                                <yAxis><NumberAxis side="LEFT" /></yAxis>
+                            </BarChart>
+                        </VBox>
+                    </HBox>
+                    <TableView fx:id="tableInventoryLowStock" styleClass="data-table" prefHeight="190">
+                        <columns>
+                            <TableColumn fx:id="colInventoryProductName" prefWidth="260" text="Sản phẩm" />
+                            <TableColumn fx:id="colInventoryCurrentStock" prefWidth="130" text="Tồn hiện tại" />
+                            <TableColumn fx:id="colInventoryMinimumStock" prefWidth="130" text="Mức tối thiểu" />
+                            <TableColumn fx:id="colInventoryUnit" prefWidth="100" text="Đơn vị" />
+                            <TableColumn fx:id="colInventoryStatus" prefWidth="170" text="Trạng thái" />
+                        </columns>
+                        <placeholder><Label text="Chưa có dữ liệu" /></placeholder>
+                    </TableView>
+                    <TableView fx:id="tableInventory" styleClass="data-table" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colInventoryScope" prefWidth="220" text="Chi nhánh" />
+                            <TableColumn fx:id="colInventorySku" prefWidth="130" text="Tổng SKU" />
+                            <TableColumn fx:id="colInventoryStock" prefWidth="140" text="Tổng tồn kho" />
+                            <TableColumn fx:id="colInventoryLow" prefWidth="150" text="Tồn thấp" />
+                            <TableColumn fx:id="colInventoryOut" prefWidth="150" text="Hết hàng" />
+                        </columns>
+                        <placeholder><Label text="Chưa có dữ liệu" /></placeholder>
+                    </TableView>
+                </VBox>
+            </Tab>
+
+            <Tab fx:id="tabChain" text="Toàn chuỗi">
+                <VBox spacing="12" styleClass="content-panel">
+                    <TableView fx:id="tableChain" styleClass="data-table" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colChainBranchId" prefWidth="120" text="Mã chi nhánh" />
+                            <TableColumn fx:id="colChainBranchName" prefWidth="220" text="Tên chi nhánh" />
+                            <TableColumn fx:id="colChainRevenue" prefWidth="170" text="Tổng doanh thu" />
+                            <TableColumn fx:id="colChainBooking" prefWidth="140" text="Số booking" />
+                            <TableColumn fx:id="colChainRoomInUse" prefWidth="160" text="Phòng đang dùng" />
+                        </columns>
+                        <placeholder><Label text="Chưa có dữ liệu" /></placeholder>
+                    </TableView>
+                </VBox>
             </Tab>
         </tabs>
     </TabPane>
-
 </VBox>

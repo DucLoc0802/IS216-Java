@@ -1,1149 +1,1377 @@
 package PetHotel.gui.controller;
 
-import PetHotel.model.AppUser;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.text.DecimalFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import PetHotel.bus.ReportBUS;
+import PetHotel.model.BookingReport;
+import PetHotel.model.ChainReport;
+import PetHotel.model.InventoryItemReport;
+import PetHotel.model.InventoryReport;
+import PetHotel.model.RevenueReport;
+import PetHotel.model.RoomTypeReport;
+import PetHotel.model.RoomUsageReport;
+import PetHotel.model.ServiceReport;
+import PetHotel.util.Role;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Side;
+import javafx.scene.Node;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.PieChart;
+import javafx.scene.chart.XYChart;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.Tab;
-import javafx.scene.layout.HBox;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
-import javafx.scene.chart.BarChart;
-import javafx.scene.chart.PieChart;
-import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import javafx.util.StringConverter;
 
 public class ReportController {
 
-    // ==========================================
-    // 1. ÁNH XẠ CÁC THÀNH PHẦN GIAO DIỆN (UI COMPONENTS)
-    // ==========================================
+    @FXML private ComboBox<String> cbbReportType;
+    @FXML private DatePicker dpFromDate;
+    @FXML private DatePicker dpToDate;
+    @FXML private Label lblSummaryTitle1;
+    @FXML private Label lblSummaryValue1;
+    @FXML private Label lblSummaryNote1;
+    @FXML private Label lblSummaryTitle2;
+    @FXML private Label lblSummaryValue2;
+    @FXML private Label lblSummaryNote2;
+    @FXML private Label lblSummaryTitle3;
+    @FXML private Label lblSummaryValue3;
+    @FXML private Label lblSummaryNote3;
+    @FXML private Label lblSummaryTitle4;
+    @FXML private Label lblSummaryValue4;
+    @FXML private Label lblSummaryNote4;
+    @FXML private TabPane tabPaneReport;
+    @FXML private Tab tabOverview;
+    @FXML private Tab tabRevenue;
+    @FXML private Tab tabBooking;
+    @FXML private Tab tabService;
+    @FXML private Tab tabRoomUsage;
+    @FXML private Tab tabInventory;
+    @FXML private Tab tabChain;
 
-    // --- Bộ lọc Thời gian & Chi nhánh ---
-    @FXML private Button btnPeriodToday;
-    @FXML private Button btnPeriodWeek;
-    @FXML private Button btnPeriodMonth;
-    @FXML private Button btnPeriodQuarter;
-    @FXML private Button btnPeriodYear;
-    @FXML private Button btnPeriodCustom;
-    
-    @FXML private HBox customDateRow;
-    @FXML private DatePicker dateFrom;
-    @FXML private DatePicker dateTo;
-    @FXML private ComboBox<String> filterBranch;
+    @FXML private Label lblOverviewTodayBooking;
+    @FXML private Label lblOverviewCheckedIn;
+    @FXML private Label lblOverviewUpcomingCheckIn;
+    @FXML private Label lblOverviewUpcomingCheckOut;
+    @FXML private Label lblOverviewRevenue;
+    @FXML private Label lblOverviewPaid;
+    @FXML private Label lblOverviewRemaining;
+    @FXML private Label lblOverviewRoomUsage;
+    @FXML private BarChart<String, Number> chartOverviewBookingByDay;
+    @FXML private PieChart pieOverviewBookingStatus;
 
-    // --- Các thẻ chỉ số KPI (Thống kê tổng quan) ---
-    @FXML private Label kpiPeriodLabel;
-    @FXML private Label kpiRevenue;
-    @FXML private Label kpiRevenueDelta;
-    @FXML private Label kpiBooking;
-    @FXML private Label kpiBookingDelta;
-    @FXML private Label kpiOccupancy;
-    @FXML private Label kpiOccupancyDelta;
-    @FXML private Label kpiGrooming;
-    @FXML private Label kpiGroomingDelta;
-    @FXML private Label kpiNewCustomers;
-    @FXML private Label kpiCustDelta;
+    @FXML private BarChart<String, Number> chartRevenueByPeriod;
+    @FXML private PieChart pieRevenueSource;
 
-    // --- Biểu đồ Quản lý ---
-    @FXML private ComboBox<String> revenueChartGroupBy;
-    @FXML private VBox revenueChartArea;
-    @FXML private VBox occupancyChartArea;
+    @FXML private BarChart<String, Number> chartBookingByPeriod;
+    @FXML private PieChart pieBookingStatus;
 
-    // --- Bảng Xếp Hạng Sản Phẩm Quản lý ---
-    @FXML private TableView<?> topProductTable;
-    @FXML private TableColumn<?, ?> colRank;
-    @FXML private TableColumn<?, ?> colProdName;
-    @FXML private TableColumn<?, ?> colProdCat;
-    @FXML private TableColumn<?, ?> colProdSold;
-    @FXML private TableColumn<?, ?> colProdRevenue;
+    @FXML private BarChart<String, Number> chartServiceUsage;
+    @FXML private BarChart<String, Number> chartServiceRevenue;
 
-    // --- Thống Kê Tồn Kho Quản lý ---
-    @FXML private Label invStatOk;
-    @FXML private Label invStatLow;
-    @FXML private Label invStatCritical;
+    @FXML private BarChart<String, Number> chartRoomUsageByType;
+    @FXML private PieChart pieRoomStatus;
 
-    // --- Danh sách báo cáo định kỳ Quản lý ---
-    @FXML private VBox reportTaskList;
+    @FXML private BarChart<String, Number> chartInventoryTopUsage;
+    @FXML private BarChart<String, Number> chartInventoryLowStock;
 
-    // ==========================================
-    // 🔑 BẮT BUỘC: PHÂN LUỒNG CONTAINER BÁO CÁO
-    // ==========================================
-    @FXML private VBox managerReportContainer;
-    @FXML private TabPane ceoReportTabPane;
+    @FXML private TableView<RevenueReport> tableRevenue;
+    @FXML private TableColumn<RevenueReport, String> colRevenuePeriod;
+    @FXML private TableColumn<RevenueReport, Integer> colRevenueInvoiceCount;
+    @FXML private TableColumn<RevenueReport, Double> colRevenueTotal;
+    @FXML private TableColumn<RevenueReport, Double> colRevenuePaid;
+    @FXML private TableColumn<RevenueReport, Double> colRevenueRemaining;
 
-    // ==========================================
-    // 👑 BÁO CÁO CEO: CÁC THÀNH PHẦN GIAO DIỆN MỚI
-    // ==========================================
+    @FXML private TableView<BookingReport> tableBooking;
+    @FXML private TableColumn<BookingReport, String> colBookingPeriod;
+    @FXML private TableColumn<BookingReport, Integer> colBookingCount;
+    @FXML private TableColumn<BookingReport, Integer> colBookingNew;
+    @FXML private TableColumn<BookingReport, Integer> colBookingCompleted;
+    @FXML private TableColumn<BookingReport, Integer> colBookingCancelled;
+    @FXML private TableColumn<BookingReport, Integer> colBookingPending;
+    @FXML private TableColumn<BookingReport, Integer> colBookingConfirmed;
+    @FXML private TableColumn<BookingReport, Integer> colBookingCheckedIn;
+    @FXML private TableColumn<BookingReport, Integer> colBookingCheckedOut;
 
-    // --- Tab 1: Tổng quan ---
-    @FXML private Label ceoKpiRevenue;
-    @FXML private Label ceoKpiBooking;
-    @FXML private Label ceoKpiBranchCount;
-    @FXML private Label ceoKpiPets;
-    @FXML private Label ceoKpiCustomers;
-    @FXML private Label ceoKpiDebt;
-    @FXML private Label ceoKpiOccupancy;
-    @FXML private Label ceoKpiTopBranch;
-    @FXML private BarChart<String, Number> ceoOverviewRevenueChart;
-    @FXML private CategoryAxis ceoOverviewRevX;
-    @FXML private PieChart ceoOverviewRevenuePie;
-    @FXML private TableView<BranchOverview> ceoOverviewTable;
-    @FXML private TableColumn<BranchOverview, String> ceoColOverBranch;
-    @FXML private TableColumn<BranchOverview, String> ceoColOverRevenue;
-    @FXML private TableColumn<BranchOverview, String> ceoColOverBooking;
-    @FXML private TableColumn<BranchOverview, String> ceoColOverRoom;
-    @FXML private TableColumn<BranchOverview, String> ceoColOverDebt;
-    @FXML private TableColumn<BranchOverview, String> ceoColOverStatus;
+    @FXML private TableView<ServiceReport> tableService;
+    @FXML private TableColumn<ServiceReport, String> colServiceName;
+    @FXML private TableColumn<ServiceReport, Integer> colServiceUsageCount;
+    @FXML private TableColumn<ServiceReport, String> colServiceRevenue;
+    @FXML private TableColumn<ServiceReport, String> colServiceUsageRate;
 
-    // --- Tab 2: Chi nhánh ---
-    @FXML private BarChart<String, Number> ceoBranchBookingChart;
-    @FXML private CategoryAxis ceoBranchBookX;
-    @FXML private BarChart<String, Number> ceoBranchOccupancyChart;
-    @FXML private CategoryAxis ceoBranchOccX;
-    @FXML private TableView<BranchDetail> ceoBranchTable;
-    @FXML private TableColumn<BranchDetail, String> ceoColBranchName;
-    @FXML private TableColumn<BranchDetail, String> ceoColBranchRevenue;
-    @FXML private TableColumn<BranchDetail, String> ceoColBranchBooking;
-    @FXML private TableColumn<BranchDetail, String> ceoColBranchOccupancy;
-    @FXML private TableColumn<BranchDetail, String> ceoColBranchDebt;
-    @FXML private TableColumn<BranchDetail, String> ceoColBranchLowStock;
-    @FXML private TableColumn<BranchDetail, String> ceoColBranchStatus;
+    @FXML private TableView<RoomTypeReport> tableRoomType;
+    @FXML private TableColumn<RoomTypeReport, String> colRoomTypeName;
+    @FXML private TableColumn<RoomTypeReport, Integer> colRoomTypeTotal;
+    @FXML private TableColumn<RoomTypeReport, Integer> colRoomTypeInUse;
+    @FXML private TableColumn<RoomTypeReport, Integer> colRoomTypeAvailable;
+    @FXML private TableColumn<RoomTypeReport, Integer> colRoomTypeMaintenance;
+    @FXML private TableColumn<RoomTypeReport, String> colRoomTypeUsageRate;
 
-    // --- Tab 3: Doanh thu ---
-    @FXML private BarChart<String, Number> ceoRevenueMonthlyChart;
-    @FXML private CategoryAxis ceoRevMonthX;
-    @FXML private PieChart ceoRevenueBranchPie;
-    @FXML private TableView<BranchRevenue> ceoRevenueTable;
-    @FXML private TableColumn<BranchRevenue, String> ceoColRevBranch;
-    @FXML private TableColumn<BranchRevenue, String> ceoColRevTotal;
-    @FXML private TableColumn<BranchRevenue, String> ceoColRevPaid;
-    @FXML private TableColumn<BranchRevenue, String> ceoColRevDebt;
-    @FXML private TableColumn<BranchRevenue, String> ceoColRevInvoices;
+    @FXML private TableView<RoomUsageReport> tableRoomUsage;
+    @FXML private TableColumn<RoomUsageReport, String> colRoomPeriod;
+    @FXML private TableColumn<RoomUsageReport, Integer> colRoomTotal;
+    @FXML private TableColumn<RoomUsageReport, Integer> colRoomInUse;
+    @FXML private TableColumn<RoomUsageReport, Integer> colRoomAvailable;
+    @FXML private TableColumn<RoomUsageReport, Double> colRoomUsageRate;
 
-    // --- Tab 4: Booking ---
-    @FXML private BarChart<String, Number> ceoBookingBranchChart;
-    @FXML private CategoryAxis ceoBookBranchX;
-    @FXML private PieChart ceoBookingStatusPie;
-    @FXML private TableView<BranchBooking> ceoBookingTable;
-    @FXML private TableColumn<BranchBooking, String> ceoColBookBranch;
-    @FXML private TableColumn<BranchBooking, String> ceoColBookTotal;
-    @FXML private TableColumn<BranchBooking, String> ceoColBookPending;
-    @FXML private TableColumn<BranchBooking, String> ceoColBookConfirmed;
-    @FXML private TableColumn<BranchBooking, String> ceoColBookIn;
-    @FXML private TableColumn<BranchBooking, String> ceoColBookOut;
-    @FXML private TableColumn<BranchBooking, String> ceoColBookCancel;
+    @FXML private TableView<InventoryReport> tableInventory;
+    @FXML private TableColumn<InventoryReport, String> colInventoryScope;
+    @FXML private TableColumn<InventoryReport, Integer> colInventorySku;
+    @FXML private TableColumn<InventoryReport, Double> colInventoryStock;
+    @FXML private TableColumn<InventoryReport, Integer> colInventoryLow;
+    @FXML private TableColumn<InventoryReport, Integer> colInventoryOut;
 
-    // --- Tab 5: Dịch vụ ---
-    @FXML private BarChart<String, Number> ceoServicePopularityChart;
-    @FXML private CategoryAxis ceoServPopX;
-    @FXML private PieChart ceoServiceRevenuePie;
-    @FXML private TableView<ServiceUsage> ceoServiceTable;
-    @FXML private TableColumn<ServiceUsage, String> ceoColServName;
-    @FXML private TableColumn<ServiceUsage, String> ceoColServCount;
-    @FXML private TableColumn<ServiceUsage, String> ceoColServRevenue;
-    @FXML private TableColumn<ServiceUsage, String> ceoColServTopBranch;
+    @FXML private TableView<InventoryItemReport> tableInventoryLowStock;
+    @FXML private TableColumn<InventoryItemReport, String> colInventoryProductName;
+    @FXML private TableColumn<InventoryItemReport, String> colInventoryCurrentStock;
+    @FXML private TableColumn<InventoryItemReport, String> colInventoryMinimumStock;
+    @FXML private TableColumn<InventoryItemReport, String> colInventoryUnit;
+    @FXML private TableColumn<InventoryItemReport, String> colInventoryStatus;
 
-    // --- Tab 6: Phòng ---
-    @FXML private BarChart<String, Number> ceoRoomOccupancyChart;
-    @FXML private CategoryAxis ceoRoomOccX;
-    @FXML private PieChart ceoRoomStatusPie;
-    @FXML private TableView<RoomStatusDetail> ceoRoomTable;
-    @FXML private TableColumn<RoomStatusDetail, String> ceoColRoomBranch;
-    @FXML private TableColumn<RoomStatusDetail, String> ceoColRoomTotal;
-    @FXML private TableColumn<RoomStatusDetail, String> ceoColRoomInUse;
-    @FXML private TableColumn<RoomStatusDetail, String> ceoColRoomVacant;
-    @FXML private TableColumn<RoomStatusDetail, String> ceoColRoomMaint;
-    @FXML private TableColumn<RoomStatusDetail, String> ceoColRoomRate;
+    @FXML private TableView<ChainReport> tableChain;
+    @FXML private TableColumn<ChainReport, String> colChainBranchId;
+    @FXML private TableColumn<ChainReport, String> colChainBranchName;
+    @FXML private TableColumn<ChainReport, Double> colChainRevenue;
+    @FXML private TableColumn<ChainReport, Integer> colChainBooking;
+    @FXML private TableColumn<ChainReport, Integer> colChainRoomInUse;
 
-    // --- Tab 7: Kho ---
-    @FXML private BarChart<String, Number> ceoInventoryAlertChart;
-    @FXML private CategoryAxis ceoInvAlertX;
-    @FXML private TableView<InventoryAlertDetail> ceoInventoryTable;
-    @FXML private TableColumn<InventoryAlertDetail, String> ceoColInvBranch;
-    @FXML private TableColumn<InventoryAlertDetail, String> ceoColInvProd;
-    @FXML private TableColumn<InventoryAlertDetail, String> ceoColInvStock;
-    @FXML private TableColumn<InventoryAlertDetail, String> ceoColInvMin;
-    @FXML private TableColumn<InventoryAlertDetail, String> ceoColInvUnit;
-    @FXML private TableColumn<InventoryAlertDetail, String> ceoColInvStatus;
+    private final ReportBUS reportBUS = new ReportBUS();
+    private final DecimalFormat moneyFormat = new DecimalFormat("#,###");
+    private final DecimalFormat quantityFormat = new DecimalFormat("#,###.##");
+    private final DateTimeFormatter fileDateFormat = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private final DateTimeFormatter chartDateFormat = DateTimeFormatter.ofPattern("dd/MM");
 
-    // --- Tab 8: Nhân viên ---
-    @FXML private BarChart<String, Number> ceoStaffCountChart;
-    @FXML private CategoryAxis ceoStaffBranchX;
-    @FXML private PieChart ceoStaffRolePie;
-    @FXML private TableView<StaffDistribution> ceoStaffTable;
-    @FXML private TableColumn<StaffDistribution, String> ceoColStaffBranch;
-    @FXML private TableColumn<StaffDistribution, String> ceoColStaffTotal;
-    @FXML private TableColumn<StaffDistribution, String> ceoColStaffReception;
-    @FXML private TableColumn<StaffDistribution, String> ceoColStaffCare;
-    @FXML private TableColumn<StaffDistribution, String> ceoColStaffManager;
-    @FXML private TableColumn<StaffDistribution, String> ceoColStaffStatus;
+    private static final String COLOR_REVENUE = "#A65A2E";
+    private static final String COLOR_BOOKING = "#4E79A7";
+    private static final String COLOR_GOOD = "#59A14F";
+    private static final String COLOR_ATTENTION = "#F2C14E";
+    private static final String COLOR_DONE = "#8E6BBE";
+    private static final String COLOR_DANGER = "#E15759";
+    private static final String COLOR_OTHER = "#BAB0AC";
+    private static final List<String> BOOKING_STATUS_COLORS =
+        List.of(COLOR_ATTENTION, COLOR_BOOKING, COLOR_GOOD, COLOR_DONE, COLOR_DANGER);
+    private static final List<String> ROOM_STATUS_COLORS =
+        List.of(COLOR_GOOD, COLOR_BOOKING, COLOR_ATTENTION, COLOR_DANGER);
+    private static final List<String> REVENUE_SOURCE_COLORS =
+        List.of(COLOR_REVENUE, COLOR_BOOKING, COLOR_ATTENTION);
+    private static final List<String> SERVICE_COLORS =
+        List.of(COLOR_BOOKING, COLOR_REVENUE, COLOR_ATTENTION, COLOR_GOOD, COLOR_DONE);
 
-
-    // ==========================================
-    // 2. KHỞI TẠO DỮ LIỆU BAN ĐẦU
-    // ==========================================
-    
     @FXML
     public void initialize() {
-        System.out.println("Đã nạp thành công giao diện Báo Cáo & Thống Kê!");
-        
-        AppUser currentUser = SessionManager.getInstance().getCurrentUser();
-        if (currentUser != null && currentUser.getRole() == PetHotel.util.Role.CEO) {
-            // Hiển thị giao diện CEO
-            if (managerReportContainer != null) {
-                managerReportContainer.setVisible(false);
-                managerReportContainer.setManaged(false);
-            }
-            if (ceoReportTabPane != null) {
-                ceoReportTabPane.setVisible(true);
-                ceoReportTabPane.setManaged(true);
-            }
+        cbbReportType.setItems(FXCollections.observableArrayList("Theo ngày", "Theo tuần", "Theo tháng"));
+        cbbReportType.setValue("Theo tháng");
 
-            // Nạp bộ lọc chi nhánh cho CEO
-            filterBranch.getItems().clear();
-            filterBranch.getItems().addAll(
-                "Tất cả chi nhánh",
-                "BR001 - Chi nhánh Pet Hotel 01",
-                "BR002 - Chi nhánh Pet Hotel 02",
-                "BR003 - Chi nhánh Pet Hotel 03",
-                "BR004 - Chi nhánh Pet Hotel 04",
-                "BR005 - Chi nhánh Pet Hotel 05"
-            );
-            filterBranch.getSelectionModel().selectFirst();
+        configureColumns();
+        configureChartDefaults();
+        applyRoleTabs();
 
-            setupCeoTableColumns();
-            loadCeoReportData();
-        } else {
-            // Hiển thị giao diện Quản lý chi nhánh gốc
-            if (managerReportContainer != null) {
-                managerReportContainer.setVisible(true);
-                managerReportContainer.setManaged(true);
-            }
-            if (ceoReportTabPane != null) {
-                ceoReportTabPane.setVisible(false);
-                ceoReportTabPane.setManaged(false);
-            }
+        tabPaneReport.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> loadSelectedReport());
 
-            filterBranch.getItems().clear();
-            filterBranch.getItems().addAll("Tất cả chi nhánh", "Chi nhánh Q.1", "Chi nhánh Q.3");
-            filterBranch.getSelectionModel().selectFirst();
-
-            loadReportData();
-        }
-    }
-
-    // Hàm gọi dữ liệu từ Database (BUS/DAO) để đổ lên màn hình của quản lý
-    private void loadReportData() {
-        System.out.println("Đang truy xuất dữ liệu thống kê từ cơ sở dữ liệu cho Quản Lý Chi Nhánh...");
-        // Báo cáo Manager gốc
-        if (kpiRevenue != null) kpiRevenue.setText("125.000.000 VNĐ");
-        if (kpiBooking != null) kpiBooking.setText("310");
-        if (kpiOccupancy != null) kpiOccupancy.setText("85%");
-        if (kpiGrooming != null) kpiGrooming.setText("180");
-        if (kpiNewCustomers != null) kpiNewCustomers.setText("45");
-        if (invStatOk != null) invStatOk.setText("18");
-        if (invStatLow != null) invStatLow.setText("3");
-        if (invStatCritical != null) invStatCritical.setText("1");
-    }
-
-    // ==========================================
-    // 👑 BÁO CÁO CEO: THIẾT LẬP CỘT BẢNG & CĂN GIỮA
-    // ==========================================
-    private <S, T> void alignColumnCenter(TableColumn<S, T> column) {
-        if (column != null) {
-            column.setStyle("-fx-alignment: CENTER;");
-        }
-    }
-
-    private void setupCeoTableColumns() {
-        // Tab 1 Overview
-        ceoColOverBranch.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("branch"));
-        ceoColOverRevenue.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("revenue"));
-        ceoColOverBooking.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("booking"));
-        ceoColOverRoom.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("occupancy"));
-        ceoColOverDebt.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("debt"));
-        ceoColOverStatus.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("status"));
-
-        alignColumnCenter(ceoColOverBranch);
-        alignColumnCenter(ceoColOverRevenue);
-        alignColumnCenter(ceoColOverBooking);
-        alignColumnCenter(ceoColOverRoom);
-        alignColumnCenter(ceoColOverDebt);
-        alignColumnCenter(ceoColOverStatus);
-
-        ceoColOverStatus.setCellFactory(column -> new TableCell<BranchOverview, String>() {
-            @Override protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null); setStyle("");
-                } else {
-                    setText(item);
-                    if ("Tốt".equalsIgnoreCase(item)) setStyle("-fx-text-fill: #59A14F; -fx-font-weight: bold; -fx-alignment: CENTER;");
-                    else if ("Ổn định".equalsIgnoreCase(item)) setStyle("-fx-text-fill: #4E79A7; -fx-font-weight: bold; -fx-alignment: CENTER;");
-                    else if ("Cần theo dõi".equalsIgnoreCase(item)) setStyle("-fx-text-fill: #F2C14E; -fx-font-weight: bold; -fx-alignment: CENTER;");
-                    else if ("Rủi ro".equalsIgnoreCase(item)) setStyle("-fx-text-fill: #E15759; -fx-font-weight: bold; -fx-alignment: CENTER;");
-                    else setStyle("-fx-alignment: CENTER;");
-                }
-            }
-        });
-
-        // Tab 2 Branch
-        ceoColBranchName.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("name"));
-        ceoColBranchRevenue.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("revenue"));
-        ceoColBranchBooking.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("booking"));
-        ceoColBranchOccupancy.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("occupancy"));
-        ceoColBranchDebt.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("debt"));
-        ceoColBranchLowStock.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("lowStock"));
-        ceoColBranchStatus.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("status"));
-
-        alignColumnCenter(ceoColBranchName);
-        alignColumnCenter(ceoColBranchRevenue);
-        alignColumnCenter(ceoColBranchBooking);
-        alignColumnCenter(ceoColBranchOccupancy);
-        alignColumnCenter(ceoColBranchDebt);
-        alignColumnCenter(ceoColBranchLowStock);
-        alignColumnCenter(ceoColBranchStatus);
-
-        ceoColBranchStatus.setCellFactory(column -> new TableCell<BranchDetail, String>() {
-            @Override protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null); setStyle("");
-                } else {
-                    setText(item);
-                    if ("Tốt".equalsIgnoreCase(item)) setStyle("-fx-text-fill: #59A14F; -fx-font-weight: bold; -fx-alignment: CENTER;");
-                    else if ("Ổn định".equalsIgnoreCase(item)) setStyle("-fx-text-fill: #4E79A7; -fx-font-weight: bold; -fx-alignment: CENTER;");
-                    else if ("Cần theo dõi".equalsIgnoreCase(item)) setStyle("-fx-text-fill: #F2C14E; -fx-font-weight: bold; -fx-alignment: CENTER;");
-                    else if ("Rủi ro".equalsIgnoreCase(item)) setStyle("-fx-text-fill: #E15759; -fx-font-weight: bold; -fx-alignment: CENTER;");
-                    else setStyle("-fx-alignment: CENTER;");
-                }
-            }
-        });
-
-        // Tab 3 Revenue
-        ceoColRevBranch.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("branch"));
-        ceoColRevTotal.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("total"));
-        ceoColRevPaid.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("paid"));
-        ceoColRevDebt.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("debt"));
-        ceoColRevInvoices.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("invoices"));
-
-        alignColumnCenter(ceoColRevBranch);
-        alignColumnCenter(ceoColRevTotal);
-        alignColumnCenter(ceoColRevPaid);
-        alignColumnCenter(ceoColRevDebt);
-        alignColumnCenter(ceoColRevInvoices);
-
-        // Tab 4 Booking
-        ceoColBookBranch.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("branch"));
-        ceoColBookTotal.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("total"));
-        ceoColBookPending.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("pending"));
-        ceoColBookConfirmed.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("confirmed"));
-        ceoColBookIn.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("checkIn"));
-        ceoColBookOut.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("checkOut"));
-        ceoColBookCancel.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("cancel"));
-
-        alignColumnCenter(ceoColBookBranch);
-        alignColumnCenter(ceoColBookTotal);
-        alignColumnCenter(ceoColBookPending);
-        alignColumnCenter(ceoColBookConfirmed);
-        alignColumnCenter(ceoColBookIn);
-        alignColumnCenter(ceoColBookOut);
-        alignColumnCenter(ceoColBookCancel);
-
-        // Tab 5 Service
-        ceoColServName.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("name"));
-        ceoColServCount.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("count"));
-        ceoColServRevenue.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("revenue"));
-        ceoColServTopBranch.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("topBranch"));
-
-        alignColumnCenter(ceoColServName);
-        alignColumnCenter(ceoColServCount);
-        alignColumnCenter(ceoColServRevenue);
-        alignColumnCenter(ceoColServTopBranch);
-
-        // Tab 6 Room
-        ceoColRoomBranch.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("branch"));
-        ceoColRoomTotal.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("total"));
-        ceoColRoomInUse.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("inUse"));
-        ceoColRoomVacant.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("vacant"));
-        ceoColRoomMaint.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("maintenance"));
-        ceoColRoomRate.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("occupancy"));
-
-        alignColumnCenter(ceoColRoomBranch);
-        alignColumnCenter(ceoColRoomTotal);
-        alignColumnCenter(ceoColRoomInUse);
-        alignColumnCenter(ceoColRoomVacant);
-        alignColumnCenter(ceoColRoomMaint);
-        alignColumnCenter(ceoColRoomRate);
-
-        // Tab 7 Inventory
-        ceoColInvBranch.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("branch"));
-        ceoColInvProd.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("product"));
-        ceoColInvStock.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("stock"));
-        ceoColInvMin.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("minStock"));
-        ceoColInvUnit.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("unit"));
-        ceoColInvStatus.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("status"));
-
-        alignColumnCenter(ceoColInvBranch);
-        alignColumnCenter(ceoColInvProd);
-        alignColumnCenter(ceoColInvStock);
-        alignColumnCenter(ceoColInvMin);
-        alignColumnCenter(ceoColInvUnit);
-        alignColumnCenter(ceoColInvStatus);
-
-        ceoColInvStatus.setCellFactory(column -> new TableCell<InventoryAlertDetail, String>() {
-            @Override protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null); setStyle("");
-                } else {
-                    setText(item);
-                    if ("Đủ hàng".equalsIgnoreCase(item)) setStyle("-fx-text-fill: #59A14F; -fx-font-weight: bold; -fx-alignment: CENTER;");
-                    else if ("Sắp hết".equalsIgnoreCase(item)) setStyle("-fx-text-fill: #F2C14E; -fx-font-weight: bold; -fx-alignment: CENTER;");
-                    else if ("Hết hàng".equalsIgnoreCase(item) || "Cần nhập thêm".equalsIgnoreCase(item)) setStyle("-fx-text-fill: #E15759; -fx-font-weight: bold; -fx-alignment: CENTER;");
-                    else setStyle("-fx-alignment: CENTER;");
-                }
-            }
-        });
-
-        // Tab 8 Staff
-        ceoColStaffBranch.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("branch"));
-        ceoColStaffTotal.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("total"));
-        ceoColStaffReception.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("reception"));
-        ceoColStaffCare.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("care"));
-        ceoColStaffManager.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("manager"));
-        ceoColStaffStatus.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("status"));
-
-        alignColumnCenter(ceoColStaffBranch);
-        alignColumnCenter(ceoColStaffTotal);
-        alignColumnCenter(ceoColStaffReception);
-        alignColumnCenter(ceoColStaffCare);
-        alignColumnCenter(ceoColStaffManager);
-        alignColumnCenter(ceoColStaffStatus);
-
-        ceoColStaffStatus.setCellFactory(column -> new TableCell<StaffDistribution, String>() {
-            @Override protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null); setStyle("");
-                } else {
-                    setText(item);
-                    if ("Đầy đủ".equalsIgnoreCase(item) || "Tốt".equalsIgnoreCase(item)) setStyle("-fx-text-fill: #59A14F; -fx-font-weight: bold; -fx-alignment: CENTER;");
-                    else if ("Thiếu lễ tân".equalsIgnoreCase(item) || "Thiếu chăm sóc".equalsIgnoreCase(item)) setStyle("-fx-text-fill: #F2C14E; -fx-font-weight: bold; -fx-alignment: CENTER;");
-                    else setStyle("-fx-alignment: CENTER;");
-                }
-            }
-        });
-    }
-
-    // ==========================================
-    // 👑 BÁO CÁO CEO: TRUY XUẤT VÀ NẠP DỮ LIỆU DEMO
-    // ==========================================
-    private void loadCeoReportData() {
-        System.out.println("Đang truy xuất dữ liệu thống kê từ cơ sở dữ liệu chuỗi chi nhánh cho CEO...");
-        loadCeoOverviewDemoData();
-        loadCeoBranchDemoData();
-        loadCeoRevenueDemoData();
-        loadCeoBookingDemoData();
-        loadCeoServiceDemoData();
-        loadCeoRoomDemoData();
-        loadCeoInventoryDemoData();
-        loadCeoEmployeeDemoData();
-    }
-
-    private void loadCeoOverviewDemoData() {
-        ceoKpiRevenue.setText("320.000.000 VNĐ");
-        ceoKpiBooking.setText("845");
-        ceoKpiBranchCount.setText("5");
-        ceoKpiPets.setText("96 thú cưng");
-        ceoKpiCustomers.setText("1.240");
-        ceoKpiDebt.setText("24.000.000 VNĐ");
-        ceoKpiOccupancy.setText("78%");
-        ceoKpiTopBranch.setText("Pet Hotel Q.1");
-
-        // Charts
-        ceoOverviewRevenueChart.getData().clear();
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Doanh thu");
-        series.getData().add(new XYChart.Data<>("BR001 (Q.1)", 120000000));
-        series.getData().add(new XYChart.Data<>("BR002 (Q.3)", 80000000));
-        series.getData().add(new XYChart.Data<>("BR003 (B.Thạnh)", 65000000));
-        series.getData().add(new XYChart.Data<>("BR004 (T.Bình)", 40000000));
-        series.getData().add(new XYChart.Data<>("BR005 (G.Vấp)", 15000000));
-        ceoOverviewRevenueChart.getData().add(series);
-
-        // Pie Chart
-        ceoOverviewRevenuePie.getData().clear();
-        ceoOverviewRevenuePie.getData().addAll(
-            new PieChart.Data("Tiền phòng (60%)", 60),
-            new PieChart.Data("Dịch vụ Spa/Grooming (30%)", 30),
-            new PieChart.Data("Phụ phí khác (10%)", 10)
-        );
-
-        // Palette thương hiệu
-        String[] colors = {"#A65A2E", "#4E79A7", "#BAB0AC"};
-        javafx.application.Platform.runLater(() -> {
-            for (XYChart.Data<String, Number> data : series.getData()) {
-                if (data.getNode() != null) {
-                    data.getNode().setStyle("-fx-bar-fill: #A65A2E;");
-                }
-            }
-            int idx = 0;
-            for (PieChart.Data d : ceoOverviewRevenuePie.getData()) {
-                if (d.getNode() != null && idx < colors.length) {
-                    d.getNode().setStyle("-fx-pie-color: " + colors[idx] + ";");
-                }
-                idx++;
-            }
-        });
-
-        // Table
-        ObservableList<BranchOverview> dataList = FXCollections.observableArrayList(
-            new BranchOverview("BR001 - Chi nhánh Pet Hotel Q.1", "120.000.000 VNĐ", "310", "85%", "4.000.000 VNĐ", "Tốt"),
-            new BranchOverview("BR002 - Chi nhánh Pet Hotel Q.3", "80.000.000 VNĐ", "210", "78%", "6.000.000 VNĐ", "Ổn định"),
-            new BranchOverview("BR003 - Chi nhánh Pet Hotel Bình Thạnh", "65.000.000 VNĐ", "165", "72%", "2.000.000 VNĐ", "Tốt"),
-            new BranchOverview("BR004 - Chi nhánh Pet Hotel Tân Bình", "40.000.000 VNĐ", "110", "60%", "7.000.000 VNĐ", "Cần theo dõi"),
-            new BranchOverview("BR005 - Chi nhánh Pet Hotel Gò Vấp", "15.000.000 VNĐ", "50", "45%", "5.000.000 VNĐ", "Rủi ro")
-        );
-        ceoOverviewTable.setItems(dataList);
-    }
-
-    private void loadCeoBranchDemoData() {
-        ceoBranchBookingChart.getData().clear();
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Booking");
-        series.getData().add(new XYChart.Data<>("BR001 (Q.1)", 310));
-        series.getData().add(new XYChart.Data<>("BR002 (Q.3)", 210));
-        series.getData().add(new XYChart.Data<>("BR003 (B.Thạnh)", 165));
-        series.getData().add(new XYChart.Data<>("BR004 (T.Bình)", 110));
-        series.getData().add(new XYChart.Data<>("BR005 (G.Vấp)", 50));
-        ceoBranchBookingChart.getData().add(series);
-
-        ceoBranchOccupancyChart.getData().clear();
-        XYChart.Series<String, Number> series2 = new XYChart.Series<>();
-        series2.setName("Công suất %");
-        series2.getData().add(new XYChart.Data<>("BR001 (Q.1)", 85));
-        series2.getData().add(new XYChart.Data<>("BR002 (Q.3)", 78));
-        series2.getData().add(new XYChart.Data<>("BR003 (B.Thạnh)", 72));
-        series2.getData().add(new XYChart.Data<>("BR004 (T.Bình)", 60));
-        series2.getData().add(new XYChart.Data<>("BR005 (G.Vấp)", 45));
-        ceoBranchOccupancyChart.getData().add(series2);
-
-        javafx.application.Platform.runLater(() -> {
-            for (XYChart.Data<String, Number> data : series.getData()) {
-                if (data.getNode() != null) {
-                    data.getNode().setStyle("-fx-bar-fill: #4E79A7;");
-                }
-            }
-            for (XYChart.Data<String, Number> data : series2.getData()) {
-                if (data.getNode() != null) {
-                    data.getNode().setStyle("-fx-bar-fill: #4E79A7;");
-                }
-            }
-        });
-
-        ObservableList<BranchDetail> dataList = FXCollections.observableArrayList(
-            new BranchDetail("BR001 - Chi nhánh Pet Hotel Q.1", "120.000.000 VNĐ", "310", "85%", "4.000.000 VNĐ", "2", "Tốt"),
-            new BranchDetail("BR002 - Chi nhánh Pet Hotel Q.3", "80.000.000 VNĐ", "210", "78%", "6.000.000 VNĐ", "5", "Ổn định"),
-            new BranchDetail("BR003 - Chi nhánh Pet Hotel Bình Thạnh", "65.000.000 VNĐ", "165", "72%", "2.000.000 VNĐ", "1", "Tốt"),
-            new BranchDetail("BR004 - Chi nhánh Pet Hotel Tân Bình", "40.000.000 VNĐ", "110", "60%", "7.000.000 VNĐ", "8", "Cần theo dõi"),
-            new BranchDetail("BR005 - Chi nhánh Pet Hotel Gò Vấp", "15.000.000 VNĐ", "50", "45%", "5.000.000 VNĐ", "0", "Rủi ro")
-        );
-        ceoBranchTable.setItems(dataList);
-    }
-
-    private void loadCeoRevenueDemoData() {
-        ceoRevenueMonthlyChart.getData().clear();
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Doanh thu");
-        series.getData().add(new XYChart.Data<>("Tháng 1", 220000000));
-        series.getData().add(new XYChart.Data<>("Tháng 2", 260000000));
-        series.getData().add(new XYChart.Data<>("Tháng 3", 280000000));
-        series.getData().add(new XYChart.Data<>("Tháng 4", 310000000));
-        series.getData().add(new XYChart.Data<>("Tháng 5", 320000000));
-        ceoRevenueMonthlyChart.getData().add(series);
-
-        ceoRevenueBranchPie.getData().clear();
-        ceoRevenueBranchPie.getData().addAll(
-            new PieChart.Data("BR001 Q.1 (38%)", 38),
-            new PieChart.Data("BR002 Q.3 (25%)", 25),
-            new PieChart.Data("BR003 Bình Thạnh (20%)", 20),
-            new PieChart.Data("BR004 Tân Bình (12%)", 12),
-            new PieChart.Data("BR005 Gò Vấp (5%)", 5)
-        );
-
-        String[] colors = {"#A65A2E", "#4E79A7", "#59A14F", "#F2C14E", "#E15759"};
-        javafx.application.Platform.runLater(() -> {
-            for (XYChart.Data<String, Number> data : series.getData()) {
-                if (data.getNode() != null) {
-                    data.getNode().setStyle("-fx-bar-fill: #A65A2E;");
-                }
-            }
-            int idx = 0;
-            for (PieChart.Data d : ceoRevenueBranchPie.getData()) {
-                if (d.getNode() != null && idx < colors.length) {
-                    d.getNode().setStyle("-fx-pie-color: " + colors[idx] + ";");
-                }
-                idx++;
-            }
-        });
-
-        ObservableList<BranchRevenue> dataList = FXCollections.observableArrayList(
-            new BranchRevenue("BR001 - Chi nhánh Pet Hotel Q.1", "120.000.000 VNĐ", "116.000.000 VNĐ", "4.000.000 VNĐ", "310"),
-            new BranchRevenue("BR002 - Chi nhánh Pet Hotel Q.3", "80.000.000 VNĐ", "74.000.000 VNĐ", "6.000.000 VNĐ", "210"),
-            new BranchRevenue("BR003 - Chi nhánh Pet Hotel Bình Thạnh", "65.000.000 VNĐ", "63.000.000 VNĐ", "2.000.000 VNĐ", "165"),
-            new BranchRevenue("BR004 - Chi nhánh Pet Hotel Tân Bình", "40.000.000 VNĐ", "33.000.000 VNĐ", "7.000.000 VNĐ", "110"),
-            new BranchRevenue("BR005 - Chi nhánh Pet Hotel Gò Vấp", "15.000.000 VNĐ", "10.000.000 VNĐ", "5.000.000 VNĐ", "50")
-        );
-        ceoRevenueTable.setItems(dataList);
-    }
-
-    private void loadCeoBookingDemoData() {
-        ceoBookingBranchChart.getData().clear();
-        XYChart.Series<String, Number> seriesSuccess = new XYChart.Series<>();
-        seriesSuccess.setName("Thành công");
-        seriesSuccess.getData().add(new XYChart.Data<>("BR001 (Q.1)", 295));
-        seriesSuccess.getData().add(new XYChart.Data<>("BR002 (Q.3)", 195));
-        seriesSuccess.getData().add(new XYChart.Data<>("BR003 (B.Thạnh)", 157));
-        seriesSuccess.getData().add(new XYChart.Data<>("BR004 (T.Bình)", 98));
-        seriesSuccess.getData().add(new XYChart.Data<>("BR005 (G.Vấp)", 42));
-
-        XYChart.Series<String, Number> seriesCancel = new XYChart.Series<>();
-        seriesCancel.setName("Đã Hủy");
-        seriesCancel.getData().add(new XYChart.Data<>("BR001 (Q.1)", 15));
-        seriesCancel.getData().add(new XYChart.Data<>("BR002 (Q.3)", 15));
-        seriesCancel.getData().add(new XYChart.Data<>("BR003 (B.Thạnh)", 8));
-        seriesCancel.getData().add(new XYChart.Data<>("BR004 (T.Bình)", 12));
-        seriesCancel.getData().add(new XYChart.Data<>("BR005 (G.Vấp)", 8));
-
-        ceoBookingBranchChart.getData().addAll(seriesSuccess, seriesCancel);
-
-        ceoBookingStatusPie.getData().clear();
-        ceoBookingStatusPie.getData().addAll(
-            new PieChart.Data("Pending (10%)", 10),
-            new PieChart.Data("Confirmed (20%)", 20),
-            new PieChart.Data("Checked-in (45%)", 45),
-            new PieChart.Data("Checked-out (20%)", 20),
-            new PieChart.Data("Cancelled (5%)", 5)
-        );
-
-        String[] colors = {"#F2C14E", "#4E79A7", "#59A14F", "#8E6BBE", "#E15759"};
-        javafx.application.Platform.runLater(() -> {
-            for (XYChart.Data<String, Number> data : seriesSuccess.getData()) {
-                if (data.getNode() != null) {
-                    data.getNode().setStyle("-fx-bar-fill: #59A14F;");
-                }
-            }
-            for (XYChart.Data<String, Number> data : seriesCancel.getData()) {
-                if (data.getNode() != null) {
-                    data.getNode().setStyle("-fx-bar-fill: #E15759;");
-                }
-            }
-            int idx = 0;
-            for (PieChart.Data d : ceoBookingStatusPie.getData()) {
-                if (d.getNode() != null && idx < colors.length) {
-                    d.getNode().setStyle("-fx-pie-color: " + colors[idx] + ";");
-                }
-                idx++;
-            }
-        });
-
-        ObservableList<BranchBooking> dataList = FXCollections.observableArrayList(
-            new BranchBooking("BR001 - Chi nhánh Pet Hotel Q.1", "310", "31", "62", "140", "62", "15"),
-            new BranchBooking("BR002 - Chi nhánh Pet Hotel Q.3", "210", "21", "42", "94", "42", "15"),
-            new BranchBooking("BR003 - Chi nhánh Pet Hotel Bình Thạnh", "165", "16", "33", "74", "33", "9"),
-            new BranchBooking("BR004 - Chi nhánh Pet Hotel Tân Bình", "110", "11", "22", "50", "22", "12"),
-            new BranchBooking("BR005 - Chi nhánh Pet Hotel Gò Vấp", "50", "5", "10", "22", "10", "8")
-        );
-        ceoBookingTable.setItems(dataList);
-    }
-
-    private void loadCeoServiceDemoData() {
-        ceoServicePopularityChart.getData().clear();
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Lượt dùng");
-        series.getData().add(new XYChart.Data<>("Grooming Combo", 320));
-        series.getData().add(new XYChart.Data<>("Tắm thú cưng", 240));
-        series.getData().add(new XYChart.Data<>("Cắt tỉa lông", 180));
-        series.getData().add(new XYChart.Data<>("Cắt móng", 120));
-        series.getData().add(new XYChart.Data<>("Vệ sinh tai", 85));
-        ceoServicePopularityChart.getData().add(series);
-
-        ceoServiceRevenuePie.getData().clear();
-        ceoServiceRevenuePie.getData().addAll(
-            new PieChart.Data("Tắm thú cưng (24%)", 24),
-            new PieChart.Data("Grooming Combo (42%)", 42),
-            new PieChart.Data("Cắt tỉa lông (18%)", 18),
-            new PieChart.Data("Cắt móng (11%)", 11),
-            new PieChart.Data("Vệ sinh tai (5%)", 5)
-        );
-
-        String[] colors = {"#4E79A7", "#A65A2E", "#F2C14E", "#59A14F", "#8E6BBE"};
-        javafx.application.Platform.runLater(() -> {
-            for (XYChart.Data<String, Number> data : series.getData()) {
-                if (data.getNode() != null) {
-                    data.getNode().setStyle("-fx-bar-fill: #4E79A7;");
-                }
-            }
-            int idx = 0;
-            for (PieChart.Data d : ceoServiceRevenuePie.getData()) {
-                if (d.getNode() != null && idx < colors.length) {
-                    d.getNode().setStyle("-fx-pie-color: " + colors[idx] + ";");
-                }
-                idx++;
-            }
-        });
-
-        ObservableList<ServiceUsage> dataList = FXCollections.observableArrayList(
-            new ServiceUsage("Grooming full combo", "320", "160.000.000 VNĐ", "BR001 - Chi nhánh Pet Hotel Q.1"),
-            new ServiceUsage("Tắm thú cưng", "240", "48.000.000 VNĐ", "BR002 - Chi nhánh Pet Hotel Q.3"),
-            new ServiceUsage("Cắt tỉa lông", "180", "54.000.000 VNĐ", "BR001 - Chi nhánh Pet Hotel Q.1"),
-            new ServiceUsage("Cắt móng", "120", "12.000.000 VNĐ", "BR003 - Chi nhánh Pet Hotel Bình Thạnh"),
-            new ServiceUsage("Vệ sinh tai", "85", "8.500.000 VNĐ", "BR004 - Chi nhánh Pet Hotel Tân Bình")
-        );
-        ceoServiceTable.setItems(dataList);
-    }
-
-    private void loadCeoRoomDemoData() {
-        ceoRoomOccupancyChart.getData().clear();
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Công suất");
-        series.getData().add(new XYChart.Data<>("BR001 (Q.1)", 85));
-        series.getData().add(new XYChart.Data<>("BR002 (Q.3)", 78));
-        series.getData().add(new XYChart.Data<>("BR003 (B.Thạnh)", 72));
-        series.getData().add(new XYChart.Data<>("BR004 (T.Bình)", 60));
-        series.getData().add(new XYChart.Data<>("BR005 (G.Vấp)", 45));
-        ceoRoomOccupancyChart.getData().add(series);
-
-        ceoRoomStatusPie.getData().clear();
-        ceoRoomStatusPie.getData().addAll(
-            new PieChart.Data("Đang sử dụng (78%)", 78),
-            new PieChart.Data("Còn trống (15%)", 15),
-            new PieChart.Data("Bảo trì (7%)", 7)
-        );
-
-        String[] colors = {"#59A14F", "#4E79A7", "#F2C14E"};
-        javafx.application.Platform.runLater(() -> {
-            for (XYChart.Data<String, Number> data : series.getData()) {
-                if (data.getNode() != null) {
-                    data.getNode().setStyle("-fx-bar-fill: #59A14F;");
-                }
-            }
-            int idx = 0;
-            for (PieChart.Data d : ceoRoomStatusPie.getData()) {
-                if (d.getNode() != null && idx < colors.length) {
-                    d.getNode().setStyle("-fx-pie-color: " + colors[idx] + ";");
-                }
-                idx++;
-            }
-        });
-
-        ObservableList<RoomStatusDetail> dataList = FXCollections.observableArrayList(
-            new RoomStatusDetail("BR001 - Chi nhánh Pet Hotel Q.1", "30", "25", "4", "1", "85%"),
-            new RoomStatusDetail("BR002 - Chi nhánh Pet Hotel Q.3", "30", "23", "5", "2", "78%"),
-            new RoomStatusDetail("BR003 - Chi nhánh Pet Hotel Bình Thạnh", "25", "18", "5", "2", "72%"),
-            new RoomStatusDetail("BR004 - Chi nhánh Pet Hotel Tân Bình", "20", "12", "6", "2", "60%"),
-            new RoomStatusDetail("BR005 - Chi nhánh Pet Hotel Gò Vấp", "15", "7", "6", "2", "45%")
-        );
-        ceoRoomTable.setItems(dataList);
-    }
-
-    private void loadCeoInventoryDemoData() {
-        ceoInventoryAlertChart.getData().clear();
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Tồn kho thấp");
-        series.getData().add(new XYChart.Data<>("BR001 (Q.1)", 2));
-        series.getData().add(new XYChart.Data<>("BR002 (Q.3)", 5));
-        series.getData().add(new XYChart.Data<>("BR003 (B.Thạnh)", 1));
-        series.getData().add(new XYChart.Data<>("BR004 (T.Bình)", 8));
-        series.getData().add(new XYChart.Data<>("BR005 (G.Vấp)", 0));
-        ceoInventoryAlertChart.getData().add(series);
-
-        javafx.application.Platform.runLater(() -> {
-            for (XYChart.Data<String, Number> data : series.getData()) {
-                if (data.getNode() != null) {
-                    data.getNode().setStyle("-fx-bar-fill: #E15759;");
-                }
-            }
-        });
-
-        ObservableList<InventoryAlertDetail> dataList = FXCollections.observableArrayList(
-            new InventoryAlertDetail("BR001 - Chi nhánh Pet Hotel Q.1", "Thức ăn chó Royal Canin", "3", "5", "bao", "Sắp hết"),
-            new InventoryAlertDetail("BR002 - Chi nhánh Pet Hotel Q.3", "Cát vệ sinh mèo", "1", "10", "bao", "Cần nhập thêm"),
-            new InventoryAlertDetail("BR002 - Chi nhánh Pet Hotel Q.3", "Pate mèo Whiskas", "0", "20", "lon", "Hết hàng"),
-            new InventoryAlertDetail("BR003 - Chi nhánh Pet Hotel Bình Thạnh", "Sữa tắm chuyên dụng", "2", "5", "chai", "Sắp hết"),
-            new InventoryAlertDetail("BR004 - Chi nhánh Pet Hotel Tân Bình", "Thuốc tẩy giun thú cưng", "1", "15", "hộp", "Cần nhập thêm")
-        );
-        ceoInventoryTable.setItems(dataList);
-    }
-
-    private void loadCeoEmployeeDemoData() {
-        ceoStaffCountChart.getData().clear();
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Nhân viên");
-        series.getData().add(new XYChart.Data<>("BR001 (Q.1)", 15));
-        series.getData().add(new XYChart.Data<>("BR002 (Q.3)", 12));
-        series.getData().add(new XYChart.Data<>("BR003 (B.Thạnh)", 10));
-        series.getData().add(new XYChart.Data<>("BR004 (T.Bình)", 8));
-        series.getData().add(new XYChart.Data<>("BR005 (G.Vấp)", 6));
-        ceoStaffCountChart.getData().add(series);
-
-        ceoStaffRolePie.getData().clear();
-        ceoStaffRolePie.getData().addAll(
-            new PieChart.Data("Lễ tân (25%)", 25),
-            new PieChart.Data("Chăm sóc (60%)", 60),
-            new PieChart.Data("Quản lý (12%)", 12),
-            new PieChart.Data("Admin/CEO (3%)", 3)
-        );
-
-        String[] colors = {"#4E79A7", "#59A14F", "#A65A2E", "#8E6BBE"};
-        javafx.application.Platform.runLater(() -> {
-            for (XYChart.Data<String, Number> data : series.getData()) {
-                if (data.getNode() != null) {
-                    data.getNode().setStyle("-fx-bar-fill: #59A14F;");
-                }
-            }
-            int idx = 0;
-            for (PieChart.Data d : ceoStaffRolePie.getData()) {
-                if (d.getNode() != null && idx < colors.length) {
-                    d.getNode().setStyle("-fx-pie-color: " + colors[idx] + ";");
-                }
-                idx++;
-            }
-        });
-
-        ObservableList<StaffDistribution> dataList = FXCollections.observableArrayList(
-            new StaffDistribution("BR001 - Chi nhánh Pet Hotel Q.1", "15", "3", "10", "1", "Đầy đủ"),
-            new StaffDistribution("BR002 - Chi nhánh Pet Hotel Q.3", "12", "2", "8", "1", "Thiếu lễ tân"),
-            new StaffDistribution("BR003 - Chi nhánh Pet Hotel Bình Thạnh", "10", "2", "6", "1", "Thiếu chăm sóc"),
-            new StaffDistribution("BR004 - Chi nhánh Pet Hotel Tân Bình", "8", "2", "5", "1", "Đầy đủ"),
-            new StaffDistribution("BR005 - Chi nhánh Pet Hotel Gò Vấp", "6", "1", "4", "1", "Thiếu lễ tân")
-        );
-        ceoStaffTable.setItems(dataList);
-    }
-
-    // ==========================================
-    // 3. XỬ LÝ SỰ KIỆN: BỘ LỌC THỜI GIAN KỲ BÁO CÁO
-    // ==========================================
-
-    @FXML
-    public void onPeriodToday(ActionEvent event) {
-        setPeriodActive(btnPeriodToday);
-        System.out.println("Lọc báo cáo: Hôm nay");
-        refreshActiveReportData();
+        LocalDate today = LocalDate.now();
+        dpFromDate.setValue(today.withDayOfMonth(1));
+        dpToDate.setValue(today);
+        loadSelectedReport();
     }
 
     @FXML
-    public void onPeriodWeek(ActionEvent event) {
-        setPeriodActive(btnPeriodWeek);
-        System.out.println("Lọc báo cáo: Tuần này");
-        refreshActiveReportData();
+    public void onFilterReport(ActionEvent event) {
+        loadSelectedReport();
     }
 
     @FXML
-    public void onPeriodMonth(ActionEvent event) {
-        setPeriodActive(btnPeriodMonth);
-        System.out.println("Lọc báo cáo: Tháng này");
-        refreshActiveReportData();
-    }
-
-    @FXML
-    public void onPeriodQuarter(ActionEvent event) {
-        setPeriodActive(btnPeriodQuarter);
-        System.out.println("Lọc báo cáo: Quý này");
-        refreshActiveReportData();
-    }
-
-    @FXML
-    public void onPeriodYear(ActionEvent event) {
-        setPeriodActive(btnPeriodYear);
-        System.out.println("Lọc báo cáo: Năm nay");
-        refreshActiveReportData();
-    }
-
-    @FXML
-    public void onPeriodCustom(ActionEvent event) {
-        setPeriodActive(btnPeriodCustom);
-        // Hiển thị thanh chọn ngày tùy chỉnh (Từ ngày - Đến ngày)
-        customDateRow.setVisible(true);
-        customDateRow.setManaged(true);
-        System.out.println("Mở bộ chọn ngày tùy chỉnh...");
-    }
-
-    @FXML
-    public void onApplyCustomPeriod(ActionEvent event) {
-        System.out.println("Áp dụng khoảng thời gian tùy chỉnh từ: " + dateFrom.getValue() + " đến: " + dateTo.getValue());
-        refreshActiveReportData();
-    }
-
-    // Hàm tiện ích: Đổi màu nút chọn thời gian đang Active và ẩn thanh Custom Date
-    private void setPeriodActive(Button activeBtn) {
-        btnPeriodToday.getStyleClass().remove("period-btn-active");
-        btnPeriodWeek.getStyleClass().remove("period-btn-active");
-        btnPeriodMonth.getStyleClass().remove("period-btn-active");
-        btnPeriodQuarter.getStyleClass().remove("period-btn-active");
-        btnPeriodYear.getStyleClass().remove("period-btn-active");
-        btnPeriodCustom.getStyleClass().remove("period-btn-active");
-
-        activeBtn.getStyleClass().add("period-btn-active");
-        
-        if (activeBtn != btnPeriodCustom) {
-            customDateRow.setVisible(false);
-            customDateRow.setManaged(false);
-        }
-    }
-
-    private void refreshActiveReportData() {
-        AppUser currentUser = SessionManager.getInstance().getCurrentUser();
-        if (currentUser != null && currentUser.getRole() == PetHotel.util.Role.CEO) {
-            loadCeoReportData();
-        } else {
-            loadReportData();
-        }
-    }
-
-    // ==========================================
-    // 4. XỬ LÝ SỰ KIỆN: XUẤT BÁO CÁO & XEM CHI TIẾT
-    // ==========================================
-
-    @FXML
-    public void onRefreshReport(ActionEvent event) {
-        System.out.println("Làm mới dữ liệu báo cáo cho chi nhánh: " + filterBranch.getValue());
-        refreshActiveReportData();
+    public void onResetReport(ActionEvent event) {
+        LocalDate today = LocalDate.now();
+        cbbReportType.setValue("Theo tháng");
+        dpFromDate.setValue(today.withDayOfMonth(1));
+        dpToDate.setValue(today);
+        loadSelectedReport();
     }
 
     @FXML
     public void onExportReport(ActionEvent event) {
-        System.out.println("Tiến hành xuất báo cáo ra file Excel/PDF...");
+        try {
+            Path exportFile = exportCurrentReport();
+            showExportSuccessDialog(exportFile);
+        } catch (IllegalArgumentException ex) {
+            showAlert(Alert.AlertType.WARNING, "Không thể xuất báo cáo", ex.getMessage());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", "Không thể xuất báo cáo: " + ex.getMessage());
+        }
     }
 
-    @FXML
-    public void onScheduleReport(ActionEvent event) {
-        System.out.println("Mở Form cấu hình gửi báo cáo định kỳ qua Email...");
+    private void configureColumns() {
+        colRevenuePeriod.setCellValueFactory(new PropertyValueFactory<>("period"));
+        colRevenueInvoiceCount.setCellValueFactory(new PropertyValueFactory<>("invoiceCount"));
+        colRevenueTotal.setCellValueFactory(new PropertyValueFactory<>("totalRevenue"));
+        colRevenuePaid.setCellValueFactory(new PropertyValueFactory<>("totalPaid"));
+        colRevenueRemaining.setCellValueFactory(new PropertyValueFactory<>("remaining"));
+
+        colBookingPeriod.setCellValueFactory(new PropertyValueFactory<>("period"));
+        colBookingCount.setCellValueFactory(new PropertyValueFactory<>("bookingCount"));
+        colBookingNew.setCellValueFactory(new PropertyValueFactory<>("newBookingCount"));
+        colBookingCompleted.setCellValueFactory(new PropertyValueFactory<>("completedBookingCount"));
+        colBookingCancelled.setCellValueFactory(new PropertyValueFactory<>("cancelledBookingCount"));
+        colBookingPending.setCellValueFactory(new PropertyValueFactory<>("pendingBookingCount"));
+        colBookingConfirmed.setCellValueFactory(new PropertyValueFactory<>("confirmedBookingCount"));
+        colBookingCheckedIn.setCellValueFactory(new PropertyValueFactory<>("checkedInBookingCount"));
+        colBookingCheckedOut.setCellValueFactory(new PropertyValueFactory<>("checkedOutBookingCount"));
+
+        colServiceName.setCellValueFactory(new PropertyValueFactory<>("serviceName"));
+        colServiceUsageCount.setCellValueFactory(new PropertyValueFactory<>("usageCount"));
+        colServiceRevenue.setCellValueFactory(data ->
+            new SimpleStringProperty(formatMoney(data.getValue().getRevenue())));
+        colServiceUsageRate.setCellValueFactory(data ->
+            new SimpleStringProperty(formatPercent(data.getValue().getUsageRate())));
+
+        colRoomTypeName.setCellValueFactory(new PropertyValueFactory<>("roomType"));
+        colRoomTypeTotal.setCellValueFactory(new PropertyValueFactory<>("totalRoom"));
+        colRoomTypeInUse.setCellValueFactory(new PropertyValueFactory<>("inUseRoom"));
+        colRoomTypeAvailable.setCellValueFactory(new PropertyValueFactory<>("availableRoom"));
+        colRoomTypeMaintenance.setCellValueFactory(new PropertyValueFactory<>("maintenanceRoom"));
+        colRoomTypeUsageRate.setCellValueFactory(data ->
+            new SimpleStringProperty(formatPercent(data.getValue().getUsageRate())));
+
+        colRoomPeriod.setCellValueFactory(new PropertyValueFactory<>("period"));
+        colRoomTotal.setCellValueFactory(new PropertyValueFactory<>("totalRoom"));
+        colRoomInUse.setCellValueFactory(new PropertyValueFactory<>("inUseRoom"));
+        colRoomAvailable.setCellValueFactory(new PropertyValueFactory<>("availableRoom"));
+        colRoomUsageRate.setCellValueFactory(new PropertyValueFactory<>("usageRate"));
+
+        colInventoryScope.setCellValueFactory(new PropertyValueFactory<>("scope"));
+        colInventorySku.setCellValueFactory(new PropertyValueFactory<>("totalSku"));
+        colInventoryStock.setCellValueFactory(new PropertyValueFactory<>("totalStock"));
+        colInventoryLow.setCellValueFactory(new PropertyValueFactory<>("lowStockCount"));
+        colInventoryOut.setCellValueFactory(new PropertyValueFactory<>("outOfStockCount"));
+
+        colInventoryProductName.setCellValueFactory(new PropertyValueFactory<>("productName"));
+        colInventoryCurrentStock.setCellValueFactory(data ->
+            new SimpleStringProperty(formatQuantity(data.getValue().getCurrentStock())));
+        colInventoryMinimumStock.setCellValueFactory(data ->
+            new SimpleStringProperty(formatQuantity(data.getValue().getMinimumStock())));
+        colInventoryUnit.setCellValueFactory(new PropertyValueFactory<>("unit"));
+        colInventoryStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
+
+        colChainBranchId.setCellValueFactory(new PropertyValueFactory<>("branchId"));
+        colChainBranchName.setCellValueFactory(new PropertyValueFactory<>("branchName"));
+        colChainRevenue.setCellValueFactory(new PropertyValueFactory<>("totalRevenue"));
+        colChainBooking.setCellValueFactory(new PropertyValueFactory<>("bookingCount"));
+        colChainRoomInUse.setCellValueFactory(new PropertyValueFactory<>("roomInUse"));
+
+        fixTableColumnBindings();
     }
 
-    @FXML
-    public void onViewProductReport(ActionEvent event) {
-        System.out.println("Chuyển hướng sang trang Báo Cáo Sản Phẩm chi tiết...");
+    private void fixTableColumnBindings() {
+        applyReportTableStyle();
+        alignColumnCenter(colRevenuePeriod);
+        applyIntegerCell(colRevenueInvoiceCount, COLOR_OTHER, "center");
+        applyMoneyCell(colRevenueTotal, COLOR_REVENUE);
+        applyMoneyCell(colRevenuePaid, COLOR_GOOD);
+        applyMoneyCell(colRevenueRemaining, COLOR_ATTENTION);
+
+        alignColumnCenter(colBookingPeriod);
+        alignColumnCenter(colServiceName);
+        alignColumnCenter(colRoomTypeName);
+        alignColumnCenter(colRoomPeriod);
+        alignColumnCenter(colInventoryProductName);
+        alignColumnCenter(colInventoryUnit);
+        alignColumnCenter(colInventoryScope);
+        alignColumnCenter(colChainBranchId);
+        alignColumnCenter(colChainBranchName);
+        applyMoneyCell(colChainRevenue, COLOR_REVENUE);
+        applyIntegerCell(colChainBooking, COLOR_BOOKING, "center");
+        applyIntegerCell(colChainRoomInUse, COLOR_GOOD, "center");
+
+        applyIntegerCell(colBookingCount, COLOR_BOOKING, "center");
+        applyIntegerCell(colBookingNew, COLOR_ATTENTION, "center");
+        applyIntegerCell(colBookingCompleted, COLOR_DONE, "center");
+        applyIntegerCell(colBookingCancelled, COLOR_DANGER, "center");
+        applyIntegerCell(colBookingPending, COLOR_ATTENTION, "center");
+        applyIntegerCell(colBookingConfirmed, COLOR_BOOKING, "center");
+        applyIntegerCell(colBookingCheckedIn, COLOR_GOOD, "center");
+        applyIntegerCell(colBookingCheckedOut, COLOR_DONE, "center");
+
+        applyIntegerCell(colServiceUsageCount, COLOR_BOOKING, "center");
+        applyStringCell(colServiceRevenue, COLOR_REVENUE, "center");
+        applyStringCell(colServiceUsageRate, COLOR_GOOD, "center");
+
+        applyIntegerCell(colRoomTypeTotal, COLOR_BOOKING, "center");
+        applyIntegerCell(colRoomTypeInUse, COLOR_GOOD, "center");
+        applyIntegerCell(colRoomTypeAvailable, COLOR_BOOKING, "center");
+        applyIntegerCell(colRoomTypeMaintenance, COLOR_ATTENTION, "center");
+        applyStringCell(colRoomTypeUsageRate, COLOR_GOOD, "center");
+        applyIntegerCell(colRoomTotal, COLOR_BOOKING, "center");
+        applyIntegerCell(colRoomInUse, COLOR_GOOD, "center");
+        applyIntegerCell(colRoomAvailable, COLOR_BOOKING, "center");
+        applyPercentCell(colRoomUsageRate, COLOR_GOOD);
+
+        applyIntegerCell(colInventorySku, COLOR_BOOKING, "center");
+        applyQuantityCell(colInventoryStock, COLOR_BOOKING);
+        applyIntegerCell(colInventoryLow, COLOR_ATTENTION, "center");
+        applyIntegerCell(colInventoryOut, COLOR_DANGER, "center");
+        applyStringCell(colInventoryCurrentStock, COLOR_ATTENTION, "center");
+        applyStringCell(colInventoryMinimumStock, COLOR_OTHER, "center");
+        applyInventoryStatusCell();
     }
 
-    @FXML
-    public void onViewInventoryReport(ActionEvent event) {
-        System.out.println("Chuyển hướng sang trang Báo Cáo Tồn Kho chi tiết...");
+    @SafeVarargs
+    private final void centerColumns(TableColumn<?, ?>... columns) {
+        for (TableColumn<?, ?> column : columns) {
+            column.setStyle("-fx-alignment: CENTER;");
+        }
     }
 
-    @FXML
-    public void onDownloadReport(ActionEvent event) {
-        System.out.println("Tải xuống file báo cáo định kỳ đã lưu...");
+    private void applyReportTableStyle() {
+        addReportTableStyle(tableRevenue, tableBooking, tableService, tableRoomType,
+            tableRoomUsage, tableInventoryLowStock, tableInventory, tableChain);
+        centerColumns(
+            colRevenuePeriod, colRevenueInvoiceCount, colRevenueTotal, colRevenuePaid, colRevenueRemaining,
+            colBookingPeriod, colBookingCount, colBookingNew, colBookingCompleted, colBookingCancelled,
+            colBookingPending, colBookingConfirmed, colBookingCheckedIn, colBookingCheckedOut,
+            colServiceName, colServiceUsageCount, colServiceRevenue, colServiceUsageRate,
+            colRoomTypeName, colRoomTypeTotal, colRoomTypeInUse, colRoomTypeAvailable,
+            colRoomTypeMaintenance, colRoomTypeUsageRate,
+            colRoomPeriod, colRoomTotal, colRoomInUse, colRoomAvailable, colRoomUsageRate,
+            colInventoryProductName, colInventoryCurrentStock, colInventoryMinimumStock,
+            colInventoryUnit, colInventoryStatus,
+            colInventoryScope, colInventorySku, colInventoryStock, colInventoryLow, colInventoryOut,
+            colChainBranchId, colChainBranchName, colChainRevenue, colChainBooking, colChainRoomInUse
+        );
     }
 
-    // ==========================================
-    // 5. HELPER DATA CLASSES DÀNH CHO BẢNG CEO
-    // ==========================================
-    public static class BranchOverview {
-        private final String branch;
-        private final String revenue;
-        private final String booking;
-        private final String occupancy;
-        private final String debt;
-        private final String status;
+    @SafeVarargs
+    private final void addReportTableStyle(TableView<?>... tables) {
+        for (TableView<?> table : tables) {
+            if (!table.getStyleClass().contains("report-table")) {
+                table.getStyleClass().add("report-table");
+            }
+        }
+    }
 
-        public BranchOverview(String branch, String revenue, String booking, String occupancy, String debt, String status) {
-            this.branch = branch;
-            this.revenue = revenue;
-            this.booking = booking;
-            this.occupancy = occupancy;
-            this.debt = debt;
-            this.status = status;
+    private <S, T> void alignColumnCenter(TableColumn<S, T> column) {
+        alignColumn(column, "center");
+    }
+
+    private <S, T> void alignColumn(TableColumn<S, T> column, String alignment) {
+        column.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(T value, boolean empty) {
+                super.updateItem(value, empty);
+                if (empty || value == null) {
+                    setText(null);
+                    setStyle("");
+                    return;
+                }
+                setText(String.valueOf(value));
+                setStyle(cellStyle(null, alignment, false));
+            }
+        });
+    }
+
+    private <S> void applyMoneyCell(TableColumn<S, Double> column, String color) {
+        column.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Double value, boolean empty) {
+                super.updateItem(value, empty);
+                if (empty || value == null) {
+                    setText(null);
+                    setStyle("");
+                    return;
+                }
+                setText(formatMoney(value));
+                setStyle(cellStyle(color, "center", true));
+            }
+        });
+    }
+
+    private <S> void applyQuantityCell(TableColumn<S, Double> column, String color) {
+        column.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Double value, boolean empty) {
+                super.updateItem(value, empty);
+                if (empty || value == null) {
+                    setText(null);
+                    setStyle("");
+                    return;
+                }
+                setText(formatQuantity(value));
+                setStyle(cellStyle(color, "center", false));
+            }
+        });
+    }
+
+    private <S> void applyPercentCell(TableColumn<S, Double> column, String color) {
+        column.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Double value, boolean empty) {
+                super.updateItem(value, empty);
+                if (empty || value == null) {
+                    setText(null);
+                    setStyle("");
+                    return;
+                }
+                setText(formatPercent(value));
+                setStyle(cellStyle(color, "center", true));
+            }
+        });
+    }
+
+    private <S> void applyIntegerCell(TableColumn<S, Integer> column, String color, String alignment) {
+        column.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Integer value, boolean empty) {
+                super.updateItem(value, empty);
+                if (empty || value == null) {
+                    setText(null);
+                    setStyle("");
+                    return;
+                }
+                setText(String.valueOf(value));
+                setStyle(cellStyle(color, alignment, true));
+            }
+        });
+    }
+
+    private <S> void applyStringCell(TableColumn<S, String> column, String color, String alignment) {
+        column.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String value, boolean empty) {
+                super.updateItem(value, empty);
+                if (empty || value == null) {
+                    setText(null);
+                    setStyle("");
+                    return;
+                }
+                setText(value);
+                setStyle(cellStyle(color, alignment, color != null));
+            }
+        });
+    }
+
+    private void applyInventoryStatusCell() {
+        colInventoryStatus.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String status, boolean empty) {
+                super.updateItem(status, empty);
+                if (empty || status == null) {
+                    setText(null);
+                    setStyle("");
+                    return;
+                }
+                setText(status);
+                setStyle(cellStyle(statusColor(status), "center", true));
+            }
+        });
+    }
+
+    private String cellStyle(String color, String alignment, boolean bold) {
+        StringBuilder style = new StringBuilder("-fx-alignment: ").append(alignment).append(";");
+        if (color != null) {
+            style.append("-fx-text-fill: ").append(color).append(";");
+        }
+        if (bold) {
+            style.append("-fx-font-weight: bold;");
+        }
+        return style.toString();
+    }
+
+    private String statusColor(String status) {
+        if (status == null) {
+            return COLOR_OTHER;
+        }
+        if (status.contains("Hết hàng")) {
+            return COLOR_DANGER;
+        }
+        if (status.contains("Cần nhập thêm")) {
+            return COLOR_DANGER;
+        }
+        if (status.contains("Sắp hết")) {
+            return COLOR_ATTENTION;
+        }
+        if (status.contains("Đủ hàng")) {
+            return COLOR_GOOD;
+        }
+        return COLOR_OTHER;
+    }
+
+    private void configureChartDefaults() {
+        configureBarChart(chartOverviewBookingByDay, false, false);
+        configureBarChart(chartRevenueByPeriod, false, true);
+        configureBarChart(chartBookingByPeriod, false, false);
+        configureBarChart(chartServiceUsage, true, false);
+        configureBarChart(chartServiceRevenue, true, true);
+        configureBarChart(chartRoomUsageByType, false, false);
+        configureBarChart(chartInventoryTopUsage, true, false);
+        configureBarChart(chartInventoryLowStock, true, false);
+
+        configurePieChart(pieOverviewBookingStatus);
+        configurePieChart(pieRevenueSource);
+        configurePieChart(pieBookingStatus);
+        configurePieChart(pieRoomStatus);
+    }
+
+    private void configureBarChart(BarChart<String, Number> chart, boolean rotateXLabels, boolean moneyAxis) {
+        if (chart == null) {
+            return;
+        }
+        chart.setLegendVisible(false);
+        chart.setCategoryGap(18);
+        chart.setBarGap(3);
+        chart.getXAxis().setTickLabelRotation(rotateXLabels ? -45 : 0);
+        chart.getXAxis().setTickLabelGap(8);
+        if (chart.getYAxis() instanceof NumberAxis numberAxis) {
+            numberAxis.setForceZeroInRange(true);
+            if (moneyAxis) {
+                numberAxis.setTickLabelFormatter(new StringConverter<>() {
+                    @Override
+                    public String toString(Number value) {
+                        double number = value == null ? 0 : value.doubleValue();
+                        if (Math.abs(number) >= 1_000_000) {
+                            return moneyFormat.format(number / 1_000_000) + "tr";
+                        }
+                        if (Math.abs(number) >= 1_000) {
+                            return moneyFormat.format(number / 1_000) + "k";
+                        }
+                        return moneyFormat.format(number);
+                    }
+
+                    @Override
+                    public Number fromString(String value) {
+                        return 0;
+                    }
+                });
+            }
+        }
+    }
+
+    private void configurePieChart(PieChart chart) {
+        if (chart == null) {
+            return;
+        }
+        chart.setLabelsVisible(false);
+        chart.setLegendVisible(true);
+        chart.setLegendSide(Side.BOTTOM);
+        chart.setLabelLineLength(0);
+        chart.setStartAngle(90);
+        chart.setClockwise(true);
+    }
+
+    private void applyRoleTabs() {
+        Role role = currentRole();
+        if (role == Role.RECEPTIONIST || role == Role.PET_CARE_STAFF) {
+            showAlert(Alert.AlertType.WARNING, "Không có quyền", "Bạn không có quyền xem báo cáo.");
+            tabPaneReport.setDisable(true);
+            return;
+        }
+        if (role != Role.CEO && role != Role.ADMIN) {
+            tabPaneReport.getTabs().remove(tabChain);
+        }
+    }
+
+    private void loadSelectedReport() {
+        if (tabPaneReport == null || tabPaneReport.isDisabled()) {
+            return;
         }
 
-        public String getBranch() { return branch; }
-        public String getRevenue() { return revenue; }
-        public String getBooking() { return booking; }
-        public String getOccupancy() { return occupancy; }
-        public String getDebt() { return debt; }
-        public String getStatus() { return status; }
+        try {
+            Tab selected = tabPaneReport.getSelectionModel().getSelectedItem();
+            if (selected == tabOverview) {
+                loadOverviewReport();
+            } else if (selected == tabRevenue) {
+                loadRevenueReport();
+            } else if (selected == tabBooking) {
+                loadBookingReport();
+            } else if (selected == tabService) {
+                loadServiceReport();
+            } else if (selected == tabRoomUsage) {
+                loadRoomUsageReport();
+            } else if (selected == tabInventory) {
+                loadInventoryReport();
+            } else if (selected == tabChain) {
+                loadChainReport();
+            }
+        } catch (IllegalArgumentException ex) {
+            showAlert(Alert.AlertType.WARNING, "Dữ liệu không hợp lệ", ex.getMessage());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", "Không thể tải báo cáo: " + ex.getMessage());
+        }
     }
 
-    public static class BranchDetail {
-        private final String name;
-        private final String revenue;
-        private final String booking;
-        private final String occupancy;
-        private final String debt;
-        private final String lowStock;
-        private final String status;
+    private void loadOverviewReport() {
+        List<BookingReport> bookingReports = getBookingReportsOrDemo();
+        List<RevenueReport> revenueReports = getRevenueReportsOrDemo();
+        RoomUsageReport roomUsage = firstRoomUsage(getRoomUsageReportsOrDemo());
+        BookingStatusTotals statusTotals = calculateBookingStatusTotals(bookingReports);
 
-        public BranchDetail(String name, String revenue, String booking, String occupancy, String debt, String lowStock, String status) {
-            this.name = name;
-            this.revenue = revenue;
-            this.booking = booking;
-            this.occupancy = occupancy;
-            this.debt = debt;
-            this.lowStock = lowStock;
-            this.status = status;
-        }
+        int todayBooking = bookingReports.isEmpty()
+            ? 0
+            : bookingReports.get(bookingReports.size() - 1).getBookingCount();
+        double revenue = sumRevenue(revenueReports);
+        double paid = sumPaid(revenueReports);
+        double remaining = sumRemaining(revenueReports);
 
-        public String getName() { return name; }
-        public String getRevenue() { return revenue; }
-        public String getBooking() { return booking; }
-        public String getOccupancy() { return occupancy; }
-        public String getDebt() { return debt; }
-        public String getLowStock() { return lowStock; }
-        public String getStatus() { return status; }
+        lblOverviewTodayBooking.setText(String.valueOf(todayBooking));
+        lblOverviewCheckedIn.setText(String.valueOf(statusTotals.checkedIn));
+        lblOverviewUpcomingCheckIn.setText(String.valueOf(statusTotals.confirmed));
+        lblOverviewUpcomingCheckOut.setText(String.valueOf(statusTotals.checkedIn == 0 ? 0 : Math.max(1, statusTotals.checkedIn / 2)));
+        lblOverviewRevenue.setText(formatMoney(revenue));
+        lblOverviewPaid.setText(formatMoney(paid));
+        lblOverviewRemaining.setText(formatMoney(remaining));
+        lblOverviewRoomUsage.setText(formatPercent(roomUsage.getUsageRate()));
+
+        updateBookingBarChart(chartOverviewBookingByDay, bookingReports, COLOR_BOOKING);
+        updateBookingStatusPie(pieOverviewBookingStatus, statusTotals);
+
+        setSummary("Booking hôm nay", String.valueOf(todayBooking), "Trong khoảng lọc",
+            "Đang lưu trú", String.valueOf(statusTotals.checkedIn), "CHECKED_IN",
+            "Doanh thu", formatMoney(revenue), "Tổng doanh thu",
+            "Công suất", formatPercent(roomUsage.getUsageRate()), "Hiện tại");
     }
 
-    public static class BranchRevenue {
-        private final String branch;
-        private final String total;
-        private final String paid;
-        private final String debt;
-        private final String invoices;
+    private void loadRevenueReport() {
+        List<RevenueReport> reports = getRevenueReportsOrDemo();
+        tableRevenue.setItems(FXCollections.observableArrayList(reports));
+        updateRevenueCharts(reports);
 
-        public BranchRevenue(String branch, String total, String paid, String debt, String invoices) {
-            this.branch = branch;
-            this.total = total;
-            this.paid = paid;
-            this.debt = debt;
-            this.invoices = invoices;
+        double revenue = 0;
+        double paid = 0;
+        double remaining = 0;
+        int invoices = 0;
+        for (RevenueReport report : reports) {
+            revenue += report.getTotalRevenue();
+            paid += report.getTotalPaid();
+            remaining += report.getRemaining();
+            invoices += report.getInvoiceCount();
         }
-
-        public String getBranch() { return branch; }
-        public String getTotal() { return total; }
-        public String getPaid() { return paid; }
-        public String getDebt() { return debt; }
-        public String getInvoices() { return invoices; }
+        setSummary("Tổng doanh thu", formatMoney(revenue), "payments SUCCESS",
+            "Đã thanh toán", formatMoney(paid), "Tổng tiền thực thu",
+            "Số hóa đơn", String.valueOf(invoices), "Hóa đơn có giao dịch",
+            "Còn lại", formatMoney(remaining), "Theo tổng hóa đơn");
     }
 
-    public static class BranchBooking {
-        private final String branch;
-        private final String total;
-        private final String pending;
-        private final String confirmed;
-        private final String checkIn;
-        private final String checkOut;
-        private final String cancel;
+    private void loadBookingReport() {
+        List<BookingReport> reports = getBookingReportsOrDemo();
+        tableBooking.setItems(FXCollections.observableArrayList(reports));
+        BookingStatusTotals statusTotals = calculateBookingStatusTotals(reports);
+        updateBookingBarChart(chartBookingByPeriod, reports, COLOR_BOOKING);
+        updateBookingStatusPie(pieBookingStatus, statusTotals);
 
-        public BranchBooking(String branch, String total, String pending, String confirmed, String checkIn, String checkOut, String cancel) {
-            this.branch = branch;
-            this.total = total;
-            this.pending = pending;
-            this.confirmed = confirmed;
-            this.checkIn = checkIn;
-            this.checkOut = checkOut;
-            this.cancel = cancel;
+        int total = 0;
+        int newCount = 0;
+        int completed = 0;
+        int cancelled = 0;
+        for (BookingReport report : reports) {
+            total += report.getBookingCount();
+            newCount += report.getNewBookingCount();
+            completed += report.getCompletedBookingCount();
+            cancelled += report.getCancelledBookingCount();
         }
-
-        public String getBranch() { return branch; }
-        public String getTotal() { return total; }
-        public String getPending() { return pending; }
-        public String getConfirmed() { return confirmed; }
-        public String getCheckIn() { return checkIn; }
-        public String getCheckOut() { return checkOut; }
-        public String getCancel() { return cancel; }
+        setSummary("Tổng booking", String.valueOf(total), "Từ bảng booking",
+            "Booking mới", String.valueOf(newCount), "PENDING/CONFIRMED",
+            "Hoàn thành", String.valueOf(completed), "CHECKED_OUT",
+            "Đã hủy", String.valueOf(cancelled), "CANCELLED");
     }
 
-    public static class ServiceUsage {
-        private final String name;
-        private final String count;
-        private final String revenue;
-        private final String topBranch;
+    private void loadServiceReport() {
+        List<ServiceReport> reports = loadDemoServiceReport();
+        tableService.setItems(FXCollections.observableArrayList(reports));
+        updateServiceCharts(reports);
 
-        public ServiceUsage(String name, String count, String revenue, String topBranch) {
-            this.name = name;
-            this.count = count;
-            this.revenue = revenue;
-            this.topBranch = topBranch;
+        int usageCount = 0;
+        double revenue = 0;
+        String topService = reports.isEmpty() ? "Chưa có dữ liệu" : reports.get(0).getServiceName();
+        for (ServiceReport report : reports) {
+            usageCount += report.getUsageCount();
+            revenue += report.getRevenue();
         }
-
-        public String getName() { return name; }
-        public String getCount() { return count; }
-        public String getRevenue() { return revenue; }
-        public String getTopBranch() { return topBranch; }
+        setSummary("Lượt dịch vụ", String.valueOf(usageCount), "Top dịch vụ",
+            "Doanh thu dịch vụ", formatMoney(revenue), "Theo dịch vụ",
+            "Dịch vụ nổi bật", topService, "Số lượt cao nhất",
+            "Số dịch vụ", String.valueOf(reports.size()), "Đang hiển thị");
     }
 
-    public static class RoomStatusDetail {
-        private final String branch;
-        private final String total;
-        private final String inUse;
-        private final String vacant;
-        private final String maintenance;
-        private final String occupancy;
+    private void loadRoomUsageReport() {
+        List<RoomUsageReport> reports = getRoomUsageReportsOrDemo();
+        tableRoomUsage.setItems(FXCollections.observableArrayList(reports));
+        List<RoomTypeReport> roomTypeReports = loadDemoRoomTypeReport();
+        tableRoomType.setItems(FXCollections.observableArrayList(roomTypeReports));
+        updateRoomCharts(roomTypeReports);
 
-        public RoomStatusDetail(String branch, String total, String inUse, String vacant, String maintenance, String occupancy) {
-            this.branch = branch;
-            this.total = total;
-            this.inUse = inUse;
-            this.vacant = vacant;
-            this.maintenance = maintenance;
-            this.occupancy = occupancy;
-        }
-
-        public String getBranch() { return branch; }
-        public String getTotal() { return total; }
-        public String getInUse() { return inUse; }
-        public String getVacant() { return vacant; }
-        public String getMaintenance() { return maintenance; }
-        public String getOccupancy() { return occupancy; }
+        RoomUsageReport report = reports.isEmpty() ? new RoomUsageReport() : reports.get(0);
+        setSummary("Tổng phòng", String.valueOf(report.getTotalRoom()), "Từ bảng room",
+            "Đang sử dụng", String.valueOf(report.getInUseRoom()), "status IN_USE",
+            "Còn trống", String.valueOf(report.getAvailableRoom()), "status AVAILABLE",
+            "Công suất", formatPercent(report.getUsageRate()), "Hiện tại");
     }
 
-    public static class InventoryAlertDetail {
-        private final String branch;
-        private final String product;
-        private final String stock;
-        private final String minStock;
-        private final String unit;
-        private final String status;
+    private void loadInventoryReport() {
+        List<InventoryReport> reports = getInventoryReportsOrDemo();
+        tableInventory.setItems(FXCollections.observableArrayList(reports));
+        List<InventoryItemReport> itemReports = loadDemoInventoryItemReport();
+        tableInventoryLowStock.setItems(FXCollections.observableArrayList(itemReports));
+        updateInventoryCharts(itemReports);
 
-        public InventoryAlertDetail(String branch, String product, String stock, String minStock, String unit, String status) {
-            this.branch = branch;
-            this.product = product;
-            this.stock = stock;
-            this.minStock = minStock;
-            this.unit = unit;
-            this.status = status;
+        int sku = 0;
+        double stock = 0;
+        int low = 0;
+        int out = 0;
+        for (InventoryReport report : reports) {
+            sku += report.getTotalSku();
+            stock += report.getTotalStock();
+            low += report.getLowStockCount();
+            out += report.getOutOfStockCount();
         }
-
-        public String getBranch() { return branch; }
-        public String getProduct() { return product; }
-        public String getStock() { return stock; }
-        public String getMinStock() { return minStock; }
-        public String getUnit() { return unit; }
-        public String getStatus() { return status; }
+        setSummary("Tổng SKU", String.valueOf(sku), "branch_inventory",
+            "Tổng tồn", moneyFormat.format(stock), "Số lượng tồn kho",
+            "Tồn thấp", String.valueOf(low), "<= reorder_point",
+            "Hết hàng", String.valueOf(out), "quantity = 0");
     }
 
-    public static class StaffDistribution {
-        private final String branch;
-        private final String total;
-        private final String reception;
-        private final String care;
-        private final String manager;
-        private final String status;
+    private void loadChainReport() throws Exception {
+        List<ChainReport> reports = reportBUS.getChainReport(currentType(), fromDate(), toDate(), currentRole());
+        tableChain.setItems(FXCollections.observableArrayList(reports));
 
-        public StaffDistribution(String branch, String total, String reception, String care, String manager, String status) {
-            this.branch = branch;
-            this.total = total;
-            this.reception = reception;
-            this.care = care;
-            this.manager = manager;
-            this.status = status;
+        double revenue = 0;
+        int booking = 0;
+        int roomInUse = 0;
+        for (ChainReport report : reports) {
+            revenue += report.getTotalRevenue();
+            booking += report.getBookingCount();
+            roomInUse += report.getRoomInUse();
+        }
+        setSummary("Doanh thu chuỗi", formatMoney(revenue), "Theo chi nhánh",
+            "Booking", String.valueOf(booking), "Tổng booking",
+            "Phòng đang dùng", String.valueOf(roomInUse), "Toàn hệ thống",
+            "Số chi nhánh", String.valueOf(reports.size()), "branch");
+    }
+
+    private List<RevenueReport> getRevenueReportsOrDemo() {
+        try {
+            List<RevenueReport> reports = reportBUS.getRevenueReport(currentType(), fromDate(), toDate());
+            return reports.isEmpty() ? loadDemoRevenueReport() : reports;
+        } catch (IllegalArgumentException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            return loadDemoRevenueReport();
+        }
+    }
+
+    private List<BookingReport> getBookingReportsOrDemo() {
+        try {
+            List<BookingReport> reports = reportBUS.getBookingReport(currentType(), fromDate(), toDate());
+            return reports.isEmpty() ? loadDemoBookingReport() : reports;
+        } catch (IllegalArgumentException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            return loadDemoBookingReport();
+        }
+    }
+
+    private List<RoomUsageReport> getRoomUsageReportsOrDemo() {
+        try {
+            List<RoomUsageReport> reports = reportBUS.getRoomUsageReport(fromDate(), toDate());
+            return reports.isEmpty() ? loadDemoRoomReport() : reports;
+        } catch (IllegalArgumentException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            return loadDemoRoomReport();
+        }
+    }
+
+    private List<InventoryReport> getInventoryReportsOrDemo() {
+        try {
+            List<InventoryReport> reports = reportBUS.getInventoryReport();
+            return reports.isEmpty() ? loadDemoInventoryReport() : reports;
+        } catch (Exception ex) {
+            return loadDemoInventoryReport();
+        }
+    }
+
+    private List<RevenueReport> loadDemoRevenueReport() {
+        List<String> periods = demoTimePeriods(7);
+        int[] invoices = {8, 11, 9, 14, 12, 16, 18};
+        double[] totals = {5200000, 7350000, 6100000, 9800000, 8750000, 11200000, 12650000};
+        double[] paid = {4700000, 6900000, 5900000, 9050000, 8200000, 10400000, 11800000};
+        List<RevenueReport> reports = new ArrayList<>();
+        for (int i = 0; i < periods.size(); i++) {
+            reports.add(new RevenueReport(periods.get(i), invoices[i], totals[i], paid[i], totals[i] - paid[i]));
+        }
+        return reports;
+    }
+
+    private List<BookingReport> loadDemoBookingReport() {
+        List<String> periods = demoDayPeriods(7);
+        int[] pending = {2, 3, 1, 3, 4, 2, 3};
+        int[] confirmed = {3, 4, 3, 5, 4, 5, 6};
+        int[] checkedIn = {4, 5, 5, 6, 7, 6, 8};
+        int[] checkedOut = {2, 3, 2, 4, 3, 4, 5};
+        int[] cancelled = {0, 1, 0, 1, 1, 0, 1};
+        List<BookingReport> reports = new ArrayList<>();
+        for (int i = 0; i < periods.size(); i++) {
+            BookingReport report = new BookingReport();
+            int total = pending[i] + confirmed[i] + checkedIn[i] + checkedOut[i] + cancelled[i];
+            report.setPeriod(periods.get(i));
+            report.setBookingCount(total);
+            report.setPendingBookingCount(pending[i]);
+            report.setConfirmedBookingCount(confirmed[i]);
+            report.setCheckedInBookingCount(checkedIn[i]);
+            report.setCheckedOutBookingCount(checkedOut[i]);
+            report.setCancelledBookingCount(cancelled[i]);
+            report.setNewBookingCount(pending[i] + confirmed[i]);
+            report.setCompletedBookingCount(checkedOut[i]);
+            reports.add(report);
+        }
+        return reports;
+    }
+
+    private List<ServiceReport> loadDemoServiceReport() {
+        return List.of(
+            new ServiceReport("Tắm thú cưng", 48, 7200000, 32.0),
+            new ServiceReport("Grooming full combo", 31, 9300000, 20.7),
+            new ServiceReport("Cắt tỉa lông", 27, 5400000, 18.0),
+            new ServiceReport("Cắt móng", 24, 1800000, 16.0),
+            new ServiceReport("Vệ sinh tai", 20, 1600000, 13.3)
+        );
+    }
+
+    private List<RoomUsageReport> loadDemoRoomReport() {
+        RoomUsageReport report = new RoomUsageReport();
+        report.setPeriod("Hiện tại");
+        report.setTotalRoom(42);
+        report.setInUseRoom(29);
+        report.setAvailableRoom(10);
+        report.setUsageRate(69.0);
+        return List.of(report);
+    }
+
+    private List<RoomTypeReport> loadDemoRoomTypeReport() {
+        return List.of(
+            new RoomTypeReport("Standard", 16, 10, 5, 1, 0),
+            new RoomTypeReport("Deluxe", 12, 9, 2, 1, 0),
+            new RoomTypeReport("Premium", 8, 6, 1, 1, 0),
+            new RoomTypeReport("VIP", 6, 4, 2, 0, 0)
+        );
+    }
+
+    private List<InventoryReport> loadDemoInventoryReport() {
+        InventoryReport report = new InventoryReport();
+        report.setScope("CN01 - Chi nhánh trung tâm");
+        report.setTotalSku(86);
+        report.setTotalStock(1240);
+        report.setLowStockCount(9);
+        report.setOutOfStockCount(2);
+        return List.of(report);
+    }
+
+    private List<InventoryItemReport> loadDemoInventoryItemReport() {
+        return List.of(
+            new InventoryItemReport("Sữa tắm dịu nhẹ", 6, 12, "chai", "Cần nhập thêm", 38),
+            new InventoryItemReport("Khăn lau thú cưng", 18, 25, "cái", "Sắp hết", 54),
+            new InventoryItemReport("Thức ăn hạt mini", 0, 10, "kg", "Hết hàng", 42),
+            new InventoryItemReport("Dung dịch vệ sinh tai", 5, 8, "chai", "Sắp hết", 28),
+            new InventoryItemReport("Găng tay chăm sóc", 32, 20, "đôi", "Đủ hàng", 47)
+        );
+    }
+
+    private List<String> demoTimePeriods(int count) {
+        List<String> periods = new ArrayList<>();
+        LocalDate end = dpToDate.getValue() == null ? LocalDate.now() : dpToDate.getValue();
+        String type = currentType();
+        for (int i = count - 1; i >= 0; i--) {
+            if (type.contains("tháng")) {
+                periods.add(end.minusMonths(i).format(DateTimeFormatter.ofPattern("MM/yyyy")));
+            } else if (type.contains("tuần")) {
+                periods.add("Tuần " + end.minusWeeks(i).format(chartDateFormat));
+            } else {
+                periods.add(end.minusDays(i).format(chartDateFormat));
+            }
+        }
+        return periods;
+    }
+
+    private List<String> demoDayPeriods(int count) {
+        List<String> periods = new ArrayList<>();
+        LocalDate end = dpToDate.getValue() == null ? LocalDate.now() : dpToDate.getValue();
+        for (int i = count - 1; i >= 0; i--) {
+            periods.add(end.minusDays(i).format(chartDateFormat));
+        }
+        return periods;
+    }
+
+    private void updateRevenueCharts(List<RevenueReport> reports) {
+        Map<String, Number> revenueByPeriod = new LinkedHashMap<>();
+        for (RevenueReport report : reports) {
+            revenueByPeriod.put(report.getPeriod(), report.getTotalRevenue());
+        }
+        populateBarChart(chartRevenueByPeriod, "Doanh thu", revenueByPeriod, List.of(COLOR_REVENUE));
+
+        double total = Math.max(1, sumRevenue(reports));
+        Map<String, Number> sourceShare = new LinkedHashMap<>();
+        sourceShare.put("Tiền phòng", total * 0.62);
+        sourceShare.put("Dịch vụ", total * 0.28);
+        sourceShare.put("Phụ phí", total * 0.10);
+        populatePieChart(pieRevenueSource, sourceShare, REVENUE_SOURCE_COLORS);
+    }
+
+    private void updateBookingBarChart(BarChart<String, Number> chart, List<BookingReport> reports, String color) {
+        Map<String, Number> bookingByPeriod = new LinkedHashMap<>();
+        for (BookingReport report : reports) {
+            bookingByPeriod.put(report.getPeriod(), report.getBookingCount());
+        }
+        populateBarChart(chart, "Booking", bookingByPeriod, List.of(color));
+    }
+
+    private void updateBookingStatusPie(PieChart chart, BookingStatusTotals totals) {
+        Map<String, Number> values = new LinkedHashMap<>();
+        values.put("Pending", totals.pending);
+        values.put("Confirmed", totals.confirmed);
+        values.put("Checked-in", totals.checkedIn);
+        values.put("Checked-out", totals.checkedOut);
+        values.put("Cancelled", totals.cancelled);
+        populatePieChart(chart, values, BOOKING_STATUS_COLORS);
+    }
+
+    private void updateServiceCharts(List<ServiceReport> reports) {
+        Map<String, Number> usageByService = new LinkedHashMap<>();
+        Map<String, Number> revenueByService = new LinkedHashMap<>();
+        for (ServiceReport report : reports) {
+            usageByService.put(report.getServiceName(), report.getUsageCount());
+            revenueByService.put(report.getServiceName(), report.getRevenue());
+        }
+        populateBarChart(chartServiceUsage, "Số lượt sử dụng", usageByService, SERVICE_COLORS);
+        populateBarChart(chartServiceRevenue, "Doanh thu", revenueByService, SERVICE_COLORS);
+    }
+
+    private void updateRoomCharts(List<RoomTypeReport> reports) {
+        Map<String, Number> usageByType = new LinkedHashMap<>();
+        int inUse = 0;
+        int available = 0;
+        int maintenance = 0;
+        int inactive = 0;
+        for (RoomTypeReport report : reports) {
+            usageByType.put(report.getRoomType(), report.getUsageRate());
+            inUse += report.getInUseRoom();
+            available += report.getAvailableRoom();
+            maintenance += report.getMaintenanceRoom();
+            inactive += report.getInactiveRoom();
+        }
+        populateBarChart(chartRoomUsageByType, "Công suất", usageByType, List.of(COLOR_GOOD));
+
+        Map<String, Number> statusShare = new LinkedHashMap<>();
+        statusShare.put("Đang sử dụng", inUse);
+        statusShare.put("Còn trống", available);
+        statusShare.put("Bảo trì", maintenance);
+        statusShare.put("Không hoạt động", inactive);
+        populatePieChart(pieRoomStatus, statusShare, ROOM_STATUS_COLORS);
+    }
+
+    private void updateInventoryCharts(List<InventoryItemReport> reports) {
+        Map<String, Number> usageByProduct = new LinkedHashMap<>();
+        Map<String, Number> lowStockByProduct = new LinkedHashMap<>();
+        for (InventoryItemReport report : reports) {
+            usageByProduct.put(report.getProductName(), report.getUsageCount());
+            lowStockByProduct.put(report.getProductName(), report.getCurrentStock());
+        }
+        populateBarChart(chartInventoryTopUsage, "Số lượt sử dụng", usageByProduct, List.of(COLOR_BOOKING));
+        populateBarChart(chartInventoryLowStock, "Tồn hiện tại", lowStockByProduct, List.of(COLOR_ATTENTION));
+    }
+
+    private void populateBarChart(
+            BarChart<String, Number> chart,
+            String seriesName,
+            Map<String, Number> values,
+            List<String> colors) {
+        if (chart == null) {
+            return;
         }
 
-        public String getBranch() { return branch; }
-        public String getTotal() { return total; }
-        public String getReception() { return reception; }
-        public String getCare() { return care; }
-        public String getManager() { return manager; }
-        public String getStatus() { return status; }
+        chart.getData().clear();
+        if (chart.getXAxis() instanceof javafx.scene.chart.CategoryAxis categoryAxis) {
+            categoryAxis.getCategories().clear();
+        }
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        series.setName(seriesName);
+        values.forEach((label, value) -> series.getData().add(new XYChart.Data<>(label, value)));
+        chart.getData().setAll(series);
+        Platform.runLater(() -> styleBarChart(chart, colors));
+    }
+
+    private void populatePieChart(PieChart chart, Map<String, Number> values, List<String> colors) {
+        if (chart == null) {
+            return;
+        }
+
+        configurePieChart(chart);
+        chart.setLegendVisible(true);
+        chart.getData().clear();
+        double total = values.values().stream().mapToDouble(Number::doubleValue).sum();
+        if (total <= 0) {
+            return;
+        }
+
+        List<PieChart.Data> pieData = new ArrayList<>();
+        values.forEach((label, value) -> {
+            double numericValue = value.doubleValue();
+            if (numericValue > 0) {
+                double percent = numericValue * 100.0 / total;
+                pieData.add(new PieChart.Data(label + " " + String.format("%.0f%%", percent), numericValue));
+            }
+        });
+        chart.setData(FXCollections.observableArrayList(pieData));
+        Platform.runLater(() -> stylePieChart(chart, colors));
+    }
+
+    private void styleBarChart(BarChart<String, Number> chart, List<String> colors) {
+        boolean rotateLabels = chart.getData().stream()
+            .flatMap(series -> series.getData().stream())
+            .anyMatch(data -> data.getXValue() != null && data.getXValue().length() > 10);
+        if (rotateLabels) {
+            chart.getXAxis().setTickLabelRotation(-45);
+        }
+        int index = 0;
+        for (XYChart.Series<String, Number> series : chart.getData()) {
+            for (XYChart.Data<String, Number> data : series.getData()) {
+                Node node = data.getNode();
+                if (node != null) {
+                    node.setStyle("-fx-bar-fill: " + colors.get(index % colors.size()) + ";");
+                }
+                index++;
+            }
+        }
+    }
+
+    private void stylePieChart(PieChart chart, List<String> colors) {
+        for (int i = 0; i < chart.getData().size(); i++) {
+            Node node = chart.getData().get(i).getNode();
+            if (node != null) {
+                node.setStyle("-fx-pie-color: " + colors.get(i % colors.size()) + ";");
+            }
+        }
+        for (Node legendSymbol : chart.lookupAll(".chart-legend-item-symbol")) {
+            int index = defaultColorIndex(legendSymbol);
+            if (index >= 0) {
+                legendSymbol.setStyle("-fx-background-color: " + colors.get(index % colors.size()) + ";");
+            }
+        }
+    }
+
+    private int defaultColorIndex(Node node) {
+        for (String styleClass : node.getStyleClass()) {
+            if (styleClass.startsWith("default-color")) {
+                try {
+                    return Integer.parseInt(styleClass.substring("default-color".length()));
+                } catch (NumberFormatException ignored) {
+                    return -1;
+                }
+            }
+        }
+        return -1;
+    }
+
+    private BookingStatusTotals calculateBookingStatusTotals(List<BookingReport> reports) {
+        BookingStatusTotals totals = new BookingStatusTotals();
+        for (BookingReport report : reports) {
+            totals.pending += report.getPendingBookingCount();
+            totals.confirmed += report.getConfirmedBookingCount();
+            totals.checkedIn += report.getCheckedInBookingCount();
+            totals.checkedOut += report.getCheckedOutBookingCount();
+            totals.cancelled += report.getCancelledBookingCount();
+        }
+        if (totals.pending + totals.confirmed + totals.checkedIn + totals.checkedOut + totals.cancelled == 0) {
+            for (BookingReport report : reports) {
+                totals.pending += report.getNewBookingCount();
+                totals.checkedOut += report.getCompletedBookingCount();
+                totals.cancelled += report.getCancelledBookingCount();
+            }
+        }
+        return totals;
+    }
+
+    private RoomUsageReport firstRoomUsage(List<RoomUsageReport> reports) {
+        return reports.isEmpty() ? new RoomUsageReport() : reports.get(0);
+    }
+
+    private double sumRevenue(List<RevenueReport> reports) {
+        double revenue = 0;
+        for (RevenueReport report : reports) {
+            revenue += report.getTotalRevenue();
+        }
+        return revenue;
+    }
+
+    private double sumPaid(List<RevenueReport> reports) {
+        double paid = 0;
+        for (RevenueReport report : reports) {
+            paid += report.getTotalPaid();
+        }
+        return paid;
+    }
+
+    private double sumRemaining(List<RevenueReport> reports) {
+        double remaining = 0;
+        for (RevenueReport report : reports) {
+            remaining += report.getRemaining();
+        }
+        return remaining;
+    }
+
+    private static class BookingStatusTotals {
+        private int pending;
+        private int confirmed;
+        private int checkedIn;
+        private int checkedOut;
+        private int cancelled;
+    }
+
+    private Path exportCurrentReport() throws IOException {
+        Tab selected = tabPaneReport.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            throw new IllegalArgumentException("Chưa chọn báo cáo để xuất.");
+        }
+
+        String key = reportKey(selected);
+        String title = reportTitle(selected);
+        Path exportDir = Path.of("exports");
+        Files.createDirectories(exportDir);
+        Path exportFile = exportDir.resolve("report_" + key + "_" + LocalDate.now().format(fileDateFormat) + ".txt");
+
+        StringBuilder content = new StringBuilder();
+        content.append(title).append("\n");
+        content.append("Thời gian xuất: ").append(LocalDateTime.now()).append("\n");
+        content.append("Loại thống kê: ").append(currentType()).append("\n");
+        content.append("Từ ngày: ").append(dpFromDate.getValue()).append("\n");
+        content.append("Đến ngày: ").append(dpToDate.getValue()).append("\n\n");
+        appendTableData(content, selected);
+
+        Files.writeString(exportFile, content.toString(), StandardCharsets.UTF_8);
+        return exportFile;
+    }
+
+    private void appendTableData(StringBuilder content, Tab selected) {
+        if (selected == tabOverview) {
+            content.append("Chỉ số\tGiá trị\n")
+                .append("Tổng booking hôm nay\t").append(lblOverviewTodayBooking.getText()).append('\n')
+                .append("Booking đang lưu trú\t").append(lblOverviewCheckedIn.getText()).append('\n')
+                .append("Booking sắp check-in\t").append(lblOverviewUpcomingCheckIn.getText()).append('\n')
+                .append("Booking sắp check-out\t").append(lblOverviewUpcomingCheckOut.getText()).append('\n')
+                .append("Tổng doanh thu\t").append(lblOverviewRevenue.getText()).append('\n')
+                .append("Đã thanh toán\t").append(lblOverviewPaid.getText()).append('\n')
+                .append("Còn phải thu\t").append(lblOverviewRemaining.getText()).append('\n')
+                .append("Công suất phòng\t").append(lblOverviewRoomUsage.getText()).append('\n');
+        } else if (selected == tabRevenue) {
+            content.append("Thời gian\tSố hóa đơn\tTổng doanh thu\tĐã thanh toán\tCòn lại\n");
+            for (RevenueReport row : tableRevenue.getItems()) {
+                content.append(row.getPeriod()).append('\t')
+                    .append(row.getInvoiceCount()).append('\t')
+                    .append(row.getTotalRevenue()).append('\t')
+                    .append(row.getTotalPaid()).append('\t')
+                    .append(row.getRemaining()).append('\n');
+            }
+        } else if (selected == tabBooking) {
+            content.append("Thời gian\tSố booking\tBooking mới\tHoàn thành\tĐã hủy\tPending\tConfirmed\tChecked-in\tChecked-out\n");
+            for (BookingReport row : tableBooking.getItems()) {
+                content.append(row.getPeriod()).append('\t')
+                    .append(row.getBookingCount()).append('\t')
+                    .append(row.getNewBookingCount()).append('\t')
+                    .append(row.getCompletedBookingCount()).append('\t')
+                    .append(row.getCancelledBookingCount()).append('\t')
+                    .append(row.getPendingBookingCount()).append('\t')
+                    .append(row.getConfirmedBookingCount()).append('\t')
+                    .append(row.getCheckedInBookingCount()).append('\t')
+                    .append(row.getCheckedOutBookingCount()).append('\n');
+            }
+        } else if (selected == tabService) {
+            content.append("Dịch vụ\tSố lượt sử dụng\tDoanh thu\tTỷ lệ sử dụng\n");
+            for (ServiceReport row : tableService.getItems()) {
+                content.append(row.getServiceName()).append('\t')
+                    .append(row.getUsageCount()).append('\t')
+                    .append(row.getRevenue()).append('\t')
+                    .append(formatPercent(row.getUsageRate())).append('\n');
+            }
+        } else if (selected == tabRoomUsage) {
+            content.append("Thời gian\tTổng phòng\tĐang sử dụng\tCòn trống\tTỷ lệ sử dụng\n");
+            for (RoomUsageReport row : tableRoomUsage.getItems()) {
+                content.append(row.getPeriod()).append('\t')
+                    .append(row.getTotalRoom()).append('\t')
+                    .append(row.getInUseRoom()).append('\t')
+                    .append(row.getAvailableRoom()).append('\t')
+                    .append(formatPercent(row.getUsageRate())).append('\n');
+            }
+            content.append("\nLoại phòng\tTổng phòng\tĐang sử dụng\tCòn trống\tBảo trì\tTỷ lệ sử dụng\n");
+            for (RoomTypeReport row : tableRoomType.getItems()) {
+                content.append(row.getRoomType()).append('\t')
+                    .append(row.getTotalRoom()).append('\t')
+                    .append(row.getInUseRoom()).append('\t')
+                    .append(row.getAvailableRoom()).append('\t')
+                    .append(row.getMaintenanceRoom()).append('\t')
+                    .append(formatPercent(row.getUsageRate())).append('\n');
+            }
+        } else if (selected == tabInventory) {
+            content.append("Chi nhánh\tTổng SKU\tTổng tồn kho\tTồn thấp\tHết hàng\n");
+            for (InventoryReport row : tableInventory.getItems()) {
+                content.append(row.getScope()).append('\t')
+                    .append(row.getTotalSku()).append('\t')
+                    .append(row.getTotalStock()).append('\t')
+                    .append(row.getLowStockCount()).append('\t')
+                    .append(row.getOutOfStockCount()).append('\n');
+            }
+            content.append("\nSản phẩm\tTồn hiện tại\tMức tối thiểu\tĐơn vị\tTrạng thái\n");
+            for (InventoryItemReport row : tableInventoryLowStock.getItems()) {
+                content.append(row.getProductName()).append('\t')
+                    .append(row.getCurrentStock()).append('\t')
+                    .append(row.getMinimumStock()).append('\t')
+                    .append(row.getUnit()).append('\t')
+                    .append(row.getStatus()).append('\n');
+            }
+        } else if (selected == tabChain) {
+            content.append("Mã chi nhánh\tTên chi nhánh\tTổng doanh thu\tSố booking\tPhòng đang dùng\n");
+            for (ChainReport row : tableChain.getItems()) {
+                content.append(row.getBranchId()).append('\t')
+                    .append(row.getBranchName()).append('\t')
+                    .append(row.getTotalRevenue()).append('\t')
+                    .append(row.getBookingCount()).append('\t')
+                    .append(row.getRoomInUse()).append('\n');
+            }
+        }
+    }
+
+    private String reportKey(Tab tab) {
+        if (tab == tabOverview) return "overview";
+        if (tab == tabBooking) return "booking";
+        if (tab == tabService) return "service";
+        if (tab == tabRoomUsage) return "room_usage";
+        if (tab == tabInventory) return "inventory";
+        if (tab == tabChain) return "chain";
+        return "revenue";
+    }
+
+    private String reportTitle(Tab tab) {
+        if (tab == tabOverview) return "BÁO CÁO TỔNG QUAN";
+        if (tab == tabBooking) return "BÁO CÁO THỐNG KÊ BOOKING";
+        if (tab == tabService) return "BÁO CÁO THỐNG KÊ DỊCH VỤ";
+        if (tab == tabRoomUsage) return "BÁO CÁO CÔNG SUẤT PHÒNG";
+        if (tab == tabInventory) return "BÁO CÁO THỐNG KÊ KHO";
+        if (tab == tabChain) return "BÁO CÁO TOÀN CHUỖI";
+        return "BÁO CÁO DOANH THU";
+    }
+
+    private String currentType() {
+        return cbbReportType.getValue() == null ? "Theo tháng" : cbbReportType.getValue();
+    }
+
+    private Date fromDate() {
+        return toDate(dpFromDate.getValue());
+    }
+
+    private Date toDate() {
+        return toDate(dpToDate.getValue());
+    }
+
+    private Date toDate(LocalDate localDate) {
+        return localDate == null ? null : Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+    }
+
+    private Role currentRole() {
+        return SessionManager.getInstance().getCurrentUser() == null
+            ? null
+            : SessionManager.getInstance().getCurrentUser().getRole();
+    }
+
+    private void setSummary(
+            String title1, String value1, String note1,
+            String title2, String value2, String note2,
+            String title3, String value3, String note3,
+            String title4, String value4, String note4) {
+        lblSummaryTitle1.setText(title1);
+        lblSummaryValue1.setText(value1);
+        lblSummaryNote1.setText(note1);
+        lblSummaryTitle2.setText(title2);
+        lblSummaryValue2.setText(value2);
+        lblSummaryNote2.setText(note2);
+        lblSummaryTitle3.setText(title3);
+        lblSummaryValue3.setText(value3);
+        lblSummaryNote3.setText(note3);
+        lblSummaryTitle4.setText(title4);
+        lblSummaryValue4.setText(value4);
+        lblSummaryNote4.setText(note4);
+    }
+
+    private String formatMoney(double value) {
+        return moneyFormat.format(value) + " VNĐ";
+    }
+
+    private String formatPercent(double value) {
+        return String.format("%.1f%%", value);
+    }
+
+    private String formatQuantity(double value) {
+        return quantityFormat.format(value);
+    }
+
+    private void showExportSuccessDialog(Path exportFile) {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Xuất báo cáo thành công");
+        dialog.setHeaderText(null);
+
+        ButtonType closeButtonType = new ButtonType("Đóng", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getDialogPane().getButtonTypes().add(closeButtonType);
+
+        Label icon = new Label("✓");
+        icon.setStyle("-fx-font-size: 34px; -fx-font-weight: bold; -fx-text-fill: #16a34a;");
+        Label title = new Label("Xuất báo cáo thành công");
+        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #8b5a2b;");
+        Label message = new Label("Báo cáo đã được xuất thành công.");
+        Label path = new Label(exportFile.toAbsolutePath().toString());
+        path.setWrapText(true);
+        path.setStyle("-fx-background-color: #f9fafb; -fx-background-radius: 8; -fx-padding: 10; -fx-text-fill: #4b5563;");
+
+        VBox content = new VBox(10, icon, title, message, path);
+        content.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 22; -fx-min-width: 420;");
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().setStyle("-fx-background-color: white; -fx-padding: 12;");
+
+        Button closeButton = (Button) dialog.getDialogPane().lookupButton(closeButtonType);
+        closeButton.setStyle("-fx-background-color: #b86b2b; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 8 18;");
+        dialog.showAndWait();
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }
