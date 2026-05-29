@@ -38,3 +38,4 @@
 {"logId":"LOG533497","employeeId":"EMP0874866","employeeName":"Dương Đức Lộc","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-29T14:49:09.110460700+07:00"}
 {"logId":"LOG287466","employeeId":"EMP_ADMIN","employeeName":"Quản Trị Viên Hệ Thống","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-29T14:51:59.921653400+07:00"}
 {"logId":"LOG150524","employeeId":"EMP_ADMIN","employeeName":"Quản Trị Viên Hệ Thống","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-29T14:53:51.108316500+07:00"}
+{"logId":"LOG755410","employeeId":"EMP004","employeeName":"Nguyễn Thị D","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-29T15:26:34.511182700+07:00"}

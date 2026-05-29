@@ -28,9 +28,6 @@ import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Alert;
-
-import java.text.DecimalFormat;
-import java.util.Map;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -39,6 +36,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -47,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class DashboardHomeController {
@@ -104,7 +103,7 @@ public class DashboardHomeController {
     @FXML private TableColumn<AppUser, String> colUserBranch;
     @FXML private TableColumn<AppUser, String> colUserLastLogin;
     @FXML private TableColumn<AppUser, String> colUserOnlineStatus;
-    
+
     @FXML private TableView<AuditLog> auditLogTable;
     @FXML private TableColumn<AuditLog, String> colLogTime;
     @FXML private TableColumn<AuditLog, String> colLogUser;
@@ -121,7 +120,7 @@ public class DashboardHomeController {
     @FXML private TableColumn<BookingService, String> colGroomService;
     @FXML private TableColumn<BookingService, String> colGroomTime;
     @FXML private TableColumn<BookingService, String> colGroomStatus;
-    
+
     @FXML private TableView<Room> waitingPetsRoomTable;
     @FXML private TableColumn<Room, String> colRoomNumber;
     @FXML private TableColumn<Room, String> colRoomType;
@@ -136,7 +135,7 @@ public class DashboardHomeController {
     @FXML private BarChart<String, Number> managerRevenueChart;
     @FXML private CategoryAxis revXAxis;
     @FXML private NumberAxis revYAxis;
-    
+
     @FXML private TableView<StaffPerformance> staffPerformanceTable;
     @FXML private TableColumn<StaffPerformance, String> colStaffName;
     @FXML private TableColumn<StaffPerformance, String> colStaffRole;
@@ -151,7 +150,7 @@ public class DashboardHomeController {
     @FXML private BarChart<String, Number> ceoRevenueChart;
     @FXML private CategoryAxis ceoRevXAxis;
     @FXML private NumberAxis ceoRevYAxis;
-    
+
     @FXML private BarChart<String, Number> ceoServiceUsageChart;
     @FXML private CategoryAxis ceoServiceXAxis;
     @FXML private NumberAxis ceoServiceYAxis;
@@ -195,19 +194,19 @@ public class DashboardHomeController {
     private void setupTableColumns() {
         // --- Standard Booking Table Columns ---
         if (colBkId != null) {
-            colBkId.setCellValueFactory(cellData -> 
+            colBkId.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getBookingId()));
         }
         if (colBkPet != null) {
-            colBkPet.setCellValueFactory(cellData -> 
+            colBkPet.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getPetName() != null ? cellData.getValue().getPetName() : "—"));
         }
         if (colBkOwner != null) {
-            colBkOwner.setCellValueFactory(cellData -> 
+            colBkOwner.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getCustomerName() != null ? cellData.getValue().getCustomerName() : "—"));
         }
         if (colBkRoom != null) {
-            colBkRoom.setCellValueFactory(cellData -> 
+            colBkRoom.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getRoomNumber() != null ? cellData.getValue().getRoomNumber() : "—"));
         }
         if (colBkCkin != null) {
@@ -219,7 +218,7 @@ public class DashboardHomeController {
             });
         }
         if (colBkStatus != null) {
-            colBkStatus.setCellValueFactory(cellData -> 
+            colBkStatus.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getStatus()));
         }
 
@@ -277,7 +276,7 @@ public class DashboardHomeController {
         }
 
         if (colLogTime != null) {
-            colLogTime.setCellValueFactory(cellData -> 
+            colLogTime.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM HH:mm:ss"))));
         }
         if (colLogUser != null) {
@@ -342,7 +341,7 @@ public class DashboardHomeController {
 
     private void applyRoleDashboard(Role role) {
         if (role == null) return;
-        
+
         // Bắt đầu bằng việc ẩn tất cả các container chuyên biệt
         hideNode(adminDashboardContainer);
         hideNode(careStaffDashboardContainer);
@@ -358,7 +357,7 @@ public class DashboardHomeController {
                 hideNode(bookingTableContainer);
                 hideNode(lowStockAlertContainer);
                 hideNode(sideColumnContainer);
-                
+
                 showNode(careStaffDashboardContainer);
                 break;
 
@@ -422,48 +421,76 @@ public class DashboardHomeController {
             AppUser currentUser = SessionManager.getInstance().getCurrentUser();
             if (currentUser == null) return;
 
-            // 1. Tải các thông số tổng hợp từ Database thật qua reportBUS (KPI cards)
-            Map<String, Number> summary = reportBUS.getDashboardSummary();
-            int inUse = number(summary, "roomInUse").intValue();
-            int available = number(summary, "roomAvailable").intValue();
-            int maintenance = number(summary, "roomMaintenance").intValue();
-            int totalRoom = number(summary, "roomTotal").intValue();
-            int lowStock = number(summary, "lowStock").intValue();
+            // 1. Tải các thông số tổng hợp trên cùng (Standard cards)
+            List<Room> allRooms = new RoomBUS().getAllRooms();
+            long occupiedCount = allRooms.stream().filter(r -> "IN_USE".equals(r.getStatus())).count();
+            long availableCount = allRooms.stream().filter(r -> "AVAILABLE".equals(r.getStatus())).count();
+            long maintenanceCount = allRooms.stream().filter(r -> "MAINTENANCE".equals(r.getStatus())).count();
+            long totalRooms = allRooms.size();
 
-            setText(statBookingTotal, String.valueOf(number(summary, "todayBooking").intValue()));
-            setText(statRoomOccupied, inUse + "/" + totalRoom);
-            setText(statRevenue, moneyFormat.format(number(summary, "todayRevenue").doubleValue()) + " VNĐ");
-            setText(statLowStock, String.valueOf(lowStock));
-            setText(statRestockNeeded, String.valueOf(lowStock));
-            setText(statGroomingPending, String.valueOf(number(summary, "groomingPending").intValue()));
-
-            setText(roomOccupied, String.valueOf(inUse));
-            setText(roomAvailable, String.valueOf(available));
-            setText(roomCleaning, String.valueOf(maintenance));
+            setText(statRoomOccupied, occupiedCount + "/" + totalRooms);
+            setText(roomOccupied, String.valueOf(occupiedCount));
+            setText(roomAvailable, String.valueOf(availableCount));
+            setText(roomCleaning, String.valueOf(maintenanceCount));
 
             if (roomStatusChart != null) {
                 roomStatusChart.getData().clear();
-                if (inUse > 0) {
-                    roomStatusChart.getData().add(new PieChart.Data("Đang dùng (" + inUse + ")", inUse));
+                if (occupiedCount > 0) {
+                    roomStatusChart.getData().add(new PieChart.Data("Đang dùng (" + occupiedCount + ")", occupiedCount));
                 }
-                if (available > 0) {
-                    roomStatusChart.getData().add(new PieChart.Data("Trống (" + available + ")", available));
+                if (availableCount > 0) {
+                    roomStatusChart.getData().add(new PieChart.Data("Trống (" + availableCount + ")", availableCount));
                 }
-                if (maintenance > 0) {
-                    roomStatusChart.getData().add(new PieChart.Data("Bảo trì (" + maintenance + ")", maintenance));
+                if (maintenanceCount > 0) {
+                    roomStatusChart.getData().add(new PieChart.Data("Bảo trì (" + maintenanceCount + ")", maintenanceCount));
                 }
             }
 
-            // Tải danh sách Booking hôm nay
             List<Booking> allBookings = new BookingBUS().getAllBookings();
             LocalDate today = LocalDate.now();
             List<Booking> todayBookings = allBookings.stream()
                 .filter(b -> b.getCheckinExpectedAt() != null && b.getCheckinExpectedAt().toLocalDate().equals(today))
                 .collect(Collectors.toList());
-            
+            setText(statBookingTotal, String.valueOf(todayBookings.size()));
+
             if (todayBookingTable != null) {
                 todayBookingTable.setItems(FXCollections.observableArrayList(todayBookings));
             }
+
+            // Tải Grooming pending
+            int pendingGrooming = new GroomingBUS().getPendingCountToday();
+            setText(statGroomingPending, String.valueOf(pendingGrooming));
+
+            // Load revenue today
+            if (currentUser.hasRole(Role.ADMIN) || currentUser.hasRole(Role.RECEPTIONIST)
+                    || currentUser.hasRole(Role.BRANCH_MANAGER) || currentUser.hasRole(Role.CEO)) {
+                Calendar cal = Calendar.getInstance();
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                Date todayStart = cal.getTime();
+
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                cal.set(Calendar.MILLISECOND, 999);
+                Date todayEnd = cal.getTime();
+
+                List<Invoice> todayInvoices = new InvoiceBUS().searchInvoices(null, null, todayStart, todayEnd);
+                double todayRevenue = todayInvoices.stream()
+                    .filter(inv -> !"CANCELLED".equalsIgnoreCase(inv.getStatus()))
+                    .mapToDouble(Invoice::getTotalAmount)
+                    .sum();
+
+                java.text.NumberFormat nf = java.text.NumberFormat.getInstance(new java.util.Locale("vi", "VN"));
+                setText(statRevenue, nf.format(todayRevenue) + " VNĐ");
+            } else {
+                setText(statRevenue, "— VNĐ");
+            }
+
+            setText(statLowStock, "0");
+            setText(statRestockNeeded, "0");
 
             // =========================================================
             // 🛎️ 2. RECEPTIONIST SPECIFIC STATS (WEEKLY DAILY CHART)
@@ -477,10 +504,10 @@ public class DashboardHomeController {
                     if (monthXAxis != null) {
                         monthXAxis.setLabel("Ngày Trong Tuần");
                     }
-                    
+
                     LocalDate startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1);
                     LocalDate endOfWeek = startOfWeek.plusDays(6);
-                    
+
                     int[] weeklyCounts = new int[7];
                     for (Booking b : allBookings) {
                         if (b.getCheckinExpectedAt() != null) {
@@ -493,7 +520,7 @@ public class DashboardHomeController {
                             }
                         }
                     }
-                    
+
                     XYChart.Series<String, Number> series = new XYChart.Series<>();
                     series.setName("Đặt Phòng");
                     String[] dayLabels = {"Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"};
@@ -503,7 +530,6 @@ public class DashboardHomeController {
                     monthlyStatsChart.getData().add(series);
                 }
             } else if (currentUser.getRole() == Role.CEO || currentUser.getRole() == Role.BRANCH_MANAGER) {
-                // Default monthly stats if needed
                 if (monthlyStatsChart != null && currentUser.getRole() == Role.CEO) {
                     monthlyStatsChart.getData().clear();
                     int[] monthlyCounts = new int[12];
@@ -518,7 +544,8 @@ public class DashboardHomeController {
                     }
                     XYChart.Series<String, Number> series = new XYChart.Series<>();
                     series.setName("Đặt Phòng");
-                    String[] monthLabels = {"Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"};
+                    String[] monthLabels = {"Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
+                                            "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"};
                     for (int m = 0; m < 12; m++) {
                         series.getData().add(new XYChart.Data<>(monthLabels[m], monthlyCounts[m]));
                     }
@@ -530,13 +557,11 @@ public class DashboardHomeController {
             // 🔑 3. ADMIN SPECIFIC LOAD
             // =========================================================
             if (currentUser.getRole() == Role.ADMIN) {
-                // Tải danh sách user đăng nhập hôm nay
                 List<AppUser> loggedInToday = new AppUserDAO().findLoggedInToday();
                 if (loggedInUsersTable != null) {
                     loggedInUsersTable.setItems(FXCollections.observableArrayList(loggedInToday));
                 }
 
-                // Tải danh sách audit log từ file JSON
                 List<AuditLog> logs = AuditLogLocalService.getAllLogs();
                 if (auditLogTable != null) {
                     auditLogTable.setItems(FXCollections.observableArrayList(logs));
@@ -547,14 +572,11 @@ public class DashboardHomeController {
             // 🦮 4. CARE STAFF SPECIFIC LOAD
             // =========================================================
             if (currentUser.getRole() == Role.PET_CARE_STAFF) {
-                // Tải lịch grooming được giao cho nhân viên hôm nay
                 List<BookingService> myGroomingToday = new GroomingBUS().getEmployeeScheduleToday(currentUser.getEmployeeId());
                 if (todayGroomingTable != null) {
                     todayGroomingTable.setItems(FXCollections.observableArrayList(myGroomingToday));
                 }
 
-                // Tải danh sách phòng đang có thú cưng chờ
-                List<Room> allRooms = new RoomBUS().getAllRooms();
                 List<Room> waitingRooms = allRooms.stream()
                     .filter(r -> r.getCurrentPetNames() != null && !r.getCurrentPetNames().trim().isEmpty())
                     .collect(Collectors.toList());
@@ -569,7 +591,6 @@ public class DashboardHomeController {
             if (currentUser.getRole() == Role.BRANCH_MANAGER && currentUser.getEmployee() != null) {
                 String branchId = currentUser.getEmployee().getBranchId();
 
-                // Setup selector và sự kiện
                 if (revenuePeriodSelector != null) {
                     revenuePeriodSelector.setItems(FXCollections.observableArrayList("Trong ngày", "Trong tuần", "Trong tháng"));
                     if (revenuePeriodSelector.getSelectionModel().isEmpty()) {
@@ -578,19 +599,17 @@ public class DashboardHomeController {
                     revenuePeriodSelector.setOnAction(e -> updateBranchRevenueChart(branchId));
                 }
 
-                // Vẽ chart doanh thu chi nhánh ban đầu
                 updateBranchRevenueChart(branchId);
 
-                // Tải hiệu suất nhân viên chi nhánh
                 List<Employee> branchEmployees = new EmployeeBUS().searchEmployees(null, null, "Dang hoat dong", branchId);
                 List<StaffPerformance> performances = new ArrayList<>();
                 EmployeeBUS empBUS = new EmployeeBUS();
                 for (Employee emp : branchEmployees) {
-                    int[] summaryPerf = empBUS.getPerformanceSummary(emp.getEmployeeId());
+                    int[] summary = empBUS.getPerformanceSummary(emp.getEmployeeId());
                     String roleName = emp.getRoleCode() != null ? mapRoleCodeToName(emp.getRoleCode()) : "Nhân viên";
-                    performances.add(new StaffPerformance(emp.getFullName(), roleName, summaryPerf[0], summaryPerf[1]));
+                    performances.add(new StaffPerformance(emp.getFullName(), roleName, summary[0], summary[1]));
                 }
-                
+
                 if (staffPerformanceTable != null) {
                     staffPerformanceTable.setItems(FXCollections.observableArrayList(performances));
                 }
@@ -600,7 +619,6 @@ public class DashboardHomeController {
             // 👑 6. CEO SPECIFIC LOAD
             // =========================================================
             if (currentUser.getRole() == Role.CEO) {
-                // Setup selector và sự kiện
                 if (ceoRevenuePeriodSelector != null) {
                     ceoRevenuePeriodSelector.setItems(FXCollections.observableArrayList("Trong ngày", "Trong tuần", "Trong tháng"));
                     if (ceoRevenuePeriodSelector.getSelectionModel().isEmpty()) {
@@ -609,10 +627,7 @@ public class DashboardHomeController {
                     ceoRevenuePeriodSelector.setOnAction(e -> updateSystemRevenueChart());
                 }
 
-                // Vẽ chart doanh thu toàn hệ thống ban đầu
                 updateSystemRevenueChart();
-
-                // Thống kê dịch vụ trong ngày
                 updateSystemServiceUsageChart();
             }
 
@@ -638,7 +653,7 @@ public class DashboardHomeController {
 
             if ("Trong ngày".equalsIgnoreCase(selectedPeriod)) {
                 revXAxis.setLabel("Khung Giờ");
-                double[] hourlyRev = new double[12]; // 0-2h, 2-4h, ... 22-24h
+                double[] hourlyRev = new double[12];
                 LocalDate today = LocalDate.now();
 
                 for (Invoice inv : branchInvoices) {
@@ -790,7 +805,6 @@ public class DashboardHomeController {
         System.out.println("Chuyển hướng sang trang Quản lý Tồn Kho...");
     }
 
-<<<<<<< HEAD
     private void updateSystemRevenueChart() {
         if (ceoRevenueChart == null) return;
         ceoRevenueChart.getData().clear();
@@ -859,7 +873,7 @@ public class DashboardHomeController {
             } else if ("Trong tháng".equalsIgnoreCase(selectedPeriod)) {
                 ceoRevXAxis.setLabel("Tuần/Ngày Trong Tháng");
                 LocalDate today = LocalDate.now();
-                
+
                 double w1 = 0; // Days 1 to 7
                 double w2 = 0; // Days 8 to 14
                 double w3 = 0; // Days 15 to 21
@@ -909,7 +923,6 @@ public class DashboardHomeController {
             String todayStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             List<BookingService> todayServices = new GroomingBUS().getGroomingScheduleByDate(todayStr, null, null, currentUser);
 
-            // Group services by name and count their frequency
             java.util.Map<String, Long> serviceCounts = todayServices.stream()
                 .filter(bs -> bs.getServiceName() != null && !"CANCELLED".equalsIgnoreCase(bs.getStatus()))
                 .collect(Collectors.groupingBy(BookingService::getServiceName, Collectors.counting()));
