@@ -35,9 +35,7 @@ public class PetFormController {
     @FXML private TextField txtPetName;
     @FXML private ComboBox<String> cbSpecies;
     @FXML private TextField txtBreed;
-    @FXML private TextField txtDob;
     @FXML private TextField txtWeight;
-    @FXML private TextField txtColor;
     @FXML private ComboBox<String> cbSex;
     @FXML private ComboBox<Customer> cbOwner;
     @FXML private TextField txtOwnerDisplay;
@@ -64,7 +62,10 @@ public class PetFormController {
 
         formScrollPane.setFitToWidth(true);
         formScrollPane.setFitToHeight(false);
-        cbSpecies.setValue("DOG");
+        cbSpecies.setItems(FXCollections.observableArrayList("Chó", "Mèo"));
+        cbSpecies.setValue("Chó");
+        cbSex.setItems(FXCollections.observableArrayList("Đực", "Cái"));
+        cbSex.setPromptText("Chọn giới tính");
         cbOwner.setConverter(new StringConverter<>() {
             @Override
             public String toString(Customer c) {
@@ -141,9 +142,9 @@ public class PetFormController {
             Pet created = petBUS.createPet(
                     owner.getCustomerId(),
                     txtPetName.getText(),
-                    cbSpecies.getValue(),
+                    toSpeciesCode(cbSpecies.getValue()),
                     txtBreed.getText(),
-                    cbSex.getValue(),
+                    toSexCode(cbSex.getValue()),
                     weight,
                     combinedNote
             );
@@ -207,6 +208,22 @@ public class PetFormController {
         } catch (NumberFormatException e) {
             throw new ValidationException("Cân nặng phải là số.");
         }
+    }
+
+    private String toSpeciesCode(String value) {
+        if (value == null || value.trim().isEmpty()) return value;
+        String normalized = value.trim().toLowerCase();
+        if ("chó".equals(normalized) || "cho".equals(normalized) || "dog".equals(normalized)) return "DOG";
+        if ("mèo".equals(normalized) || "meo".equals(normalized) || "cat".equals(normalized)) return "CAT";
+        return value.trim();
+    }
+
+    private String toSexCode(String value) {
+        if (value == null || value.trim().isEmpty()) return null;
+        String normalized = value.trim().toLowerCase();
+        if ("đực".equals(normalized) || "duc".equals(normalized) || "male".equals(normalized)) return "Male";
+        if ("cái".equals(normalized) || "cai".equals(normalized) || "female".equals(normalized)) return "Female";
+        return value.trim();
     }
 
     private String combineNotes(String note, String health) {

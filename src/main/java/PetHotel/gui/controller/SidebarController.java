@@ -35,6 +35,7 @@ public class SidebarController {
     // --- Khai báo Menu Items ---
     @FXML private VBox menuDashboard;
     
+    @FXML private VBox groupBusiness;
     @FXML private VBox menuCustomer;
     @FXML private VBox menuPet;
     @FXML private VBox menuBooking;
@@ -81,18 +82,14 @@ public class SidebarController {
 private void applyRolePermissions(Role role) {
     switch (role) {
         case RECEPTIONIST:
-            // 1. NHÂN VIÊN LỄ TÂN
-            // Ẩn Dashboard
-            hideMenu(menuDashboard); 
-            
-            // Ẩn các menu liên quan đến nghiệp vụ không liên quan
+            hideMenu(menuPet);
+            hideMenu(menuDashboard);
+            hideMenu(menuRoom);
             hideMenu(menuAssignedTasks);
-
-            // Về Kho hàng: Lễ tân chỉ được tra cứu sản phẩm, nên ẩn Nhập kho và Nhà cung cấp
+            hideMenu(groupInventory);
+            hideMenu(menuProduct);
             hideMenu(menuInventory);
             hideMenu(menuSupplier);
-            
-            // Ẩn hoàn toàn nhóm Quản trị hệ thống & Báo cáo
             hideMenu(groupAdmin);
             hideMenu(menuStaff);
             hideMenu(menuAccount);
@@ -100,25 +97,17 @@ private void applyRolePermissions(Role role) {
             break;
 
         case PET_CARE_STAFF:
-            showMenu(menuPet);
+            hideMenu(menuPet);
             showMenu(menuGrooming);
-            // 2. NHÂN VIÊN CHĂM SÓC
-            // Chỉ tương tác với Thú cưng và Grooming (cập nhật trạng thái, sức khoẻ)
             hideMenu(menuDashboard);
             hideMenu(menuCustomer);
             hideMenu(menuBooking);
-            hideMenu(menuService);
-            hideMenu(menuAssignedTasks);
             hideMenu(menuRoom);
-            hideMenu(menuInvoice); 
-
-            // Ẩn hoàn toàn nhóm Kho
+            hideMenu(menuInvoice);
             hideMenu(groupInventory);
             hideMenu(menuProduct);
             hideMenu(menuInventory);
             hideMenu(menuSupplier);
-            
-            // Ẩn hoàn toàn nhóm Quản trị
             hideMenu(groupAdmin);
             hideMenu(menuStaff);
             hideMenu(menuAccount);
@@ -126,75 +115,48 @@ private void applyRolePermissions(Role role) {
             break;
 
         case BRANCH_MANAGER:
-            // 3. QUẢN LÝ CHI NHÁNH
-            // Vận hành toàn bộ chi nhánh, quản lý nhân viên, xem báo cáo nhưng KHÔNG quản lý tài khoản hệ thống
-            hideMenu(menuAccount); 
-            hideMenu(menuAssignedTasks);
-            break;
-
-        case ADMIN:
-            // 4. ADMIN (Quản trị viên hệ thống)
-            // Chỉ quản lý cấu hình hệ thống: Tài khoản, Phân quyền, Danh mục Phòng. Không vận hành hàng ngày.
-            hideMenu(menuDashboard);
-            hideMenu(menuCustomer);
             hideMenu(menuPet);
-            hideMenu(menuBooking);
-            hideMenu(menuGrooming);
-            hideMenu(menuService);
-            hideMenu(menuInvoice);
             hideMenu(menuAssignedTasks);
-            
-            // Ẩn toàn bộ nhóm Kho
-            hideMenu(groupInventory);
-            hideMenu(menuProduct);
-            hideMenu(menuInventory);
-            hideMenu(menuSupplier);
-            
-            // Trong Quản trị, Admin không xem Báo cáo doanh thu và không quản lý Nhân sự chi nhánh
-            hideMenu(menuStaff);
-            hideMenu(menuReport);
-            // Giữ lại: menuRoom (cấu hình loại phòng) và menuAccount
+            hideMenu(menuAccount);
             break;
 
         case CEO:
-            // 5. CEO (OWNER)
-            // Thiên về xem báo cáo tổng quan, dashboard, kiểm kê tồn kho và giám sát (Audit / Khoá TK)
-            // Ẩn các thao tác vận hành hàng ngày
+            hideMenu(groupBusiness);
             hideMenu(menuCustomer);
             hideMenu(menuPet);
             hideMenu(menuBooking);
             hideMenu(menuGrooming);
             hideMenu(menuService);
+            hideMenu(menuAssignedTasks);
             hideMenu(menuRoom);
             hideMenu(menuInvoice);
-            hideMenu(menuAssignedTasks);
-            
-            // Nhóm kho: Ẩn phần bán hàng/nhà cung cấp, chỉ giữ Inventory để xem thống kê
-            hideMenu(menuProduct);
-            hideMenu(menuSupplier);
-            
-            // Nhóm Quản trị: Không trực tiếp sửa nhân viên chi nhánh
-            hideMenu(menuStaff);
-            // Giữ lại: menuDashboard, menuInventory, menuAccount (để khoá tk), menuReport
-            break;
-
-        default:
-            // Nếu không xác định được role, ẩn tất cả, chỉ để lại menu trống (người dùng chỉ có thể Đăng xuất)
-            hideMenu(menuDashboard);
-            hideMenu(menuCustomer);
-            hideMenu(menuPet);
-            hideMenu(menuBooking);
-            hideMenu(menuGrooming);
-            hideMenu(menuService);
-            hideMenu(menuRoom);
-            hideMenu(menuInvoice);
-            hideMenu(menuAssignedTasks);
-            
             hideMenu(groupInventory);
             hideMenu(menuProduct);
             hideMenu(menuInventory);
             hideMenu(menuSupplier);
-            
+            hideMenu(menuStaff);
+            hideMenu(menuAccount);
+            break;
+
+        case ADMIN:
+            hideMenu(menuPet);
+            break;
+
+        default:
+            hideMenu(menuDashboard);
+            hideMenu(groupBusiness);
+            hideMenu(menuCustomer);
+            hideMenu(menuPet);
+            hideMenu(menuBooking);
+            hideMenu(menuGrooming);
+            hideMenu(menuService);
+            hideMenu(menuRoom);
+            hideMenu(menuInvoice);
+            hideMenu(menuAssignedTasks);
+            hideMenu(groupInventory);
+            hideMenu(menuProduct);
+            hideMenu(menuInventory);
+            hideMenu(menuSupplier);
             hideMenu(groupAdmin);
             hideMenu(menuStaff);
             hideMenu(menuAccount);
@@ -257,25 +219,38 @@ private void applyRolePermissions(Role role) {
             if (mainController != null && menuType != null) {
                 switch (menuType) {
                     case "dashboard":
-                        if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER) {
+                        if (currentRole == Role.ADMIN
+                                || currentRole == Role.BRANCH_MANAGER
+                                || currentRole == Role.CEO) {
                             mainController.loadView("DashboardHome.fxml");
                             mainController.getTopbarController().setTitle("Dashboard", "Trang chủ");
                         }
                         break;
                     case "customer":
-                        mainController.loadView("CustomerManagement.fxml");
-                        mainController.getTopbarController().setTitle("Khách Hàng", "Quản lý khách hàng");
+                        if (currentRole == Role.ADMIN
+                                || currentRole == Role.RECEPTIONIST
+                                || currentRole == Role.BRANCH_MANAGER) {
+                            mainController.loadView("CustomerManagement.fxml");
+                            mainController.getTopbarController().setTitle("Khách Hàng", "Quản lý khách hàng");
+                        }
                         break;
                     case "booking":
-                        mainController.loadView("BookingManagement.fxml");
-                        mainController.getTopbarController().setTitle("Booking", "Quản lý đặt phòng");
+                        if (currentRole == Role.ADMIN
+                                || currentRole == Role.RECEPTIONIST
+                                || currentRole == Role.BRANCH_MANAGER) {
+                            mainController.loadView("BookingManagement.fxml");
+                            mainController.getTopbarController().setTitle("Booking", "Quản lý đặt phòng");
+                        }
                         break;
                     case "room":
-                        mainController.loadView("RoomManagement.fxml");
-                        mainController.getTopbarController().setTitle("Phòng", "Quản lý phòng");
+                        if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER) {
+                            mainController.loadView("RoomManagement.fxml");
+                            mainController.getTopbarController().setTitle("Phòng", "Quản lý phòng");
+                        }
                         break;
                     case "grooming":
-                        if (currentRole == Role.RECEPTIONIST
+                        if (currentRole == Role.ADMIN
+                                || currentRole == Role.RECEPTIONIST
                                 || currentRole == Role.PET_CARE_STAFF
                                 || currentRole == Role.BRANCH_MANAGER) {
                             mainController.loadView("GroomingManagement.fxml");
@@ -286,7 +261,10 @@ private void applyRolePermissions(Role role) {
                         }
                         break;
                     case "service":
-                        if (currentRole == Role.RECEPTIONIST || currentRole == Role.BRANCH_MANAGER) {
+                        if (currentRole == Role.ADMIN
+                                || currentRole == Role.RECEPTIONIST
+                                || currentRole == Role.PET_CARE_STAFF
+                                || currentRole == Role.BRANCH_MANAGER) {
                             mainController.loadView("ServiceManagement.fxml");
                             mainController.getTopbarController().setTitle(
                                 "Danh Sách Dịch Vụ",
@@ -295,17 +273,21 @@ private void applyRolePermissions(Role role) {
                         }
                         break;
                     case "assigned-tasks":
-                        if (currentRole == Role.PET_CARE_STAFF || currentRole == Role.BRANCH_MANAGER) {
-                            mainController.loadView("GroomingManagement.fxml");
+                        if (currentRole == Role.PET_CARE_STAFF || currentRole == Role.ADMIN) {
+                            mainController.loadView("AssignedTasks.fxml");
                             mainController.getTopbarController().setTitle(
-                                "Grooming",
-                                "Công việc grooming được phân công"
+                                "Công Việc Được Phân Công",
+                                "Danh sách dịch vụ cần thực hiện"
                             );
                         }
                         break;
                     case "invoice":
-                        mainController.loadView("InvoiceManagement.fxml");
-                        mainController.getTopbarController().setTitle("Hóa Đơn", "Quản lý hóa đơn");
+                        if (currentRole == Role.RECEPTIONIST
+                                || currentRole == Role.BRANCH_MANAGER
+                                || currentRole == Role.ADMIN) {
+                            mainController.loadView("InvoiceManagement.fxml");
+                            mainController.getTopbarController().setTitle("Hóa Đơn", "Quản lý hóa đơn");
+                        }
                         break;
                     case "account":
                         if (currentRole == Role.ADMIN) {
@@ -320,7 +302,9 @@ private void applyRolePermissions(Role role) {
                         }
                         break;
                     case "report":
-                        if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER) {
+                        if (currentRole == Role.ADMIN
+                                || currentRole == Role.BRANCH_MANAGER
+                                || currentRole == Role.CEO) {
                             mainController.loadView("ReportManagement.fxml");
                             mainController.getTopbarController().setTitle("Báo Cáo", "Thống kê & báo cáo");
                         }
@@ -332,11 +316,12 @@ private void applyRolePermissions(Role role) {
                         }
                         break;
                     case "pet":
-                        if (mainController != null) {
+                        if (currentRole == Role.ADMIN
+                                || currentRole == Role.RECEPTIONIST
+                                || currentRole == Role.PET_CARE_STAFF) {
                             mainController.showPetManagement(null);
                             return;
                         }
-                        mainController.getTopbarController().setTitle("Thú Cưng", "Quản lý hồ sơ thú cưng");
                         break;
                     case "inventory":
                         if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER) {

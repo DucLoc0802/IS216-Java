@@ -98,20 +98,22 @@ public class CustomerDAO {
      * TODO: Optimize query, thêm index trên booking.customer_id.
      */
     private static final String SQL_SERVICE_HISTORY =
-        "SELECT b.booking_id, b.status AS booking_status, " +
-        "       b.checkin_expected_at, b.checkout_expected_at, " +
-        "       s.service_name, bs.status AS service_status, bs.scheduled_at, " +
-        "       od.unit_price, od.quantity, od.line_total, " +
-        "       o.order_id, o.status AS order_status, o.grand_total, " +
-        "       p.payment_method, p.amount AS paid_amount, p.status AS payment_status, p.paid_at " +
+        "SELECT b.booking_id, " +
+        "       COALESCE(bs.scheduled_at, b.checkin_expected_at, b.created_at) AS used_at, " +
+        "       p.pet_name, " +
+        "       s.service_name, " +
+        "       e.full_name AS employee_name, " +
+        "       COALESCE(bs.status, b.status) AS service_status, " +
+        "       NVL(od.line_total, s.base_price) AS line_total " +
         "FROM booking b " +
         "LEFT JOIN booking_services bs ON b.booking_id = bs.booking_id " +
         "LEFT JOIN services s          ON bs.service_id = s.service_id " +
-        "LEFT JOIN order_details od    ON b.booking_id = od.booking_id " +
-        "LEFT JOIN orders o            ON od.order_id = o.order_id " +
-        "LEFT JOIN payments p          ON o.order_id = p.order_id " +
+        "LEFT JOIN pet p               ON bs.pet_id = p.pet_id " +
+        "LEFT JOIN employee e          ON bs.employee_id = e.employee_id " +
+        "LEFT JOIN order_details od    ON od.booking_service_id = bs.booking_service_id " +
         "WHERE b.customer_id = ? " +
-        "ORDER BY b.created_at DESC, bs.scheduled_at DESC";
+        "  AND bs.booking_service_id IS NOT NULL " +
+        "ORDER BY COALESCE(bs.scheduled_at, b.checkin_expected_at, b.created_at) DESC, b.booking_id DESC";
 
     // ── Public Methods ───────────────────────────────────────────
 

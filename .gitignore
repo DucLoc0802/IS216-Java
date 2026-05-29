@@ -1,5 +1,13 @@
 target/
+exports/
 *.class
+*.log
+
 .vscode/
 .idea/
+*.iml
+
 .DS_Store
+Thumbs.db
+
+.env

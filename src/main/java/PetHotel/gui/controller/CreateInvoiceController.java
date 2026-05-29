@@ -2,6 +2,7 @@ package PetHotel.gui.controller;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -26,10 +27,13 @@ public class CreateInvoiceController {
     private static final String DEFAULT_BRANCH_ID = "BR001";
     // TODO: replace with employee_id from login session after invoice flow is wired to auth/session.
     private static final String DEFAULT_CREATED_BY_EMP = "EMP001";
+    private static final DecimalFormat DISPLAY_MONEY_FORMAT = new DecimalFormat("#,###");
 
     private final InvoiceBUS invoiceBUS = new InvoiceBUS();
     private final Map<String, Invoice> bookingOptions = new LinkedHashMap<>();
     private final Map<String, Double> bookingFees = new LinkedHashMap<>();
+    private final Map<String, String> displayToBookingId = new LinkedHashMap<>();
+    private final List<String> bookingDisplayOptions = new ArrayList<>();
 
     @FXML
     private ComboBox<String> cbbBooking;
@@ -90,7 +94,7 @@ public class CreateInvoiceController {
         txtBookingFee.setEditable(false);
         txtTotalAmount.setEditable(false);
 
-        cbbBooking.valueProperty().addListener((obs, oldValue, newValue) -> fillBookingInfo(newValue));
+        cbbBooking.valueProperty().addListener((obs, oldValue, newValue) -> fillBookingInfo(selectedBookingId()));
         txtGroomingFee.textProperty().addListener((obs, oldValue, newValue) -> refreshTotalSilently());
         txtExtraFee.textProperty().addListener((obs, oldValue, newValue) -> refreshTotalSilently());
         refreshTotalSilently();
@@ -98,7 +102,7 @@ public class CreateInvoiceController {
 
     @FXML
     public void onCreateInvoice(ActionEvent event) {
-        String bookingId = cbbBooking.getValue();
+        String bookingId = selectedBookingId();
         String customerId = txtCustomer.getText() == null ? "" : txtCustomer.getText().trim();
 
         if (bookingId == null || bookingId.trim().isEmpty()) {
@@ -164,22 +168,31 @@ public class CreateInvoiceController {
             ex.printStackTrace();
         }
 
-        if (bookingOptions.isEmpty()) {
-            addFallbackBooking("BK001", "CUS001", "BR001");
-            addFallbackBooking("BK002", "CUS002", "BR001");
-            addFallbackBooking("BK003", "CUS003", "BR001");
-        }
-
-        cbbBooking.setItems(FXCollections.observableArrayList(bookingOptions.keySet()));
+        rebuildBookingDisplayOptions();
+        cbbBooking.setItems(FXCollections.observableArrayList(bookingDisplayOptions));
     }
 
-    private void addFallbackBooking(String bookingId, String customerId, String branchId) {
-        Invoice booking = new Invoice();
-        booking.setBookingId(bookingId);
-        booking.setCustomerId(customerId);
-        booking.setBranchId(branchId);
-        bookingOptions.put(bookingId, booking);
-        bookingFees.put(bookingId, demoBookingFeeForBooking(bookingId));
+    private void rebuildBookingDisplayOptions() {
+        displayToBookingId.clear();
+        bookingDisplayOptions.clear();
+
+        for (Map.Entry<String, Invoice> entry : bookingOptions.entrySet()) {
+            String bookingId = entry.getKey();
+            Invoice booking = entry.getValue();
+            String display = bookingId
+                + " | " + valueOrDash(booking.getCustomerId())
+                + " | " + DISPLAY_MONEY_FORMAT.format(bookingFeeForBooking(bookingId));
+            displayToBookingId.put(display, bookingId);
+            bookingDisplayOptions.add(display);
+        }
+    }
+
+    private String selectedBookingId() {
+        String selected = cbbBooking.getValue();
+        if (selected == null || selected.trim().isEmpty()) {
+            return null;
+        }
+        return displayToBookingId.getOrDefault(selected, selected);
     }
 
     private void fillBookingInfo(String bookingId) {
@@ -199,19 +212,6 @@ public class CreateInvoiceController {
         double queriedFee = bookingFees.getOrDefault(bookingId, 0.0);
         if (queriedFee > 0) {
             return queriedFee;
-        }
-        return demoBookingFeeForBooking(bookingId);
-    }
-
-    private double demoBookingFeeForBooking(String bookingId) {
-        if ("BK001".equals(bookingId)) {
-            return 500000;
-        }
-        if ("BK002".equals(bookingId)) {
-            return 700000;
-        }
-        if ("BK003".equals(bookingId)) {
-            return 450000;
         }
         return 0;
     }
@@ -310,6 +310,10 @@ public class CreateInvoiceController {
             return String.valueOf((long) value);
         }
         return String.valueOf(value);
+    }
+
+    private String valueOrDash(String value) {
+        return value == null || value.trim().isEmpty() ? "-" : value.trim();
     }
 
     private void closeWindow() {

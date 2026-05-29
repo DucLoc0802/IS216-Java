@@ -42,7 +42,7 @@
         <HBox spacing="14">
             <VBox spacing="4" HBox.hgrow="ALWAYS">
                 <Label styleClass="form-label" text="Booking *" />
-                <ComboBox fx:id="cbbBooking" maxWidth="Infinity" styleClass="form-combo" />
+                <ComboBox fx:id="cbbBooking" maxWidth="Infinity" visibleRowCount="8" styleClass="form-combo" />
             </VBox>
             <VBox spacing="4" HBox.hgrow="ALWAYS">
                 <Label styleClass="form-label" text="Khách hàng" />
