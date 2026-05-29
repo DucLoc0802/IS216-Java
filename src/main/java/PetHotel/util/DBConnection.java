@@ -8,14 +8,14 @@ public class DBConnection {
     // Thông số kết nối
     private static final String HOST = "localhost";
     private static final String PORT = "1521";
-    private static final String SERVICE_NAME = "xe";
+    private static final String SERVICE_NAME = "orcl.lan";
     // Sửa 2 dòng dưới đây:
-    private static final String USER = "system";
-    private static final String PASS = "123456";
+    private static final String USER = "PETHOTEL";
+    private static final String PASS = "thienloc2006";
     // Chuỗi URL kết nối chuẩn Oracle
     private static final String URL = "jdbc:oracle:thin:@//" + HOST + ":" + PORT + "/" + SERVICE_NAME;
 
-    public static Connection getConnection() {
+    public static Connection getConnection() throws SQLException {
         try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
 
@@ -25,6 +25,8 @@ public class DBConnection {
                 throw new SQLException("Không tạo được kết nối Oracle.");
             }
             return conn;
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("Không tìm thấy JDBC Driver Oracle. Vui lòng thêm ojdbc.jar vào classpath.", e);
         } catch (SQLException e) {
             throw new SQLException(
                     "Không kết nối được database. Vui lòng kiểm tra Oracle service, JDBC URL, username/password. "
