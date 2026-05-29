@@ -64,6 +64,7 @@ public class AssignedTasksController {
 
     @FXML private Button btnStartTask;
     @FXML private Button btnCompleteTask;
+    @FXML private Button btnRecordWaste;
     @FXML private Button btnUpdateStatus;
     @FXML private Button btnCloseDetails;
 
@@ -228,6 +229,21 @@ public class AssignedTasksController {
             confirmCompleteTask(selectedTask);
         });
 
+        btnRecordWaste.setOnAction(e -> {
+            if (selectedTask == null) {
+                showWarning("Vui lòng chọn công việc.");
+                return;
+            }
+            if (!BookingService.STATUS_IN_PROGRESS.equals(selectedTask.getStatus())) {
+                showWarning("Chỉ ghi nhận tiêu hao khi dịch vụ đang thực hiện.");
+                return;
+            }
+            MaterialWasteController.openForTask(selectedTask, () -> {
+                loadTasks();
+                loadStatistics();
+            });
+        });
+
         btnCloseDetails.setOnAction(e -> {
             detailsPanel.setVisible(false);
             detailsPanel.setManaged(false);
@@ -334,6 +350,7 @@ public class AssignedTasksController {
         btnUpdateStatus.setDisable(BookingService.STATUS_DONE.equals(task.getStatus()));
         btnStartTask.setDisable(!BookingService.STATUS_SCHEDULED.equals(task.getStatus()));
         btnCompleteTask.setDisable(!BookingService.STATUS_IN_PROGRESS.equals(task.getStatus()));
+        btnRecordWaste.setDisable(!BookingService.STATUS_IN_PROGRESS.equals(task.getStatus()));
     }
 
     private void handleUpdateStatus() {
@@ -423,20 +440,12 @@ public class AssignedTasksController {
             return;
         }
 
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Xác nhận hoàn thành dịch vụ");
-        confirm.setHeaderText("Xác nhận dịch vụ grooming đã hoàn tất?");
-        confirm.setContentText(
-                "Mã công việc: " + task.getBookingServiceId()
-                + "\nThú cưng: " + valueOrDash(task.getPetName())
-                + "\nDịch vụ: " + valueOrDash(task.getServiceName())
-        );
-
-        Optional<ButtonType> result = confirm.showAndWait();
-
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            updateTaskStatus(task, BookingService.STATUS_DONE);
-        }
+        // Mở dialog xác nhận hoàn thành với trừ tồn kho
+        CompleteServiceMaterialController.openDialog(task, currentUser, () -> {
+            loadTasks();
+            loadStatistics();
+            detailsPanel.setVisible(false);
+        });
     }
 
     private void updateTaskStatus(BookingService task, String newStatus) {

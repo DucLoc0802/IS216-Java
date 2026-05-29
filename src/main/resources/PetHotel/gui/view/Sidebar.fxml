@@ -131,10 +131,24 @@
                 </HBox>
             </VBox>
 
-            <VBox fx:id="menuSupplier" onMouseClicked="#onMenu" styleClass="menu-item" userData="supplier">
+            <VBox fx:id="menuGoodsReceipt" onMouseClicked="#onMenu" styleClass="menu-item" userData="goods-receipt">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="+" />
+                    <Label styleClass="menu-label" text="Nhập Kho" />
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="menuStockAudit" onMouseClicked="#onMenu" styleClass="menu-item" userData="stock-audit">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="✓" />
+                    <Label styleClass="menu-label" text="Kiểm Kê Kho" />
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="menuSupplier" managed="false" visible="false" onMouseClicked="#onMenu" styleClass="menu-item" userData="supplier">
                 <HBox alignment="CENTER_LEFT" spacing="12">
                     <Label styleClass="menu-icon" text="🏢" />
-                    <Label styleClass="menu-label" text="Nhà Cung Cấp" />
+                    <Label styleClass="menu-label" text="" />
                 </HBox>
             </VBox>
 

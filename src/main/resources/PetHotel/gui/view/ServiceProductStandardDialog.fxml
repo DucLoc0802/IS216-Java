@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="14"
+      styleClass="main-content"
+      stylesheets="@../css/style.css"
+      xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="PetHotel.gui.controller.ServiceProductStandardController">
+
+    <HBox alignment="CENTER_LEFT" spacing="8">
+        <Region styleClass="section-header-line"/>
+        <Label styleClass="section-header" text="Định Mức Vật Tư Tiêu Hao"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btnClose"
+                text="Đóng"
+                onAction="#handleClose"
+                styleClass="action-btn action-btn-outline"/>
+    </HBox>
+
+    <Label fx:id="lblServiceInfo"
+           text="Dịch vụ: "
+           style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+
+    <HBox spacing="14" VBox.vgrow="ALWAYS">
+
+        <VBox spacing="10" HBox.hgrow="ALWAYS" styleClass="content-panel">
+            <Label text="Danh sách vật tư tiêu hao"
+                   style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+
+            <TableView fx:id="standardTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colProductName" text="Sản phẩm" prefWidth="180"/>
+                    <TableColumn fx:id="colSpecies" text="Loài" prefWidth="70"/>
+                    <TableColumn fx:id="colWeightRange" text="Cân nặng" prefWidth="120"/>
+                    <TableColumn fx:id="colUsageAmount" text="Số lượng" prefWidth="90"/>
+                    <TableColumn fx:id="colUnit" text="Đơn vị" prefWidth="70"/>
+                    <TableColumn fx:id="colNote" text="Ghi chú" prefWidth="180"/>
+                </columns>
+                <placeholder>
+                    <Label text="Chưa có định mức vật tư cho dịch vụ này"/>
+                </placeholder>
+            </TableView>
+        </VBox>
+
+        <VBox spacing="10" prefWidth="330" styleClass="content-panel">
+            <Label text="Thông tin định mức"
+                   style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+
+            <Label text="Sản phẩm"/>
+            <ComboBox fx:id="cbProduct"
+                      prefWidth="300"
+                      promptText="Chọn sản phẩm"/>
+
+            <Label text="Loài"/>
+            <ComboBox fx:id="cbSpecies"
+                      prefWidth="300"
+                      promptText="DOG/CAT"/>
+
+            <HBox spacing="8">
+                <VBox spacing="4">
+                    <Label text="Cân nặng từ"/>
+                    <TextField fx:id="txtMinWeight"
+                               promptText="0"
+                               prefWidth="140"/>
+                </VBox>
+
+                <VBox spacing="4">
+                    <Label text="Cân nặng đến"/>
+                    <TextField fx:id="txtMaxWeight"
+                               promptText="10"
+                               prefWidth="140"/>
+                </VBox>
+            </HBox>
+
+            <HBox spacing="8">
+                <VBox spacing="4">
+                    <Label text="Số lượng dùng"/>
+                    <TextField fx:id="txtUsageAmount"
+                               promptText="30"
+                               prefWidth="140"/>
+                </VBox>
+
+                <VBox spacing="4">
+                    <Label text="Đơn vị"/>
+                    <ComboBox fx:id="cbUnit"
+                              prefWidth="140"/>
+                </VBox>
+            </HBox>
+
+            <Label text="Ghi chú"/>
+            <TextArea fx:id="txtNote"
+                      prefRowCount="3"
+                      wrapText="true"
+                      promptText="Ghi chú nếu có"/>
+
+            <HBox spacing="8" alignment="CENTER_RIGHT">
+                <Button fx:id="btnAdd"
+                        text="Thêm"
+                        onAction="#handleAdd"
+                        styleClass="action-btn action-btn-primary"/>
+
+                <Button fx:id="btnUpdate"
+                        text="Cập Nhật"
+                        onAction="#handleUpdate"
+                        styleClass="action-btn action-btn-primary"/>
+
+                <Button fx:id="btnDelete"
+                        text="Xóa"
+                        onAction="#handleDelete"
+                        styleClass="action-btn action-btn-outline"/>
+
+                <Button fx:id="btnClear"
+                        text="Làm Mới"
+                        onAction="#handleClearForm"
+                        styleClass="action-btn action-btn-outline"/>
+            </HBox>
+        </VBox>
+    </HBox>
+</VBox>
