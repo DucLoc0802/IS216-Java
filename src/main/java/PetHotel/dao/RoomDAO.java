@@ -11,14 +11,30 @@ public class RoomDAO {
 
     private static final String SQL_FIND_ALL =
         "SELECT r.room_id, r.branch_id, r.type_room_id, r.room_number, r.status, r.created_at, " +
-        "       t.type_name, t.base_price_per_day, t.max_pets, t.max_weight_kg " +
+        "       t.type_name, t.base_price_per_day, t.max_pets, t.max_weight_kg, " +
+        "       (SELECT LISTAGG(p.pet_name, ', ') WITHIN GROUP (ORDER BY p.pet_name) " +
+        "        FROM booking_room_pet brp " +
+        "        JOIN booking_room br ON brp.booking_room_id = br.booking_room_id " +
+        "        JOIN booking b ON br.booking_id = b.booking_id " +
+        "        JOIN pet p ON brp.pet_id = p.pet_id " +
+        "        WHERE br.room_id = r.room_id " +
+        "          AND b.status IN ('CHECKED_IN', 'PENDING', 'CONFIRMED') " +
+        "       ) AS pet_names " +
         "FROM room r " +
         "JOIN type_room t ON r.type_room_id = t.type_room_id " +
         "ORDER BY r.room_number";
 
     private static final String SQL_SEARCH =
         "SELECT r.room_id, r.branch_id, r.type_room_id, r.room_number, r.status, r.created_at, " +
-        "       t.type_name, t.base_price_per_day, t.max_pets, t.max_weight_kg " +
+        "       t.type_name, t.base_price_per_day, t.max_pets, t.max_weight_kg, " +
+        "       (SELECT LISTAGG(p.pet_name, ', ') WITHIN GROUP (ORDER BY p.pet_name) " +
+        "        FROM booking_room_pet brp " +
+        "        JOIN booking_room br ON brp.booking_room_id = br.booking_room_id " +
+        "        JOIN booking b ON br.booking_id = b.booking_id " +
+        "        JOIN pet p ON brp.pet_id = p.pet_id " +
+        "        WHERE br.room_id = r.room_id " +
+        "          AND b.status IN ('CHECKED_IN', 'PENDING', 'CONFIRMED') " +
+        "       ) AS pet_names " +
         "FROM room r " +
         "JOIN type_room t ON r.type_room_id = t.type_room_id " +
         "WHERE (LOWER(r.room_number) LIKE LOWER(?) OR LOWER(r.room_id) LIKE LOWER(?) OR LOWER(t.type_name) LIKE LOWER(?)) " +
@@ -115,7 +131,8 @@ public class RoomDAO {
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Room room = mapRow(rs);
-                room.setCurrentPetNames(findCurrentPetNamesByRoomId(room.getRoomId()));
+                String petNames = rs.getString("pet_names");
+                room.setCurrentPetNames(petNames != null ? petNames.trim() : null);
                 list.add(room);
             }
         }
@@ -129,7 +146,7 @@ public class RoomDAO {
         List<Room> list = new ArrayList<>();
 
         try (Connection conn = DBConnection.getConnection();
-            PreparedStatement ps = conn.prepareStatement(SQL_SEARCH)) {
+             PreparedStatement ps = conn.prepareStatement(SQL_SEARCH)) {
             ps.setString(1, pattern);
             ps.setString(2, pattern);
             ps.setString(3, pattern);
@@ -141,7 +158,8 @@ public class RoomDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Room room = mapRow(rs);
-                    room.setCurrentPetNames(findCurrentPetNamesByRoomId(room.getRoomId()));
+                    String petNames = rs.getString("pet_names");
+                    room.setCurrentPetNames(petNames != null ? petNames.trim() : null);
                     list.add(room);
                 }
             }
