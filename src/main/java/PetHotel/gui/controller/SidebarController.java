@@ -85,7 +85,6 @@ private void applyRolePermissions(Role role) {
     switch (role) {
         case RECEPTIONIST:
             hideMenu(menuPet);
-            hideMenu(menuDashboard);
             hideMenu(menuRoom);
             hideMenu(menuAssignedTasks);
 
@@ -103,7 +102,6 @@ private void applyRolePermissions(Role role) {
         case PET_CARE_STAFF:
             hideMenu(menuPet);
             showMenu(menuGrooming);
-            hideMenu(menuDashboard);
             hideMenu(menuCustomer);
             hideMenu(menuBooking);
             hideMenu(menuRoom);
@@ -249,7 +247,10 @@ private void applyRolePermissions(Role role) {
                 switch (menuType) {
                     case "dashboard":
                         if (currentRole == Role.ADMIN
-                                || currentRole == Role.BRANCH_MANAGER) {
+                                || currentRole == Role.BRANCH_MANAGER
+                                || currentRole == Role.CEO
+                                || currentRole == Role.RECEPTIONIST
+                                || currentRole == Role.PET_CARE_STAFF) {
                             mainController.loadView("DashboardHome.fxml");
                             mainController.getTopbarController().setTitle("Tổng Quan Hôm Nay", "Trang chủ");
                         }

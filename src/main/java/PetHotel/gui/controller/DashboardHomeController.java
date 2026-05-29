@@ -350,24 +350,26 @@ public class DashboardHomeController {
 
         switch (role) {
             case PET_CARE_STAFF:
+                // Ẩn các thẻ tài chính/kho không liên quan đến nhân viên chăm sóc
                 hideNode(cardRevenue);
                 hideNode(cardLowStock);
                 hideNode(cardRestockNeeded);
-                hideNode(quickActionsContainer);
-                hideNode(bookingTableContainer);
                 hideNode(lowStockAlertContainer);
-                hideNode(sideColumnContainer);
 
+                // Hiển thị container chuyên biệt của nhân viên chăm sóc
                 showNode(careStaffDashboardContainer);
+                // Giữ lại quickActionsContainer (biểu đồ), bookingTableContainer và sideColumnContainer (tổng quan phòng)
                 break;
 
             case RECEPTIONIST:
+                // Ẩn các thẻ kho không liên quan đến lễ tân
                 hideNode(cardLowStock);
                 hideNode(cardRestockNeeded);
                 hideNode(lowStockAlertContainer);
                 break;
 
             case ADMIN:
+                // Admin không cần xem booking/doanh thu — chỉ xem audit log và user activity
                 hideNode(quickActionsContainer);
                 hideNode(cardRevenue);
                 hideNode(cardLowStock);
@@ -380,6 +382,7 @@ public class DashboardHomeController {
                 break;
 
             case BRANCH_MANAGER:
+                // Quản lý chi nhánh xem chart doanh thu riêng, không cần biểu đồ chung
                 hideNode(quickActionsContainer);
                 hideNode(lowStockAlertContainer);
                 hideNode(bookingTableContainer);
@@ -389,6 +392,7 @@ public class DashboardHomeController {
                 break;
 
             case CEO:
+                // CEO xem chart toàn hệ thống riêng
                 hideNode(quickActionsContainer);
                 hideNode(lowStockAlertContainer);
                 hideNode(bookingTableContainer);
@@ -805,6 +809,37 @@ public class DashboardHomeController {
         System.out.println("Chuyển hướng sang trang Quản lý Tồn Kho...");
     }
 
+    private Date[] getPeriodDates(String period) {
+        LocalDate today = LocalDate.now();
+        LocalDate start;
+        LocalDate end;
+
+        if ("Trong tuần".equalsIgnoreCase(period)) {
+            // Thứ 2 đầu tuần (Day 1)
+            start = today.minusDays(today.getDayOfWeek().getValue() - 1);
+            end = start.plusDays(6);
+        } else if ("Trong tháng".equalsIgnoreCase(period)) {
+            start = today.withDayOfMonth(1);
+            end = today.withDayOfMonth(today.lengthOfMonth());
+        } else { // "Trong ngày"
+            start = today;
+            end = today;
+        }
+
+        // Chuyển sang java.util.Date với giờ tương ứng (start: 00:00:00, end: 23:59:59)
+        Calendar cal = Calendar.getInstance();
+        
+        cal.set(start.getYear(), start.getMonthValue() - 1, start.getDayOfMonth(), 0, 0, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        Date fromDate = cal.getTime();
+
+        cal.set(end.getYear(), end.getMonthValue() - 1, end.getDayOfMonth(), 23, 59, 59);
+        cal.set(Calendar.MILLISECOND, 999);
+        Date toDate = cal.getTime();
+
+        return new Date[] { fromDate, toDate };
+    }
+
     private void updateSystemRevenueChart() {
         if (ceoRevenueChart == null) return;
         ceoRevenueChart.getData().clear();
@@ -813,8 +848,13 @@ public class DashboardHomeController {
         }
 
         try {
-            List<Invoice> allInvoices = new InvoiceBUS().searchInvoices(null, null, null, null);
-            String selectedPeriod = ceoRevenuePeriodSelector.getSelectionModel().getSelectedItem();
+            String selectedPeriod = "Trong ngày";
+            if (ceoRevenuePeriodSelector != null && ceoRevenuePeriodSelector.getSelectionModel().getSelectedItem() != null) {
+                selectedPeriod = ceoRevenuePeriodSelector.getSelectionModel().getSelectedItem();
+            }
+
+            Date[] dates = getPeriodDates(selectedPeriod);
+            List<Invoice> periodInvoices = new InvoiceBUS().searchInvoices(null, null, dates[0], dates[1]);
 
             XYChart.Series<String, Number> series = new XYChart.Series<>();
             series.setName("Doanh Thu");
@@ -824,7 +864,7 @@ public class DashboardHomeController {
                 double[] hourlyRev = new double[12];
                 LocalDate today = LocalDate.now();
 
-                for (Invoice inv : allInvoices) {
+                for (Invoice inv : periodInvoices) {
                     if (inv.getCreateDate() != null && !"CANCELLED".equalsIgnoreCase(inv.getStatus())) {
                         Calendar cal = Calendar.getInstance();
                         cal.setTime(inv.getCreateDate());
@@ -851,7 +891,7 @@ public class DashboardHomeController {
                 LocalDate startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1);
                 LocalDate endOfWeek = startOfWeek.plusDays(6);
 
-                for (Invoice inv : allInvoices) {
+                for (Invoice inv : periodInvoices) {
                     if (inv.getCreateDate() != null && !"CANCELLED".equalsIgnoreCase(inv.getStatus())) {
                         Calendar cal = Calendar.getInstance();
                         cal.setTime(inv.getCreateDate());
@@ -879,7 +919,7 @@ public class DashboardHomeController {
                 double w3 = 0; // Days 15 to 21
                 double wOthers = 0; // Days 22 to end of month
 
-                for (Invoice inv : allInvoices) {
+                for (Invoice inv : periodInvoices) {
                     if (inv.getCreateDate() != null && !"CANCELLED".equalsIgnoreCase(inv.getStatus())) {
                         Calendar cal = Calendar.getInstance();
                         cal.setTime(inv.getCreateDate());

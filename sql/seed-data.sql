@@ -42,9 +42,9 @@ INSERT INTO app_user (employee_id, password_hash, role_emp, user_name, is_active
 INSERT INTO employee (employee_id, branch_id, full_name, salary, email, phone, hire_date, status_code, note) VALUES ('EMP001', 'BR001', N'Nguyễn Văn A', 12000000, 'nguyen.van.a@pethotel.vn', '0123456789', TIMESTAMP '2025-01-01 08:00:00 +07:00', 'WORKING', N'Nhân viên lễ tân');
 INSERT INTO app_user (employee_id, password_hash, role_emp, user_name, is_active, last_login) VALUES ('EMP001', 'letan', 1, 'letan', 1, NULL);
 INSERT INTO employee (employee_id, branch_id, full_name, salary, email, phone, hire_date, status_code, note) VALUES ('EMP002', 'BR001', N'Lê Thị B', 11000000, 'le.thi.b@pethotel.vn', '0987654321', TIMESTAMP '2025-01-01 08:00:00 +07:00', 'WORKING', N'Nhân viên chăm sóc thú cưng');
-INSERT INTO app_user (employee_id, password_hash, role_emp, user_name, is_active, last_login) VALUES ('EMP002', 'chamsoc', 2, 'chamsoc', 1, NULL);
+INSERT INTO app_user (employee_id, password_hash, role_emp, user_name, is_active, last_login) VALUES ('EMP002', 'chamsoc', 1, 'chamsoc', 1, NULL);
 INSERT INTO employee (employee_id, branch_id, full_name, salary, email, phone, hire_date, status_code, note) VALUES ('EMP003', 'BR001', N'Phạm Văn C', 18000000, 'pham.van.c@pethotel.vn', '0912345678', TIMESTAMP '2025-01-01 08:00:00 +07:00', 'WORKING', N'Quản lý chi nhánh');
-INSERT INTO app_user (employee_id, password_hash, role_emp, user_name, is_active, last_login) VALUES ('EMP003', 'quanly', 3, 'quanly', 1, NULL);
+INSERT INTO app_user (employee_id, password_hash, role_emp, user_name, is_active, last_login) VALUES ('EMP003', 'quanly', 1, 'quanly', 1, NULL);
 INSERT INTO employee (employee_id, branch_id, full_name, salary, email, phone, hire_date, status_code, note) VALUES ('EMP004', 'BR001', N'Nguyễn Thị D', 40000000, 'nguyen.thi.d@pethotel.vn', '0901234567', TIMESTAMP '2025-01-01 08:00:00 +07:00', 'WORKING', N'CEO');
 INSERT INTO app_user (employee_id, password_hash, role_emp, user_name, is_active, last_login) VALUES ('EMP004', 'ceo', 4, 'ceo', 1, NULL);
 INSERT INTO employee (employee_id, branch_id, full_name, salary, email, phone, hire_date, status_code, note) VALUES ('EMP005', 'BR001', N'Nhân viên B1 5', 11000000, 'emp5@pethotel.vn', '0911000005', TIMESTAMP '2025-01-01 08:00:00 +07:00', 'WORKING', N'Nhân viên chăm sóc thú cưng');
