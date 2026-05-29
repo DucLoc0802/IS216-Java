@@ -533,24 +533,45 @@ END;
 
 -- 13. Đồng bộ tổng số lượng và số mặt hàng của phiếu nhập
 CREATE OR REPLACE TRIGGER trg_sync_goods_receipt_totals
-AFTER INSERT OR UPDATE OR DELETE ON goods_receipt_detail
-FOR EACH ROW
-BEGIN
-    IF INSERTING THEN
-        sp_recalculate_goods_receipt_totals(:NEW.goods_receipt_id);
+FOR INSERT OR UPDATE OR DELETE ON goods_receipt_detail
+COMPOUND TRIGGER
+    TYPE t_receipt_ids IS TABLE OF goods_receipt.goods_receipt_id%TYPE INDEX BY VARCHAR2(10);
+    g_receipt_ids t_receipt_ids;
 
-    ELSIF DELETING THEN
-        sp_recalculate_goods_receipt_totals(:OLD.goods_receipt_id);
-
-    ELSIF UPDATING THEN
-        IF :OLD.goods_receipt_id <> :NEW.goods_receipt_id THEN
-            sp_recalculate_goods_receipt_totals(:OLD.goods_receipt_id);
-            sp_recalculate_goods_receipt_totals(:NEW.goods_receipt_id);
-        ELSE
-            sp_recalculate_goods_receipt_totals(:NEW.goods_receipt_id);
+    PROCEDURE remember_receipt (
+        p_goods_receipt_id IN goods_receipt.goods_receipt_id%TYPE
+    )
+    IS
+    BEGIN
+        IF p_goods_receipt_id IS NOT NULL THEN
+            g_receipt_ids(p_goods_receipt_id) := p_goods_receipt_id;
         END IF;
-    END IF;
-END;
+    END remember_receipt;
+
+    AFTER EACH ROW IS
+    BEGIN
+        IF INSERTING THEN
+            remember_receipt(:NEW.goods_receipt_id);
+
+        ELSIF DELETING THEN
+            remember_receipt(:OLD.goods_receipt_id);
+
+        ELSIF UPDATING THEN
+            remember_receipt(:OLD.goods_receipt_id);
+            remember_receipt(:NEW.goods_receipt_id);
+        END IF;
+    END AFTER EACH ROW;
+
+    AFTER STATEMENT IS
+        v_key VARCHAR2(10);
+    BEGIN
+        v_key := g_receipt_ids.FIRST;
+        WHILE v_key IS NOT NULL LOOP
+            sp_recalculate_goods_receipt_totals(g_receipt_ids(v_key));
+            v_key := g_receipt_ids.NEXT(v_key);
+        END LOOP;
+    END AFTER STATEMENT;
+END trg_sync_goods_receipt_totals;
 /
 
 -- 14. Tự động tính chênh lệch và tỷ lệ chênh lệch khi kiểm kê

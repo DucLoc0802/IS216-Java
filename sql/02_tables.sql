@@ -159,13 +159,22 @@ create table product (
    product_name        nvarchar2(160) not null,
    unit                varchar2(30),
    cost_price          number(12,2) not null,
+   is_active           number(1) default 1 not null,
+   note                clob,
+   min_quantity        number(10) default 0 not null,
+   import_price         number(12,2) default 0 not null,
    created_at          timestamp(6) with time zone default systimestamp,
    updated_at          timestamp(6) with time zone default systimestamp,
    constraint pk_product primary key ( product_id ),
    constraint fk_product_category foreign key ( product_category_id )
       references category_product ( product_category_id ),
-   constraint ck_product_cost_price check ( cost_price >= 0 )
+   constraint ck_product_cost_price check ( cost_price >= 0 ),
+   constraint ck_product_import_price check ( import_price >= 0 ),c
+   constraint ck_product_is_active check ( is_active in ( 0,
+                                                        1 ) )
+    --0: INACTIVE; 1: ACTIVE
 );
+
 -- =========================================================
 -- 8. BRANCH_INVENTORY
 -- =========================================================
@@ -581,12 +590,7 @@ create table goods_receipt_detail (
    constraint fk_grd_product foreign key ( product_id )
       references product ( product_id ),
    constraint ck_grd_quantity check ( quantity > 0 ),
-   constraint ck_grd_line_total check ( line_total >= 0 ),
-   constraint ck_grd_unit
-      check ( upper(unit) in ( 'G',
-                               'KG',
-                               'ML',
-                               'L' ) )
+   constraint ck_grd_line_total check ( line_total >= 0 )
 );
 -- =========================================================
 -- 24. STOCK_AUDIT

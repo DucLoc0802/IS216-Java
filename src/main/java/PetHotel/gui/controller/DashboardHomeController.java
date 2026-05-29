@@ -732,7 +732,6 @@ public class DashboardHomeController {
 
     private Number number(Map<String, Number> summary, String key) {
         return summary.getOrDefault(key, 0);
->>>>>>> d271bde2584cbd47fcee5cb7c9455b6b485aba4a
     }
 
     private void setText(Label label, String value) {

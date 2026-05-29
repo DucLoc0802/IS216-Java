@@ -159,6 +159,3 @@ INSERT INTO room (room_id, branch_id, type_room_id, room_number, status)
 VALUES ('R005', 'BR001', 'TYPE03', '301', 'AVAILABLE');
 
 COMMIT;
-SELECT user_id, user_name, password_hash, role_emp, is_active
-FROM app_user
-WHERE LOWER(user_name) = 'admin';

@@ -294,6 +294,7 @@ public class BookingServiceDAO {
         bs.setCustomerName(getStringSafe(rs, "customer_name"));
         bs.setCustomerPhone(getStringSafe(rs, "phone"));
         bs.setCustomerAddress(getStringSafe(rs, "address"));
+        bs.setBranchId(getStringSafe(rs, "branch_id"));
         return bs;
     }
     public List<Customer> getAllCustomers() throws SQLException {
@@ -1123,5 +1124,70 @@ public List<PetService> getActiveServicesWithStatus() throws SQLException {
     }
 
     return list;
+}
+
+/**
+ * Lấy thông tin chi tiết booking_service cùng với booking, pet, service info
+ * để chuẩn bị cho xác nhận hoàn thành dịch vụ.
+ *
+ * @param bookingServiceId
+ * @return BookingService đầy đủ thông tin hoặc null
+ * @throws SQLException
+ */
+public BookingService findCompletionContext(String bookingServiceId) throws SQLException {
+    String sql =
+        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bs.pet_id, bs.employee_id, " +
+        "       bs.scheduled_at, bs.status, bs.note, bs.created_at, bs.updated_at, " +
+        "       b.branch_id, " +
+        "       p.pet_name, p.species, p.weight_kg, " +
+        "       sv.service_name, " +
+        "       c.full_name AS customer_name, c.phone, c.address " +
+        "FROM booking_services bs " +
+        "JOIN booking b ON bs.booking_id = b.booking_id " +
+        "JOIN pet p ON bs.pet_id = p.pet_id " +
+        "LEFT JOIN services sv ON bs.service_id = sv.service_id " +
+        "LEFT JOIN customer c ON b.customer_id = c.customer_id " +
+        "WHERE bs.booking_service_id = ?";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, bookingServiceId);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return mapRow(rs);
+            }
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Cập nhật status = DONE và append note với thông tin vật tư đã sử dụng.
+ * Được gọi trong transaction để đảm bảo atomicity.
+ *
+ * @param bookingServiceId
+ * @param noteToAppend     Ghi chú vật tư sử dụng
+ * @param conn             Connection trong transaction
+ * @throws SQLException
+ */
+public void completeServiceAndAppendNote(String bookingServiceId, String noteToAppend, Connection conn)
+        throws SQLException {
+    String sql =
+        "UPDATE booking_services " +
+        "SET status = ?, " +
+        "    note = CASE WHEN note IS NULL THEN ? " +
+        "               ELSE note || CHR(10) || ? " +
+        "          END, " +
+        "    updated_at = SYSTIMESTAMP " +
+        "WHERE booking_service_id = ?";
+
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, BookingService.STATUS_DONE);
+        ps.setString(2, noteToAppend);
+        ps.setString(3, noteToAppend);
+        ps.setString(4, bookingServiceId);
+        ps.executeUpdate();
+    }
 }
 }

@@ -128,6 +128,9 @@
             <Button fx:id="btnCompleteTask"
                     text="Hoàn Thành"
                     style="-fx-padding: 8px 20px; -fx-font-weight: bold; -fx-background-color: #2d7c2d; -fx-text-fill: white;"/>
+            <Button fx:id="btnRecordWaste"
+                    text="Ghi Nhận Tiêu Hao"
+                    style="-fx-padding: 8px 20px; -fx-font-weight: bold;"/>
             <Button fx:id="btnCloseDetails"
                     text="Đóng"
                     style="-fx-padding: 8px 16px;"/>

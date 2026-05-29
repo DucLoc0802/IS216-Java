@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="PetHotel.gui.controller.CompleteServiceMaterialController"
+      spacing="12"
+      style="-fx-background-color: #fffaf5;"
+      prefWidth="800"
+      prefHeight="600">
+
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+
+    <!-- Title -->
+    <Label text="Xác Nhận Hoàn Thành Dịch Vụ"
+           style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #3b2314;"/>
+
+    <!-- Service Info Section -->
+    <VBox spacing="10" style="-fx-border-color: #e8dcc4; -fx-border-width: 1; -fx-border-radius: 4; -fx-padding: 12;">
+        <Label text="Thông Tin Dịch Vụ"
+               style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #3b2314;"/>
+
+        <GridPane hgap="20" vgap="8">
+            <columnConstraints>
+                <ColumnConstraints prefWidth="120"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+                <ColumnConstraints prefWidth="120"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+            </columnConstraints>
+
+            <Label text="Mã công việc:" GridPane.rowIndex="0" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/>
+            <Label fx:id="lblTaskId" text="—" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Thú cưng:" GridPane.rowIndex="0" GridPane.columnIndex="2" style="-fx-font-weight: bold;"/>
+            <Label fx:id="lblPetName" text="—" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+            <Label text="Dịch vụ:" GridPane.rowIndex="1" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/>
+            <Label fx:id="lblServiceName" text="—" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <Label text="Loài:" GridPane.rowIndex="1" GridPane.columnIndex="2" style="-fx-font-weight: bold;"/>
+            <Label fx:id="lblSpecies" text="—" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+            <Label text="Cân nặng:" GridPane.rowIndex="2" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/>
+            <Label fx:id="lblWeight" text="—" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+            <Label text="Nhân viên:" GridPane.rowIndex="2" GridPane.columnIndex="2" style="-fx-font-weight: bold;"/>
+            <Label fx:id="lblEmployee" text="—" GridPane.rowIndex="2" GridPane.columnIndex="3"/>
+        </GridPane>
+    </VBox>
+
+    <!-- Material Table -->
+    <VBox spacing="8" VBox.vgrow="ALWAYS">
+        <Label text="Danh Sách Vật Tư"
+               style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #3b2314;"/>
+
+        <TableView fx:id="tableMaterials" style="-fx-font-size: 11px;" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colProductId" prefWidth="80" text="Mã SP"/>
+                <TableColumn fx:id="colProductName" prefWidth="140" text="Tên Sản Phẩm"/>
+                <TableColumn fx:id="colStandard" prefWidth="100" text="Định Mức"/>
+                <TableColumn fx:id="colActualAmount" prefWidth="120" text="Thực Tế"/>
+                <TableColumn fx:id="colInventory" prefWidth="100" text="Tồn Hiện Tại"/>
+                <TableColumn fx:id="colNote" prefWidth="150" text="Ghi Chú"/>
+            </columns>
+            <placeholder>
+                <Label text="Dịch vụ chưa cấu hình vật tư tiêu hao"/>
+            </placeholder>
+        </TableView>
+
+        <!-- Warning if no materials -->
+        <Label fx:id="lblNoMaterials"
+               text="Dịch vụ chưa cấu hình vật tư tiêu hao. Vẫn có thể xác nhận hoàn thành."
+               style="-fx-text-fill: #d97706; -fx-font-size: 11px;"
+               wrapText="true"
+               visible="false"/>
+    </VBox>
+
+    <!-- Completion Note Section -->
+    <VBox spacing="6">
+        <Label text="Ghi Chú Bổ Sung (Tùy Chọn)"
+               style="-fx-font-size: 11px; -fx-font-weight: bold;"/>
+        <TextArea fx:id="txtCompletionNote"
+                  prefRowCount="3"
+                  wrapText="true"
+                  promptText="Nhập ghi chú về dịch vụ nếu cần..."/>
+    </VBox>
+
+    <!-- Buttons -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="btnCancel"
+                text="Hủy"
+                style="-fx-padding: 8px 20px;"/>
+        <Button fx:id="btnConfirm"
+                text="Xác Nhận Hoàn Thành"
+                style="-fx-padding: 8px 20px; -fx-font-weight: bold; -fx-background-color: #2d7c2d; -fx-text-fill: white;"/>
+    </HBox>
+
+</VBox>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox maxWidth="560" prefWidth="560" spacing="0"
+      styleClass="form-root"
+      stylesheets="@../css/style.css"
+      xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="PetHotel.gui.controller.StockAdjustmentController">
+
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="form-header">
+        <Label styleClass="form-header-icon" text="" />
+        <VBox spacing="2">
+            <Label styleClass="form-header-title" text="Điều Chỉnh Tồn Kho" />
+            <Label styleClass="form-header-subtitle" text="Cập nhật số lượng sau kiểm kê thực tế" />
+        </VBox>
+        <Region HBox.hgrow="ALWAYS" />
+        <Button onAction="#handleCancel" styleClass="form-close-btn" text="Đóng" />
+    </HBox>
+
+    <VBox spacing="16" styleClass="form-body">
+        <Label styleClass="form-section-title" text="Vật Tư Kiểm Kê" />
+
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Vật Tư *" />
+            <ComboBox fx:id="cmbProduct" styleClass="form-combo" promptText="Chọn vật tư" />
+            <Label fx:id="lblProductError" styleClass="form-error" text="" />
+        </VBox>
+
+        <HBox spacing="14">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Tồn Kho Hệ Thống" />
+                <Label fx:id="lblSystemQty" styleClass="detail-value" text="—" />
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Số Lượng Thực Tế *" />
+                <TextField fx:id="txtActualQty" styleClass="form-field" promptText="VD: 12" />
+                <Label fx:id="lblActualError" styleClass="form-error" text="" />
+            </VBox>
+        </HBox>
+
+        <Separator styleClass="form-divider" />
+        <Label styleClass="form-section-title" text="Ngưỡng Cảnh Báo" />
+
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Tồn Tối Thiểu" />
+            <TextField fx:id="txtReorderPoint" styleClass="form-field" promptText="VD: 5" />
+            <Label fx:id="lblReorderError" styleClass="form-error" text="" />
+        </VBox>
+
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Lý Do / Ghi Chú" />
+            <TextArea fx:id="txtNote" prefRowCount="3" wrapText="true" styleClass="form-area"
+                      promptText="VD: Kiểm kê cuối ngày, hao hụt do đổ vỡ, lệch cân..." />
+        </VBox>
+
+        <Label fx:id="lblGeneralError" styleClass="form-error" text="" />
+        <Label styleClass="form-hint" text="Hệ thống sẽ tạo phiếu kiểm kê và cập nhật tồn kho theo số lượng thực tế." />
+    </VBox>
+
+    <HBox alignment="CENTER_RIGHT" spacing="10" styleClass="form-footer">
+        <Region HBox.hgrow="ALWAYS" />
+        <Button onAction="#handleCancel" styleClass="btn-secondary" text="Hủy" />
+        <Button onAction="#handleSave" styleClass="btn-primary" text="Lưu Điều Chỉnh" />
+    </HBox>
+</VBox>
