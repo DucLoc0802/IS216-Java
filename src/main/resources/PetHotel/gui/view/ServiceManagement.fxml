@@ -30,8 +30,20 @@
         <Region styleClass="section-header-line" />
         <Label styleClass="section-header" text="Xem Danh Sách Dịch Vụ" />
         <Region HBox.hgrow="ALWAYS" />
-        <Button fx:id="btnAddService" onAction="#handleAddService" styleClass="action-btn action-btn-primary" text="Thêm Dịch Vụ Mới" visible="false" />
-        <Button fx:id="btnAddCategory" onAction="#handleAddCategory" styleClass="action-btn action-btn-primary" text="Thêm Loại Dịch Vụ" visible="false" />
+        <Button fx:id="btnAddService" 
+            onAction="#handleAddService" 
+            styleClass="action-btn action-btn-primary" 
+            text="Thêm Dịch Vụ Mới" 
+            visible="false" />
+        <Button fx:id="btnAddCategory" 
+            onAction="#handleAddCategory"   
+            styleClass="action-btn action-btn-primary" 
+            text="Thêm Loại Dịch Vụ" 
+            visible="false" />
+        <Button fx:id="btnMaterialStandard"
+            text="Vật Tư Tiêu Hao"
+            styleClass="action-btn action-btn-primary"
+            onAction="#onOpenMaterialStandard"/>
     </HBox>
 
     <!-- Thanh tìm kiếm -->

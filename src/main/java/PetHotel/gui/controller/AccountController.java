@@ -53,40 +53,18 @@ public class AccountController {
     @FXML private TableColumn<AppUser, String> colEmail;
     @FXML private TableColumn<AppUser, String> colStatus;
     @FXML private TableColumn<AppUser, String> colLastLogin;
-    @FXML private TableColumn<AppUser, Void> colActions;
-
     @FXML private Label statTotalAccounts;
     @FXML private Label statActiveAccounts;
     @FXML private Label statLockedAccounts;
     @FXML private Label statAdminAccounts;
 
+    @FXML private Button btnEdit;
     @FXML private Button btnLock;
     @FXML private Button btnUnlock;
     @FXML private Button btnResetPwd;
-    @FXML private Button btnPermission;
     @FXML private Label selectionInfo;
     @FXML private Pagination pagination;
     @FXML private Label pageInfo;
-
-    @FXML private VBox detailPanel;
-    @FXML private VBox accountDetailCard;
-    @FXML private VBox noSelectionHint;
-    @FXML private Label detailAvatar;
-    @FXML private Label detailFullName;
-    @FXML private Label detailRole;
-    @FXML private Label detailUsername;
-    @FXML private Label detailEmail;
-    @FXML private Label detailBranch;
-    @FXML private Label detailCreated;
-    @FXML private Label detailLastLogin;
-    @FXML private Label detailStatus;
-    @FXML private Button btnDetailEdit;
-    @FXML private Button btnDetailLock;
-    @FXML private Button btnDetailReset;
-
-    @FXML private ComboBox<String> roleSelector;
-    @FXML private ComboBox<String> branchSelector;
-    @FXML private Button btnSavePermission;
 
     @FXML private VBox auditLogList;
     @FXML private Pagination logPagination;
@@ -102,7 +80,7 @@ public class AccountController {
         accountBUS = new AccountBUS();
 
         setupTableColumns();
-        accountTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+        accountTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         setupFilterListeners();
         loadAccountData();
         loadStats();
@@ -245,51 +223,17 @@ public class AccountController {
         AppUser selected = accountTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
             this.selectedUser = selected;
-            showAccountDetail(selected);
             enableActionButtons(true);
         }
     }
 
-    private void showAccountDetail(AppUser user) {
-        noSelectionHint.setVisible(false);
-        accountDetailCard.setVisible(true);
-
-        Employee emp = user.getEmployee();
-        String fullName = (emp != null && emp.getFullName() != null) ? emp.getFullName() : user.getUserName();
-
-        detailAvatar.setText(String.valueOf(fullName.charAt(0)).toUpperCase());
-        detailFullName.setText(fullName);
-        detailRole.setText(user.getRole().getDisplayName());
-        detailUsername.setText(user.getUserName());
-        detailEmail.setText(emp != null && emp.getEmail() != null ? emp.getEmail() : "—");
-        detailBranch.setText(emp != null && emp.getBranchId() != null ? emp.getBranchId() : "—");
-        detailCreated.setText(user.getCreatedAt() != null ? user.getCreatedAt().toString() : "—");
-        detailLastLogin.setText(user.getLastLogin() != null ? user.getLastLogin().toString() : "Chưa đăng nhập");
-
-        if (user.isActive()) {
-            detailStatus.setText("Hoạt động");
-            detailStatus.getStyleClass().removeAll("status-inactive");
-            detailStatus.getStyleClass().add("status-active");
-        } else {
-            detailStatus.setText("Đã khóa");
-            detailStatus.getStyleClass().removeAll("status-active");
-            detailStatus.getStyleClass().add("status-inactive");
-        }
-
-        btnDetailEdit.setDisable(false);
-        btnDetailLock.setDisable(false);
-        btnDetailReset.setDisable(false);
-
-        roleSelector.setDisable(false);
-        branchSelector.setDisable(false);
-        btnSavePermission.setDisable(false);
-    }
-
     private void enableActionButtons(boolean enable) {
+        if (btnEdit != null) {
+            btnEdit.setDisable(!enable);
+        }
         btnLock.setDisable(!enable);
         btnUnlock.setDisable(!enable);
         btnResetPwd.setDisable(!enable);
-        btnPermission.setDisable(!enable);
     }
 
     @FXML
@@ -417,34 +361,7 @@ public class AccountController {
         });
     }
 
-    @FXML
-    public void onManagePermission(ActionEvent event) {
-        if (selectedUser == null) return;
 
-        String selectedRoleStr = roleSelector.getValue();
-        if (selectedRoleStr == null || selectedRoleStr.isEmpty()) {
-            showAlert(AlertType.WARNING, "Chưa chọn", "Vui lòng chọn vai trò mới.");
-            return;
-        }
-
-        Role newRole = mapDisplayNameToRole(selectedRoleStr);
-        if (newRole == null) return;
-
-        confirmAndExecute("Phân quyền",
-            "Bạn có chắc muốn đổi vai trò của \"" + selectedUser.getUserName() + "\" thành " + selectedRoleStr + "?",
-            () -> {
-                AppUser currentUser = SessionManager.getInstance().getCurrentUser();
-                accountBUS.updateRole(currentUser, selectedUser.getEmployeeId(), newRole);
-                showAlert(AlertType.INFORMATION, "Thành công", "Đã cập nhật vai trò.");
-                loadAccountData();
-                showAccountDetail(selectedUser);
-            });
-    }
-
-    @FXML
-    public void onSavePermission(ActionEvent event) {
-        onManagePermission(event);
-    }
 
     @FXML
     public void onFilterLog(ActionEvent event) {

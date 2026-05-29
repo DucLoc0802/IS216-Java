@@ -153,18 +153,18 @@
             </HBox>
 
             <HBox alignment="CENTER_LEFT" spacing="10" styleClass="action-toolbar">
+                <Button fx:id="btnEdit" disable="true" onAction="#onEditAccount" styleClass="action-btn action-btn-outline" text="Sửa" />
                 <Button fx:id="btnLock" disable="true" onAction="#onLockSelected" styleClass="action-btn action-btn-danger" text="Khóa" />
                 <Button fx:id="btnUnlock" disable="true" onAction="#onUnlockSelected" styleClass="action-btn action-btn-success" text="Mở Khóa" />
                 <Button fx:id="btnResetPwd" disable="true" onAction="#onResetPassword" styleClass="action-btn action-btn-amber" text="Đặt Lại MK" />
-                <Button fx:id="btnPermission" disable="true" onAction="#onManagePermission" styleClass="action-btn action-btn-outline" text="Phân Quyền" />
                 <Region HBox.hgrow="ALWAYS" />
                 <Label fx:id="selectionInfo" style="-fx-text-fill: -ph-text-muted; -fx-font-size: 11px;" text="" />
             </HBox>
 
             <TableView fx:id="accountTable" onMouseClicked="#onTableClick" styleClass="data-table" VBox.vgrow="ALWAYS">
                 <columns>
-                    <TableColumn fx:id="colSelect" prefWidth="40" resizable="false" text="" />
-                    <TableColumn fx:id="colAvatar" prefWidth="44" resizable="false" text="" />
+                    <TableColumn fx:id="colSelect" prefWidth="40" minWidth="40" maxWidth="40" resizable="false" text="" />
+                    <TableColumn fx:id="colAvatar" prefWidth="44" minWidth="44" maxWidth="44" resizable="false" text="" />
                     <TableColumn fx:id="colUsername" prefWidth="130" text="Username" />
                     <TableColumn fx:id="colFullName" prefWidth="150" text="Họ Tên" />
                     <TableColumn fx:id="colRole" prefWidth="140" text="Vai Trò" />
@@ -172,7 +172,6 @@
                     <TableColumn fx:id="colEmail" prefWidth="170" text="Email" />
                     <TableColumn fx:id="colStatus" prefWidth="100" text="Trạng Thái" />
                     <TableColumn fx:id="colLastLogin" prefWidth="130" text="Đăng Nhập Cuối" />
-                    <TableColumn fx:id="colActions" prefWidth="110" resizable="false" text="Thao Tác" />
                 </columns>
                 <placeholder>
                     <VBox alignment="CENTER" spacing="8">
@@ -187,113 +186,7 @@
                 <Pagination fx:id="pagination" maxPageIndicatorCount="5" pageCount="1" styleClass="pagination" />
             </HBox>
 
-        </VBox>
-
-        <VBox fx:id="detailPanel" minWidth="320" prefWidth="340" spacing="14">
-
-            <VBox fx:id="accountDetailCard" spacing="14" styleClass="content-panel">
-                <HBox alignment="CENTER_LEFT">
-                    <HBox alignment="CENTER_LEFT" spacing="8">
-                        <Region styleClass="section-header-line" />
-                        <Label styleClass="panel-title" text="Chi Tiết Tài Khoản" />
-                    </HBox>
-                </HBox>
-
-                <VBox alignment="CENTER" spacing="8" style="-fx-padding: 10 0 10 0;">
-                    <Label fx:id="detailAvatar" style="-fx-background-color: -ph-brown; -fx-background-radius: 30px; -fx-min-width: 56px; -fx-max-width: 56px; -fx-min-height: 56px; -fx-max-height: 56px; -fx-alignment: center; -fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;" text="?" />
-                    <Label fx:id="detailFullName" styleClass="panel-title" text="—" />
-                    <Label fx:id="detailRole" styleClass="status-badge status-staff" text="—" />
-                </VBox>
-
-                <Separator style="-fx-background-color: -ph-border;" />
-
-                <GridPane hgap="10" vgap="8">
-                    <Label styleClass="form-label" text="Username" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                    <Label fx:id="detailUsername" style="-fx-text-fill: -ph-dark; -fx-font-size: 12px;" text="—" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-
-                    <Label styleClass="form-label" text="Email" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                    <Label fx:id="detailEmail" style="-fx-text-fill: -ph-dark; -fx-font-size: 12px;" text="—" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-
-                    <Label styleClass="form-label" text="Chi Nhánh" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                    <Label fx:id="detailBranch" style="-fx-text-fill: -ph-dark; -fx-font-size: 12px;" text="—" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-
-                    <Label styleClass="form-label" text="Tạo Lúc" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                    <Label fx:id="detailCreated" style="-fx-text-fill: -ph-dark; -fx-font-size: 12px;" text="—" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-
-                    <Label styleClass="form-label" text="Đăng Nhập" GridPane.columnIndex="0" GridPane.rowIndex="4" />
-                    <Label fx:id="detailLastLogin" style="-fx-text-fill: -ph-dark; -fx-font-size: 12px;" text="—" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-
-                    <Label styleClass="form-label" text="Trạng Thái" GridPane.columnIndex="0" GridPane.rowIndex="5" />
-                    <Label fx:id="detailStatus" styleClass="status-badge status-active" text="—" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-
-                    <columnConstraints>
-                        <ColumnConstraints minWidth="90" prefWidth="90" />
-                        <ColumnConstraints hgrow="ALWAYS" />
-                    </columnConstraints>
-               <rowConstraints>
-                  <RowConstraints />
-                  <RowConstraints />
-                  <RowConstraints />
-                  <RowConstraints />
-                  <RowConstraints />
-                  <RowConstraints />
-               </rowConstraints>
-                </GridPane>
-
-                <VBox spacing="8">
-                    <Separator style="-fx-background-color: -ph-border;" />
-                    <Label styleClass="form-label" text="Thao Tác Nhanh" />
-                    <HBox alignment="CENTER_LEFT" spacing="8">
-                        <Button fx:id="btnDetailEdit" disable="true" onAction="#onEditAccount" styleClass="action-btn action-btn-outline" text="Sửa" />
-                        <Button fx:id="btnDetailLock" disable="true" onAction="#onLockSingle" styleClass="action-btn action-btn-danger" text="Khóa" />
-                        <Button fx:id="btnDetailReset" disable="true" onAction="#onResetSinglePwd" styleClass="action-btn action-btn-amber" text="Đặt MK" />
-                    </HBox>
-                </VBox>
-
-                <VBox fx:id="noSelectionHint" alignment="CENTER" spacing="8" style="-fx-padding: 20 0 10 0;">
-                    <Label style="-fx-font-size: 26px;" text="" />
-                    <Label maxWidth="200" style="-fx-font-size: 12px; -fx-text-fill: -ph-text-muted; -fx-text-alignment: center;" text="Chọn một tài khoản để xem chi tiết" textAlignment="CENTER" wrapText="true" />
-                </VBox>
-            </VBox>
-
-            <VBox spacing="12" styleClass="content-panel">
-                <HBox alignment="CENTER_LEFT">
-                    <HBox alignment="CENTER_LEFT" spacing="8">
-                        <Region styleClass="section-header-line" />
-                        <Label styleClass="panel-title" text="Phân Quyền" />
-                    </HBox>
-                    <Region HBox.hgrow="ALWAYS" />
-                    <Button fx:id="btnSavePermission" disable="true" onAction="#onSavePermission" style="-fx-padding: 5 14 5 14;" styleClass="action-btn action-btn-success" text="Lưu" />
-                </HBox>
-
-                <Label styleClass="form-label" text="Vai trò hệ thống" />
-                <ComboBox fx:id="roleSelector" disable="true" maxWidth="1.7976931348623157E308" promptText="Chọn vai trò..." styleClass="form-combo">
-                    <items>
-                        <javafx.collections.FXCollections fx:factory="observableArrayList">
-                            <String fx:value="Admin Hệ Thống" />
-                            <String fx:value="CEO" />
-                            <String fx:value="Quản Lý Chi Nhánh" />
-                            <String fx:value="Lễ Tân" />
-                        </javafx.collections.FXCollections>
-                    </items>
-                </ComboBox>
-
-                <Label styleClass="form-label" text="Chi nhánh phụ trách" />
-                <ComboBox fx:id="branchSelector" disable="true" maxWidth="1.7976931348623157E308" promptText="Chọn chi nhánh..." styleClass="form-combo">
-                </ComboBox>
-
-                <Label styleClass="form-label" text="Quyền đặc biệt" />
-                <VBox spacing="6" style="-fx-padding: 2 0 0 0;">
-                    <CheckBox fx:id="permViewReport" disable="true" text="Xem báo cáo toàn chuỗi" />
-                    <CheckBox fx:id="permManageAcct" disable="true" text="Quản lý tài khoản" />
-                    <CheckBox fx:id="permManageStaff" disable="true" text="Quản lý nhân viên" />
-                    <CheckBox fx:id="permManageInvent" disable="true" text="Điều chỉnh tồn kho" />
-                    <CheckBox fx:id="permViewAudit" disable="true" text="Xem audit log" />
-                </VBox>
-            </VBox>
-
-        </VBox>
-    </HBox>
+        </VBox>    </HBox>
 
     <VBox spacing="12" styleClass="content-panel">
         <HBox alignment="CENTER_LEFT">

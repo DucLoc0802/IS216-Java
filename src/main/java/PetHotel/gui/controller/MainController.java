@@ -51,31 +51,9 @@ public class MainController {
     }
 
     private void loadDefaultViewByRole(AppUser currentUser) {
-        if (currentUser == null || currentUser.getRole() == null) {
-            loadView("DashboardHome.fxml");
-            return;
-        }
-
-        Role role = currentUser.getRole();
-        switch (role) {
-            case RECEPTIONIST:
-                loadView("InvoiceManagement.fxml");
-                setTopbarTitle("HÃ³a ÄÆ¡n", "Quáº£n lÃ½ hÃ³a Ä‘Æ¡n");
-                break;
-            case PET_CARE_STAFF:
-                showPetManagement(null);
-                break;
-            case ADMIN:
-                loadView("AccountManagement.fxml");
-                setTopbarTitle("TÃ i Khoáº£n", "Quáº£n lÃ½ tÃ i khoáº£n");
-                break;
-            case CEO:
-            case BRANCH_MANAGER:
-            default:
-                loadView("DashboardHome.fxml");
-                setTopbarTitle("Dashboard", "Trang chá»§");
-                break;
-        }
+        // Tất cả các vai trò đều hiển thị Dashboard (Tổng Quan Hôm Nay) làm màn hình mặc định sau khi đăng nhập
+        loadView("DashboardHome.fxml");
+        setTopbarTitle("Tổng Quan Hôm Nay", "Trang chủ");
     }
 
     private void setTopbarTitle(String title, String subtitle) {

@@ -71,16 +71,34 @@ public class RoomController {
             new SimpleObjectProperty<>(d.getValue().getBasePricePerDay()));
         colRoomCap.setCellValueFactory(d ->
             new SimpleObjectProperty<>(d.getValue().getMaxPets()));
+       colRoomStatus.setCellFactory(col -> new TableCell<Room, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                    getStyleClass().clear();
+                } else {
+                    Label label = new Label(item);
+                    label.getStyleClass().addAll("status-badge", getRoomStatusClass(item));
+                    setGraphic(label);
+                    setText(null);
+                }
+            }
+        });
         colRoomStatus.setCellValueFactory(d -> {
             Room room = d.getValue();
-            // Tự động suy luận trạng thái dựa vào thú cưng hiện tại
+            // Tự động xác định trạng thái dựa vào thú cưng hiện tại
             String petNames = room.getCurrentPetNames();
-            if (petNames != null && !petNames.isEmpty() && !"AVAILABLE".equals(room.getStatus())) {
-                // Giữ nguyên IN_USE nếu có thú cưng
-            } else if (petNames != null && !petNames.isEmpty()) {
+            if (petNames != null && !petNames.isEmpty()) {
                 room.setStatus("IN_USE");
             }
-            return new SimpleStringProperty(room.getStatus());
+            // Nếu không có thú cưng và trạng thái đang là IN_USE thì chuyển về AVAILABLE (tuỳ logic)
+            else if ("IN_USE".equals(room.getStatus())) {
+                room.setStatus("AVAILABLE");
+            }
+            return new SimpleStringProperty(translateRoomStatus(room.getStatus()));
         });
         colRoomPet.setCellValueFactory(d -> {
             String petNames = d.getValue().getCurrentPetNames();
@@ -115,6 +133,16 @@ public class RoomController {
             "Tất cả", "STANDARD", "PREMIUM", "SUITE"
         ));
         filterType.setValue("Tất cả");
+    }
+
+    private String getRoomStatusClass(String status) {
+        if (status == null) return "status-available";
+        return switch (status) {
+            case "AVAILABLE", "Trống"          -> "status-available";
+            case "IN_USE", "Đang sử dụng"      -> "status-in_use";
+            case "MAINTENANCE", "Bảo trì"      -> "status-maintenance";
+            default                             -> "status-available";
+        };
     }
 
     private void loadRooms() {
@@ -278,8 +306,9 @@ public class RoomController {
 
     private void showStatusDialog(Room room) {
     List<String> statuses = List.of("AVAILABLE", "IN_USE", "MAINTENANCE");
-
     ChoiceDialog<String> dialog = new ChoiceDialog<>(room.getStatus(), statuses);
+    dialog.getItems().clear();
+    dialog.getItems().addAll("Trống (AVAILABLE)", "Đang sử dụng (IN_USE)", "Bảo trì (MAINTENANCE)");
     dialog.setTitle("Cập nhật trạng thái");
     dialog.setHeaderText("Phòng: " + room.getRoomNumber());
     dialog.setContentText("Chọn trạng thái mới:");
@@ -293,6 +322,16 @@ public class RoomController {
             showAlert("Lỗi", e.getMessage());
             }
         });
+    }
+
+    private String translateRoomStatus(String status) {
+        if (status == null) return "—";
+        return switch (status.trim()) {
+            case "AVAILABLE"   -> "Trống";
+            case "IN_USE"      -> "Đang sử dụng";
+            case "MAINTENANCE" -> "Bảo trì";
+            default            -> status;
+        };
     }
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);

@@ -5,10 +5,9 @@ exports/
 
 .vscode/
 .idea/
-*.iml
-
 .DS_Store
+DBConnection.java
+*.iml
 Thumbs.db
-
 .env
 sql/99_test_*.sql

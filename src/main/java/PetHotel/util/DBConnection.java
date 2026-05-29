@@ -5,31 +5,31 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBConnection {
-    // Thông số kết nối
+    // Thong so ket noi
     private static final String HOST = "localhost";
     private static final String PORT = "1521";
     private static final String SERVICE_NAME = "xe";
-    // Sửa 2 dòng dưới đây:
-    private static final String USER = "system";
-    private static final String PASS = "123456";
-    // Chuỗi URL kết nối chuẩn Oracle
+    private static final String USER = "pethotel";
+    private static final String PASS = "admin";
     private static final String URL = "jdbc:oracle:thin:@//" + HOST + ":" + PORT + "/" + SERVICE_NAME;
 
-    public static Connection getConnection() {
+    public static Connection getConnection() throws SQLException {
         try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
 
-            // 2. Tạo kết nối
             Connection conn = DriverManager.getConnection(URL, USER, PASS);
             if (conn == null || conn.isClosed()) {
-                throw new SQLException("Không tạo được kết nối Oracle.");
+                throw new SQLException("Khong tao duoc ket noi Oracle.");
             }
             return conn;
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("Khong tim thay Oracle JDBC Driver trong classpath.", e);
         } catch (SQLException e) {
             throw new SQLException(
-                    "Không kết nối được database. Vui lòng kiểm tra Oracle service, JDBC URL, username/password. "
-                            + "URL=" + URL + ", user=" + USER + ". " + e.getMessage(),
-                    e);
+                "Khong ket noi duoc database. Vui long kiem tra Oracle service, JDBC URL, username/password. "
+                    + "URL=" + URL + ", user=" + USER + ". " + e.getMessage(),
+                e
+            );
         }
     }
 

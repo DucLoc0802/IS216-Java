@@ -29,7 +29,7 @@ public class AccountBUS {
         try {
             return appUserDAO.findAll();
         } catch (SQLException e) {
-            throw new RuntimeException("Loi database khi lay danh sach tai khoan.", e);
+            throw new RuntimeException("Lỗi database khi lấy danh sách tài khoản.", e);
         }
     }
 
@@ -40,7 +40,7 @@ public class AccountBUS {
         try {
             return appUserDAO.search(keyword.trim());
         } catch (SQLException e) {
-            throw new RuntimeException("Loi database khi tim kiem tai khoan.", e);
+            throw new RuntimeException("Lỗi database khi tìm kiếm tài khoản.", e);
         }
     }
 
@@ -48,40 +48,40 @@ public class AccountBUS {
         try {
             AppUser user = appUserDAO.findByEmployeeId(employeeId);
             if (user == null) {
-                throw new NotFoundException("Khong tim thay tai khoan: " + employeeId);
+                throw new NotFoundException("Không tìm thấy tài khoản: " + employeeId);
             }
             return user;
         } catch (SQLException e) {
-            throw new RuntimeException("Loi database khi lay chi tiet tai khoan.", e);
+            throw new RuntimeException("Lỗi database khi lấy chi tiết tài khoản.", e);
         }
     }
 
     public void createAccount(AppUser actor, String employeeId, String username,
                               String rawPassword, Role role) {
         if (actor == null || (!actor.hasRole(Role.ADMIN) && !actor.hasRole(Role.CEO))) {
-            throw new AuthorizationException("Ban khong co quyen tao tai khoan moi.");
+            throw new AuthorizationException("Bạn không có quyền tạo tài khoản mới.");
         }
 
         if (username == null || username.trim().isEmpty()) {
-            throw new ValidationException("Ten dang nhap khong duoc de trong.");
+            throw new ValidationException("Tên đăng nhập không được để trống.");
         }
         if (rawPassword == null || rawPassword.isEmpty()) {
-            throw new ValidationException("Mat khau khong duoc de trong.");
+            throw new ValidationException("Mật khẩu không được để trống.");
         }
         validatePasswordComplexity(rawPassword);
         if (employeeId == null || employeeId.trim().isEmpty()) {
-            throw new ValidationException("Ma nhan vien khong duoc de trong.");
+            throw new ValidationException("Mã nhân viên không được để trống.");
         }
         if (role == null) {
-            throw new ValidationException("Vai tro khong duoc de trong.");
+            throw new ValidationException("Vai trò không được để trống.");
         }
 
         try {
             if (appUserDAO.existsByUsername(username.trim())) {
-                throw new DuplicateRecordException("Ten dang nhap '" + username + "' da ton tai.");
+                throw new DuplicateRecordException("Tên đăng nhập '" + username + "' đã tồn tại.");
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Loi database khi kiem tra username.", e);
+            throw new RuntimeException("Lỗi database khi kiểm tra tên đăng nhập.", e);
         }
 
         String hashedPassword = PasswordUtil.hashPassword(rawPassword);
@@ -95,15 +95,20 @@ public class AccountBUS {
 
         try {
             appUserDAO.insert(newUser);
+
+            // Ghi audit log
+            String actorFullName = (actor.getEmployee() != null) ? actor.getEmployee().getFullName() : actor.getUserName();
+            AuditLogLocalService.log(actor.getEmployeeId(), actorFullName, "Tạo tài khoản", "Đã tạo tài khoản mới '" + username + "' cho nhân viên " + employeeId + " với vai trò " + role.getDisplayName());
+
         } catch (SQLException e) {
             String msg = e.getMessage();
             if (msg != null && msg.toUpperCase().contains("UQ_APP_USER_USERNAME")) {
-                throw new DuplicateRecordException("Ten dang nhap '" + username + "' da ton tai.");
+                throw new DuplicateRecordException("Tên đăng nhập '" + username + "' đã tồn tại.");
             }
             if (msg != null && msg.toUpperCase().contains("FK_APP_USER_EMPLOYEE")) {
-                throw new ValidationException("Ma nhan vien khong ton tai trong he thong.");
+                throw new ValidationException("Mã nhân viên không tồn tại trong hệ thống.");
             }
-            throw new RuntimeException("Loi database khi tao tai khoan.", e);
+            throw new RuntimeException("Lỗi database khi tạo tài khoản.", e);
         }
     }
 
@@ -111,20 +116,25 @@ public class AccountBUS {
         requireAdminOrCEO(actor);
 
         if (actor.getEmployeeId().equals(targetEmployeeId)) {
-            throw new ValidationException("Ban khong the khoa tai khoan cua chinh minh.");
+            throw new ValidationException("Bạn không thể khóa tài khoản của chính mình.");
         }
 
         try {
             AppUser target = appUserDAO.findByEmployeeId(targetEmployeeId);
             if (target == null) {
-                throw new NotFoundException("Khong tim thay tai khoan: " + targetEmployeeId);
+                throw new NotFoundException("Không tìm thấy tài khoản: " + targetEmployeeId);
             }
             if (target.getRole() == Role.ADMIN && actor.getRole() != Role.CEO) {
-                throw new AuthorizationException("Chi CEO moi co the khoa tai khoan Admin.");
+                throw new AuthorizationException("Chỉ CEO mới có thể khóa tài khoản Admin.");
             }
             appUserDAO.setActive(targetEmployeeId, false);
+
+            // Ghi audit log
+            String actorFullName = (actor.getEmployee() != null) ? actor.getEmployee().getFullName() : actor.getUserName();
+            AuditLogLocalService.log(actor.getEmployeeId(), actorFullName, "Khóa tài khoản", "Đã khóa tài khoản của nhân viên: " + targetEmployeeId);
+
         } catch (SQLException e) {
-            throw new RuntimeException("Loi database khi khoa tai khoan.", e);
+            throw new RuntimeException("Lỗi database khi khóa tài khoản.", e);
         }
     }
 
@@ -134,11 +144,16 @@ public class AccountBUS {
         try {
             AppUser target = appUserDAO.findByEmployeeId(targetEmployeeId);
             if (target == null) {
-                throw new NotFoundException("Khong tim thay tai khoan: " + targetEmployeeId);
+                throw new NotFoundException("Không tìm thấy tài khoản: " + targetEmployeeId);
             }
             appUserDAO.setActive(targetEmployeeId, true);
+
+            // Ghi audit log
+            String actorFullName = (actor.getEmployee() != null) ? actor.getEmployee().getFullName() : actor.getUserName();
+            AuditLogLocalService.log(actor.getEmployeeId(), actorFullName, "Mở khóa tài khoản", "Đã mở khóa tài khoản của nhân viên: " + targetEmployeeId);
+
         } catch (SQLException e) {
-            throw new RuntimeException("Loi database khi mo khoa tai khoan.", e);
+            throw new RuntimeException("Lỗi database khi mở khóa tài khoản.", e);
         }
     }
 
@@ -149,12 +164,17 @@ public class AccountBUS {
         try {
             AppUser target = appUserDAO.findByEmployeeId(targetEmployeeId);
             if (target == null) {
-                throw new NotFoundException("Khong tim thay tai khoan: " + targetEmployeeId);
+                throw new NotFoundException("Không tìm thấy tài khoản: " + targetEmployeeId);
             }
             String newHash = PasswordUtil.hashPassword(newPassword);
             appUserDAO.changePassword(targetEmployeeId, newHash, null);
+
+            // Ghi audit log
+            String actorFullName = (actor.getEmployee() != null) ? actor.getEmployee().getFullName() : actor.getUserName();
+            AuditLogLocalService.log(actor.getEmployeeId(), actorFullName, "Đặt lại mật khẩu", "Đã đặt lại mật khẩu của nhân viên: " + targetEmployeeId);
+
         } catch (SQLException e) {
-            throw new RuntimeException("Loi database khi dat lai mat khau.", e);
+            throw new RuntimeException("Lỗi database khi đặt lại mật khẩu.", e);
         }
     }
 
@@ -162,25 +182,30 @@ public class AccountBUS {
         requireAdminOrCEO(actor);
 
         if (newRole == null) {
-            throw new ValidationException("Vai tro khong duoc de trong.");
+            throw new ValidationException("Vai trò không được để trống.");
         }
 
         try {
             AppUser target = appUserDAO.findByEmployeeId(targetEmployeeId);
             if (target == null) {
-                throw new NotFoundException("Khong tim thay tai khoan: " + targetEmployeeId);
+                throw new NotFoundException("Không tìm thấy tài khoản: " + targetEmployeeId);
             }
 
             if (target.getRole() == Role.ADMIN && actor.getRole() != Role.CEO) {
-                throw new AuthorizationException("Chi CEO moi co the thay doi vai tro cua Admin.");
+                throw new AuthorizationException("Chỉ CEO mới có thể thay đổi vai trò của Admin.");
             }
             if (actor.getEmployeeId().equals(targetEmployeeId)) {
-                throw new ValidationException("Ban khong the tu thay doi vai tro cua chinh minh.");
+                throw new ValidationException("Bạn không thể tự thay đổi vai trò của chính mình.");
             }
 
             appUserDAO.updateRole(targetEmployeeId, newRole);
+
+            // Ghi audit log
+            String actorFullName = (actor.getEmployee() != null) ? actor.getEmployee().getFullName() : actor.getUserName();
+            AuditLogLocalService.log(actor.getEmployeeId(), actorFullName, "Cập nhật vai trò", "Đã cập nhật vai trò của nhân viên " + targetEmployeeId + " thành " + newRole.getDisplayName());
+
         } catch (SQLException e) {
-            throw new RuntimeException("Loi database khi cap nhat vai tro.", e);
+            throw new RuntimeException("Lỗi database khi cập nhật vai trò.", e);
         }
     }
 
@@ -188,7 +213,7 @@ public class AccountBUS {
         try {
             return appUserDAO.getAccountStats();
         } catch (SQLException e) {
-            throw new RuntimeException("Loi database khi lay thong ke tai khoan.", e);
+            throw new RuntimeException("Lỗi database khi lấy thống kê tài khoản.", e);
         }
     }
 
@@ -196,25 +221,25 @@ public class AccountBUS {
         try {
             return appUserDAO.findEmployeesWithoutAccount();
         } catch (SQLException e) {
-            throw new RuntimeException("Loi database khi lay danh sach nhan vien chua co tai khoan.", e);
+            throw new RuntimeException("Lỗi database khi lấy danh sách nhân viên chưa có tài khoản.", e);
         }
     }
 
     private void requireAdminOrCEO(AppUser actor) {
         if (actor == null) {
-            throw new AuthorizationException("Ban can dang nhap de thuc hien thao tac nay.");
+            throw new AuthorizationException("Bạn cần đăng nhập để thực hiện thao tác này.");
         }
         if (!actor.hasRole(Role.ADMIN) && !actor.hasRole(Role.CEO)) {
-            throw new AuthorizationException("Ban khong co quyen thuc hien thao tac nay. Yeu cau quyen Admin tro len.");
+            throw new AuthorizationException("Bạn không có quyền thực hiện thao tác này. Yêu cầu quyền Admin trở lên.");
         }
     }
 
     private void validatePasswordComplexity(String password) {
         if (password == null || password.trim().isEmpty()) {
-            throw new ValidationException("Mat khau khong duoc de trong.");
+            throw new ValidationException("Mật khẩu không được để trống.");
         }
         if (password.length() < 8) {
-            throw new ValidationException("Mat khau phai co it nhat 8 ky tu.");
+            throw new ValidationException("Mật khẩu phải có ít nhất 8 ký tự.");
         }
         boolean hasUpper = false;
         boolean hasLower = false;
@@ -225,7 +250,7 @@ public class AccountBUS {
             else if (Character.isDigit(c)) hasDigit = true;
         }
         if (!hasUpper || !hasLower || !hasDigit) {
-            throw new ValidationException("Mat khau phai chua it nhat 1 chu hoa, 1 chu thuong va 1 so.");
+            throw new ValidationException("Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số.");
         }
     }
 }

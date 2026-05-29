@@ -20,7 +20,7 @@
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="form-header">
         <Region styleClass="form-header-icon" />
         <VBox spacing="2">
-            <Label styleClass="form-header-title" text="Tạo Tài Khoản Mới" />
+            <Label fx:id="lblTitle" styleClass="form-header-title" text="Tạo Tài Khoản Mới" />
             <Label styleClass="form-header-subtitle" text="Điền đầy đủ thông tin bên dưới" />
         </VBox>
         <Region HBox.hgrow="ALWAYS" />

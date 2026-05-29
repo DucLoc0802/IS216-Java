@@ -129,7 +129,11 @@ public class ReportDAO {
             "       COUNT(*) AS booking_count, " +
             "       SUM(CASE WHEN b.status IN ('PENDING', 'CONFIRMED') THEN 1 ELSE 0 END) AS new_count, " +
             "       SUM(CASE WHEN b.status = 'CHECKED_OUT' THEN 1 ELSE 0 END) AS completed_count, " +
-            "       SUM(CASE WHEN b.status = 'CANCELLED' THEN 1 ELSE 0 END) AS cancelled_count " +
+            "       SUM(CASE WHEN b.status = 'CANCELLED' THEN 1 ELSE 0 END) AS cancelled_count, " +
+            "       SUM(CASE WHEN b.status = 'PENDING' THEN 1 ELSE 0 END) AS pending_count, " +
+            "       SUM(CASE WHEN b.status = 'CONFIRMED' THEN 1 ELSE 0 END) AS confirmed_count, " +
+            "       SUM(CASE WHEN b.status = 'CHECKED_IN' THEN 1 ELSE 0 END) AS checked_in_count, " +
+            "       SUM(CASE WHEN b.status = 'CHECKED_OUT' THEN 1 ELSE 0 END) AS checked_out_count " +
             "FROM booking b " +
             "WHERE (? IS NULL OR TRUNC(CAST(b.created_at AS DATE)) >= ?) " +
             "  AND (? IS NULL OR TRUNC(CAST(b.created_at AS DATE)) <= ?) " +
@@ -147,6 +151,10 @@ public class ReportDAO {
                     report.setNewBookingCount(rs.getInt("new_count"));
                     report.setCompletedBookingCount(rs.getInt("completed_count"));
                     report.setCancelledBookingCount(rs.getInt("cancelled_count"));
+                    report.setPendingBookingCount(rs.getInt("pending_count"));
+                    report.setConfirmedBookingCount(rs.getInt("confirmed_count"));
+                    report.setCheckedInBookingCount(rs.getInt("checked_in_count"));
+                    report.setCheckedOutBookingCount(rs.getInt("checked_out_count"));
                     reports.add(report);
                 }
             }

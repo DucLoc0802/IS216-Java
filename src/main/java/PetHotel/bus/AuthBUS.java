@@ -75,6 +75,11 @@ public class AuthBUS {
 
             // 6. Lưu session
             this.currentUser = user;
+
+            // Ghi audit log
+            String fullName = (user.getEmployee() != null) ? user.getEmployee().getFullName() : user.getUserName();
+            AuditLogLocalService.log(user.getEmployeeId(), fullName, "Đăng nhập", "Đăng nhập thành công vào hệ thống.");
+
             return user;
 
         } catch (SQLException e) {
@@ -94,6 +99,11 @@ public class AuthBUS {
         if (!currentUser.getEmployeeId().equals(employeeId)) {
             throw new AuthorizationException("Bạn chỉ có thể đăng xuất tài khoản của chính mình.");
         }
+        
+        // Ghi audit log
+        String fullName = (currentUser.getEmployee() != null) ? currentUser.getEmployee().getFullName() : currentUser.getUserName();
+        AuditLogLocalService.log(currentUser.getEmployeeId(), fullName, "Đăng xuất", "Đăng xuất khỏi hệ thống.");
+
         this.currentUser = null;
     }
 
@@ -131,6 +141,10 @@ public class AuthBUS {
             String newHash = PasswordUtil.hashPassword(newRawPassword);
             userDAO.changePassword(employeeId, newHash, null);
 
+            // Ghi audit log
+            String fullName = (currentUser.getEmployee() != null) ? currentUser.getEmployee().getFullName() : currentUser.getUserName();
+            AuditLogLocalService.log(employeeId, fullName, "Đổi mật khẩu", "Tự đổi mật khẩu của chính mình thành công.");
+
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi database khi đổi mật khẩu.", e);
         }
@@ -153,6 +167,10 @@ public class AuthBUS {
 
             String newHash = PasswordUtil.hashPassword(newRawPassword);
             userDAO.changePassword(targetEmployeeId, newHash, null);
+
+            // Ghi audit log
+            String actorFullName = (currentUser.getEmployee() != null) ? currentUser.getEmployee().getFullName() : currentUser.getUserName();
+            AuditLogLocalService.log(currentUser.getEmployeeId(), actorFullName, "Đặt lại mật khẩu", "Đặt lại mật khẩu cho tài khoản nhân viên: " + targetEmployeeId);
 
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi database khi reset mật khẩu.", e);

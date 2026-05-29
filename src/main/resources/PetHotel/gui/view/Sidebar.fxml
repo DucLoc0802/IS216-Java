@@ -18,8 +18,8 @@
     <!-- Brand -->
     <VBox alignment="CENTER" spacing="4" styleClass="sidebar-brand">
         <Label styleClass="brand-icon" text="🐾" />
-        <Label styleClass="brand-name" text="PET HOTEL" />
-        <Label styleClass="brand-sub" text="Management System" />
+        <Label styleClass="brand-name" text="PET HOTEL" style="-fx-text-fill: white;" />
+        <Label styleClass="brand-sub" text="Management System" style="-fx-text-fill: white; -fx-opacity: 0.8;" />
     </VBox>
 
     <!-- User Profile -->
@@ -38,10 +38,10 @@
         <VBox fx:id="menuContainer" spacing="2" styleClass="menu-container">
 
             <!-- Dashboard -->
-            <VBox fx:id="menuDashboard" onMouseClicked="#onMenu" styleClass="menu-item menu-item-active" userData="dashboard">
+            <VBox fx:id="menuDashboard" onMouseClicked="#onMenu" styleClass="menu-item menu-item-active" userData="dashboard" style="-fx-padding: 12 16 12 16;">
                 <HBox alignment="CENTER_LEFT" spacing="12">
-                    <Label styleClass="menu-icon" text="⊞" />
-                    <Label styleClass="menu-label" text="Dashboard" />
+                    <Label styleClass="menu-icon" text="⊞" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+                    <Label styleClass="menu-label" text="Tổng Quan Hôm Nay" style="-fx-font-size: 15px; -fx-font-weight: bold;" />
                 </HBox>
             </VBox>
 
@@ -131,10 +131,24 @@
                 </HBox>
             </VBox>
 
-            <VBox fx:id="menuSupplier" onMouseClicked="#onMenu" styleClass="menu-item" userData="supplier">
+            <VBox fx:id="menuGoodsReceipt" onMouseClicked="#onMenu" styleClass="menu-item" userData="goods-receipt">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="+" />
+                    <Label styleClass="menu-label" text="Nhập Kho" />
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="menuStockAudit" onMouseClicked="#onMenu" styleClass="menu-item" userData="stock-audit">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="✓" />
+                    <Label styleClass="menu-label" text="Kiểm Kê Kho" />
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="menuSupplier" managed="false" visible="false" onMouseClicked="#onMenu" styleClass="menu-item" userData="supplier">
                 <HBox alignment="CENTER_LEFT" spacing="12">
                     <Label styleClass="menu-icon" text="🏢" />
-                    <Label styleClass="menu-label" text="Nhà Cung Cấp" />
+                    <Label styleClass="menu-label" text="" />
                 </HBox>
             </VBox>
 

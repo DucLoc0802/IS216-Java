@@ -133,7 +133,14 @@ public class EmployeeBUS {
 
     public int[] getPerformanceSummary(String employeeId) {
         validateEmployeeId(employeeId);
-        return new int[] {0, 0};
+        try {
+            int bookings = employeeDAO.getBookingCountByEmployee(employeeId);
+            int groomings = employeeDAO.getGroomingCountByEmployee(employeeId);
+            return new int[] { bookings, groomings };
+        } catch (SQLException e) {
+            System.err.println("Không thể lấy hiệu suất nhân viên: " + e.getMessage());
+            return new int[] {0, 0};
+        }
     }
 
     public Employee getProfile(String employeeId) {

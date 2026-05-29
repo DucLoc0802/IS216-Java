@@ -32,15 +32,24 @@ import PetHotel.util.IDGenerator;
 public class BookingServiceDAO {
 
     // SQL Queries
+    private static final String PET_BY_BOOKING_JOIN =
+        "LEFT JOIN (" +
+        "    SELECT br.booking_id, MIN(brp.pet_id) AS pet_id " +
+        "    FROM booking_room br " +
+        "    JOIN booking_room_pet brp ON brp.booking_room_id = br.booking_room_id " +
+        "    GROUP BY br.booking_id " +
+        ") bp ON bp.booking_id = bs.booking_id " +
+        "LEFT JOIN pet p ON bp.pet_id = p.pet_id ";
+
     private static final String SQL_FIND_BY_DATE_AND_FILTER =
-        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bs.pet_id, bs.employee_id, " +
+        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bp.pet_id AS pet_id, bs.employee_id, " +
         "       bs.scheduled_at, bs.status, bs.note, bs.created_at, bs.updated_at, " +
         "       sv.service_name, e.full_name, p.pet_name, p.species, c.customer_id, c.full_name as customer_name, c.phone, c.address " +
         "FROM booking_services bs " +
         "LEFT JOIN services sv ON bs.service_id = sv.service_id " +
         "LEFT JOIN employee e ON bs.employee_id = e.employee_id " +
         "LEFT JOIN booking b ON bs.booking_id = b.booking_id " +
-        "LEFT JOIN pet p ON bs.pet_id = p.pet_id " +
+        PET_BY_BOOKING_JOIN +
         "LEFT JOIN customer c ON b.customer_id = c.customer_id " +
         "WHERE TRUNC(bs.scheduled_at) = TRUNC(TO_DATE(?, 'YYYY-MM-DD')) " +
         "  AND (? IS NULL OR bs.employee_id = ?) " +
@@ -48,40 +57,40 @@ public class BookingServiceDAO {
         "ORDER BY bs.scheduled_at ASC";
 
     private static final String SQL_FIND_ALL_AND_FILTER =
-        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bs.pet_id, bs.employee_id, " +
+        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bp.pet_id AS pet_id, bs.employee_id, " +
         "       bs.scheduled_at, bs.status, bs.note, bs.created_at, bs.updated_at, " +
         "       sv.service_name, e.full_name, p.pet_name, p.species, c.customer_id, c.full_name as customer_name, c.phone, c.address " +
         "FROM booking_services bs " +
         "LEFT JOIN services sv ON bs.service_id = sv.service_id " +
         "LEFT JOIN employee e ON bs.employee_id = e.employee_id " +
         "LEFT JOIN booking b ON bs.booking_id = b.booking_id " +
-        "LEFT JOIN pet p ON bs.pet_id = p.pet_id " +
+        PET_BY_BOOKING_JOIN +
         "LEFT JOIN customer c ON b.customer_id = c.customer_id " +
         "WHERE (? IS NULL OR bs.employee_id = ?) " +
         "  AND (? IS NULL OR bs.status = ?) " +
         "ORDER BY bs.scheduled_at ASC";
 
     private static final String SQL_FIND_BY_ID =
-        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bs.pet_id, bs.employee_id, " +
+        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bp.pet_id AS pet_id, bs.employee_id, " +
         "       bs.scheduled_at, bs.status, bs.note, bs.created_at, bs.updated_at, " +
         "       sv.service_name, e.full_name, p.pet_name, p.species, c.customer_id, c.full_name as customer_name, c.phone, c.address " +
         "FROM booking_services bs " +
         "LEFT JOIN services sv ON bs.service_id = sv.service_id " +
         "LEFT JOIN employee e ON bs.employee_id = e.employee_id " +
         "LEFT JOIN booking b ON bs.booking_id = b.booking_id " +
-        "LEFT JOIN pet p ON bs.pet_id = p.pet_id " +
+        PET_BY_BOOKING_JOIN +
         "LEFT JOIN customer c ON b.customer_id = c.customer_id " +
         "WHERE bs.booking_service_id = ?";
 
     private static final String SQL_FIND_ALL_BY_DATE_RANGE =
-        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bs.pet_id, bs.employee_id, " +
+        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bp.pet_id AS pet_id, bs.employee_id, " +
         "       bs.scheduled_at, bs.status, bs.note, bs.created_at, bs.updated_at, " +
         "       sv.service_name, e.full_name, p.pet_name, c.full_name as customer_name " +
         "FROM booking_services bs " +
         "LEFT JOIN services sv ON bs.service_id = sv.service_id " +
         "LEFT JOIN employee e ON bs.employee_id = e.employee_id " +
         "LEFT JOIN booking b ON bs.booking_id = b.booking_id " +
-        "LEFT JOIN pet p ON bs.pet_id = p.pet_id " +
+        PET_BY_BOOKING_JOIN +
         "LEFT JOIN customer c ON b.customer_id = c.customer_id " +
         "WHERE TRUNC(bs.scheduled_at) >= TRUNC(TO_DATE(?, 'YYYY-MM-DD')) " +
         "  AND TRUNC(bs.scheduled_at) <= TRUNC(TO_DATE(?, 'YYYY-MM-DD')) " +
@@ -95,7 +104,7 @@ public class BookingServiceDAO {
         "WHERE TRUNC(scheduled_at) = TRUNC(SYSDATE) AND status IN ('PENDING', 'SCHEDULED')";
 
     private static final String SQL_FIND_BY_EMPLOYEE_TODAY =
-    "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bs.pet_id, bs.employee_id, " +
+    "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bp.pet_id AS pet_id, bs.employee_id, " +
     "       bs.scheduled_at, bs.status, bs.note, bs.created_at, bs.updated_at, " +
     "       sv.service_name, e.full_name AS employee_name, p.pet_name, " +
     "       p.species, c.customer_id, c.full_name AS customer_name, c.phone, c.address " +
@@ -103,7 +112,7 @@ public class BookingServiceDAO {
     "LEFT JOIN services sv ON bs.service_id = sv.service_id " +
     "LEFT JOIN employee e ON bs.employee_id = e.employee_id " +
     "LEFT JOIN booking b ON bs.booking_id = b.booking_id " +
-    "LEFT JOIN pet p ON bs.pet_id = p.pet_id " +
+    PET_BY_BOOKING_JOIN +
     "LEFT JOIN customer c ON b.customer_id = c.customer_id " +
     "WHERE bs.employee_id = ? " +
     "  AND TRUNC(bs.scheduled_at) = TRUNC(SYSDATE) " +
@@ -285,6 +294,7 @@ public class BookingServiceDAO {
         bs.setCustomerName(getStringSafe(rs, "customer_name"));
         bs.setCustomerPhone(getStringSafe(rs, "phone"));
         bs.setCustomerAddress(getStringSafe(rs, "address"));
+        bs.setBranchId(getStringSafe(rs, "branch_id"));
         return bs;
     }
     public List<Customer> getAllCustomers() throws SQLException {
@@ -576,13 +586,13 @@ public List<BookingService> findUnassignedGroomingTasks(String dateStr, String s
     List<BookingService> list = new ArrayList<>();
 
     StringBuilder sql = new StringBuilder(
-        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bs.pet_id, bs.employee_id, " +
+        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bp.pet_id AS pet_id, bs.employee_id, " +
         "       bs.scheduled_at, bs.status, bs.note, bs.created_at, bs.updated_at, " +
         "       sv.service_name, p.pet_name, c.full_name as customer_name " +
         "FROM booking_services bs " +
         "LEFT JOIN services sv ON bs.service_id = sv.service_id " +
         "LEFT JOIN booking b ON bs.booking_id = b.booking_id " +
-        "LEFT JOIN pet p ON bs.pet_id = p.pet_id " +
+        PET_BY_BOOKING_JOIN +
         "LEFT JOIN customer c ON b.customer_id = c.customer_id " +
         "WHERE TRUNC(bs.scheduled_at) = TRUNC(TO_DATE(?, 'YYYY-MM-DD')) " +
         "  AND bs.employee_id IS NULL " // Only unassigned tasks
@@ -676,14 +686,14 @@ public List<BookingService> findEmployeeAssignedTasks(String employeeId, String 
     List<BookingService> list = new ArrayList<>();
 
     StringBuilder sql = new StringBuilder(
-        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bs.pet_id, bs.employee_id, " +
+        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bp.pet_id AS pet_id, bs.employee_id, " +
         "       bs.scheduled_at, bs.status, bs.note, bs.created_at, bs.updated_at, " +
         "       sv.service_name, p.pet_name, p.species, " +
         "       c.full_name AS customer_name, c.phone, c.address " +
         "FROM booking_services bs " +
         "LEFT JOIN services sv ON bs.service_id = sv.service_id " +
         "LEFT JOIN booking b ON bs.booking_id = b.booking_id " +
-        "LEFT JOIN pet p ON bs.pet_id = p.pet_id " +
+        PET_BY_BOOKING_JOIN +
         "LEFT JOIN customer c ON b.customer_id = c.customer_id " +
         "WHERE bs.employee_id = ? " +
         "  AND TRUNC(bs.scheduled_at) = TRUNC(TO_DATE(?, 'YYYY-MM-DD')) "
@@ -1114,5 +1124,70 @@ public List<PetService> getActiveServicesWithStatus() throws SQLException {
     }
 
     return list;
+}
+
+/**
+ * Lấy thông tin chi tiết booking_service cùng với booking, pet, service info
+ * để chuẩn bị cho xác nhận hoàn thành dịch vụ.
+ *
+ * @param bookingServiceId
+ * @return BookingService đầy đủ thông tin hoặc null
+ * @throws SQLException
+ */
+public BookingService findCompletionContext(String bookingServiceId) throws SQLException {
+    String sql =
+        "SELECT bs.booking_service_id, bs.booking_id, bs.service_id, bs.pet_id, bs.employee_id, " +
+        "       bs.scheduled_at, bs.status, bs.note, bs.created_at, bs.updated_at, " +
+        "       b.branch_id, " +
+        "       p.pet_name, p.species, p.weight_kg, " +
+        "       sv.service_name, " +
+        "       c.full_name AS customer_name, c.phone, c.address " +
+        "FROM booking_services bs " +
+        "JOIN booking b ON bs.booking_id = b.booking_id " +
+        "JOIN pet p ON bs.pet_id = p.pet_id " +
+        "LEFT JOIN services sv ON bs.service_id = sv.service_id " +
+        "LEFT JOIN customer c ON b.customer_id = c.customer_id " +
+        "WHERE bs.booking_service_id = ?";
+
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, bookingServiceId);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return mapRow(rs);
+            }
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Cập nhật status = DONE và append note với thông tin vật tư đã sử dụng.
+ * Được gọi trong transaction để đảm bảo atomicity.
+ *
+ * @param bookingServiceId
+ * @param noteToAppend     Ghi chú vật tư sử dụng
+ * @param conn             Connection trong transaction
+ * @throws SQLException
+ */
+public void completeServiceAndAppendNote(String bookingServiceId, String noteToAppend, Connection conn)
+        throws SQLException {
+    String sql =
+        "UPDATE booking_services " +
+        "SET status = ?, " +
+        "    note = CASE WHEN note IS NULL THEN ? " +
+        "               ELSE note || CHR(10) || ? " +
+        "          END, " +
+        "    updated_at = SYSTIMESTAMP " +
+        "WHERE booking_service_id = ?";
+
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, BookingService.STATUS_DONE);
+        ps.setString(2, noteToAppend);
+        ps.setString(3, noteToAppend);
+        ps.setString(4, bookingServiceId);
+        ps.executeUpdate();
+    }
 }
 }

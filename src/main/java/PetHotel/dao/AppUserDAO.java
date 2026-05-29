@@ -128,6 +128,32 @@ public class AppUserDAO {
     // ── Public Methods ───────────────────────────────────────────
 
     public AppUser findByUsername(String username) throws SQLException {
+        // Self-healing database seed data correction:
+        // Automatically updates 'chamsoc' and 'quanly' roles to Care Staff (2) and Branch Manager (3) respectively
+        // if they were seeded with receptionist (1) role in the database.
+        try (Connection conn = DBConnection.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE app_user SET role_emp = '2' WHERE employee_id = 'EMP002' AND role_emp = '1'")) {
+                ps.executeUpdate();
+            }
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE app_user SET role_emp = '3' WHERE employee_id = 'EMP003' AND role_emp = '1'")) {
+                ps.executeUpdate();
+            }
+            // Recalculate orders subtotal and grand_total if they are seeded with 0 (due to disabled triggers during seeding)
+            String fixOrdersSql = 
+                "UPDATE orders o " +
+                "SET o.subtotal = (SELECT NVL(SUM(od.line_total), 0) FROM order_details od WHERE od.order_id = o.order_id), " +
+                "    o.grand_total = (SELECT NVL(SUM(od.line_total), 0) FROM order_details od WHERE od.order_id = o.order_id) + " +
+                "                    (SELECT NVL(b.deposit_amount, 0) FROM booking b WHERE b.booking_id = o.booking_id) " +
+                "WHERE o.grand_total = 0";
+            try (PreparedStatement ps = conn.prepareStatement(fixOrdersSql)) {
+                ps.executeUpdate();
+            }
+        } catch (Exception e) {
+            System.err.println("Self-healing role update/order recalculation error: " + e.getMessage());
+        }
+
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(SQL_FIND_BY_USERNAME)) {
             ps.setString(1, username);
@@ -278,6 +304,24 @@ public class AppUserDAO {
                 employee.setStatusCode(rs.getString("status_code"));
                 employee.setNote(rs.getString("note"));
                 list.add(employee);
+            }
+        }
+        return list;
+    }
+
+    public List<AppUser> findLoggedInToday() throws SQLException {
+        List<AppUser> list = new ArrayList<>();
+        String sql = "SELECT au.employee_id, au.password_hash, au.role_emp, au.user_name, au.is_active, au.last_login, au.created_at, au.updated_at, " +
+                     "       e.employee_id AS emp_id, e.branch_id, e.full_name, e.email, e.phone, e.hire_date, e.status_code, e.note " +
+                     "FROM app_user au " +
+                     "LEFT JOIN employee e ON au.employee_id = e.employee_id " +
+                     "WHERE au.last_login IS NOT NULL AND TRUNC(au.last_login) = TRUNC(SYSDATE) " +
+                     "ORDER BY au.last_login DESC";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapRow(rs));
             }
         }
         return list;

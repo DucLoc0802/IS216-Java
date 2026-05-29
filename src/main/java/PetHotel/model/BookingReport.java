@@ -6,6 +6,10 @@ public class BookingReport {
     private int newBookingCount;
     private int completedBookingCount;
     private int cancelledBookingCount;
+    private int pendingBookingCount;
+    private int confirmedBookingCount;
+    private int checkedInBookingCount;
+    private int checkedOutBookingCount;
 
     public String getPeriod() {
         return period;
@@ -45,5 +49,37 @@ public class BookingReport {
 
     public void setCancelledBookingCount(int cancelledBookingCount) {
         this.cancelledBookingCount = cancelledBookingCount;
+    }
+
+    public int getPendingBookingCount() {
+        return pendingBookingCount;
+    }
+
+    public void setPendingBookingCount(int pendingBookingCount) {
+        this.pendingBookingCount = pendingBookingCount;
+    }
+
+    public int getConfirmedBookingCount() {
+        return confirmedBookingCount;
+    }
+
+    public void setConfirmedBookingCount(int confirmedBookingCount) {
+        this.confirmedBookingCount = confirmedBookingCount;
+    }
+
+    public int getCheckedInBookingCount() {
+        return checkedInBookingCount;
+    }
+
+    public void setCheckedInBookingCount(int checkedInBookingCount) {
+        this.checkedInBookingCount = checkedInBookingCount;
+    }
+
+    public int getCheckedOutBookingCount() {
+        return checkedOutBookingCount;
+    }
+
+    public void setCheckedOutBookingCount(int checkedOutBookingCount) {
+        this.checkedOutBookingCount = checkedOutBookingCount;
     }
 }

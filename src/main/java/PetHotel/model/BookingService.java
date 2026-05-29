@@ -42,6 +42,7 @@ public class BookingService {
     private String customerName;
     private String customerPhone;
     private String customerAddress;
+    private String branchId;       // From booking.branch_id for inventory operations
 
     // ── Constructors ──────────────────────────────────────────────
 
@@ -140,6 +141,14 @@ public class BookingService {
 
     public void setCustomerAddress(String customerAddress) {
         this.customerAddress = customerAddress;
+    }
+
+    public String getBranchId() {
+        return branchId;
+    }
+
+    public void setBranchId(String branchId) {
+        this.branchId = branchId;
     }
 
     /** @return true nếu dịch vụ chưa hoàn tất */
