@@ -70,6 +70,30 @@ public class BookingDAO {
         "  AND (? = 'ALL' OR b.status = ?) " +
         "ORDER BY b.created_at DESC";
 
+    private static final String SQL_FIND_BY_DATE_RANGE =
+        "SELECT b.booking_id, b.customer_id, b.branch_id, " +
+        "       b.checkin_expected_at, b.checkout_expected_at, " +
+        "       b.status, b.deposit_amount, b.special_note, " +
+        "       b.created_at, b.updated_at, " +
+        "       c.full_name AS customer_name, " +
+        "       COALESCE(" +
+        "           (SELECT LISTAGG(p.pet_name, ', ') WITHIN GROUP (ORDER BY p.pet_name) " +
+        "               FROM booking_room_pet brp " +
+        "               JOIN pet p ON brp.pet_id = p.pet_id " +
+        "               JOIN booking_room br2 ON brp.booking_room_id = br2.booking_room_id " +
+        "               WHERE br2.booking_id = b.booking_id), " +
+        "           (SELECT LISTAGG(p3.pet_name, ', ') WITHIN GROUP (ORDER BY p3.pet_name) " +
+        "               FROM pet p3 WHERE p3.customer_id = b.customer_id)" +
+        "       ) AS pet_name, " +
+        "       r.room_number " +
+        "FROM booking b " +
+        "LEFT JOIN customer c ON b.customer_id = c.customer_id " +
+        "LEFT JOIN booking_room br ON b.booking_id = br.booking_id " +
+        "LEFT JOIN room r ON br.room_id = r.room_id " +
+        "WHERE b.checkin_expected_at >= ? " +
+        "  AND b.checkin_expected_at <= ? " +
+        "ORDER BY b.created_at DESC";
+
     private static final String SQL_FIND_BY_ID =
         "SELECT b.booking_id, b.customer_id, b.branch_id, " +
         "       b.checkin_expected_at, b.checkout_expected_at, " +
@@ -108,6 +132,21 @@ public class BookingDAO {
              PreparedStatement ps = conn.prepareStatement(SQL_FIND_ALL);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) list.add(mapRow(rs));
+        }
+        return list;
+    }
+
+    public List<Booking> findByDateRange(java.util.Date start, java.util.Date end) throws SQLException {
+        List<Booking> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_FIND_BY_DATE_RANGE)) {
+            ps.setTimestamp(1, new Timestamp(start.getTime()));
+            ps.setTimestamp(2, new Timestamp(end.getTime()));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
         }
         return list;
     }

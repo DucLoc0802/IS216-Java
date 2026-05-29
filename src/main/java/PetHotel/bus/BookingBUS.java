@@ -24,6 +24,14 @@ public class BookingBUS {
         }
     }
 
+    public List<Booking> getBookingsByDateRange(java.util.Date start, java.util.Date end) {
+        try {
+            return bookingDAO.findByDateRange(start, end);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải danh sách booking theo khoảng thời gian.", e);
+        }
+    }
+
     public List<Booking> searchBookings(String keyword, String status) {
         try {
             return bookingDAO.search(keyword, status);

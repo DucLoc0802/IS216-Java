@@ -450,11 +450,9 @@ public class DashboardHomeController {
                 }
             }
 
-            List<Booking> allBookings = new BookingBUS().getAllBookings();
             LocalDate today = LocalDate.now();
-            List<Booking> todayBookings = allBookings.stream()
-                .filter(b -> b.getCheckinExpectedAt() != null && b.getCheckinExpectedAt().toLocalDate().equals(today))
-                .collect(Collectors.toList());
+            Date[] todayDates = getPeriodDates("Trong ngày");
+            List<Booking> todayBookings = new BookingBUS().getBookingsByDateRange(todayDates[0], todayDates[1]);
             setText(statBookingTotal, String.valueOf(todayBookings.size()));
 
             if (todayBookingTable != null) {
@@ -512,8 +510,11 @@ public class DashboardHomeController {
                     LocalDate startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1);
                     LocalDate endOfWeek = startOfWeek.plusDays(6);
 
+                    Date[] weekDates = getPeriodDates("Trong tuần");
+                    List<Booking> weekBookings = new BookingBUS().getBookingsByDateRange(weekDates[0], weekDates[1]);
+
                     int[] weeklyCounts = new int[7];
-                    for (Booking b : allBookings) {
+                    for (Booking b : weekBookings) {
                         if (b.getCheckinExpectedAt() != null) {
                             LocalDate bDate = b.getCheckinExpectedAt().toLocalDate();
                             if (!bDate.isBefore(startOfWeek) && !bDate.isAfter(endOfWeek)) {
@@ -538,7 +539,20 @@ public class DashboardHomeController {
                     monthlyStatsChart.getData().clear();
                     int[] monthlyCounts = new int[12];
                     int currentYear = LocalDate.now().getYear();
-                    for (Booking b : allBookings) {
+
+                    // Chỉ lấy Booking trong năm nay để vẽ biểu đồ tháng (không lấy toàn bộ lịch sử)
+                    Calendar cal = Calendar.getInstance();
+                    cal.set(currentYear, Calendar.JANUARY, 1, 0, 0, 0);
+                    cal.set(Calendar.MILLISECOND, 0);
+                    Date yearStart = cal.getTime();
+
+                    cal.set(currentYear, Calendar.DECEMBER, 31, 23, 59, 59);
+                    cal.set(Calendar.MILLISECOND, 999);
+                    Date yearEnd = cal.getTime();
+
+                    List<Booking> yearBookings = new BookingBUS().getBookingsByDateRange(yearStart, yearEnd);
+
+                    for (Booking b : yearBookings) {
                         if (b.getCheckinExpectedAt() != null && b.getCheckinExpectedAt().getYear() == currentYear) {
                             int monthIndex = b.getCheckinExpectedAt().getMonthValue() - 1;
                             if (monthIndex >= 0 && monthIndex < 12) {

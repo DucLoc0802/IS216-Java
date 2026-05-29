@@ -42,7 +42,7 @@ create table customer (
    constraint pk_customer primary key ( customer_id ),
    constraint uq_customer_phone unique ( phone ),
    constraint uq_customer_email unique ( email ),
-   constraint uq_customer_cccd  unique ( cccd )
+   constraint uq_customer_cccd unique ( cccd )
 );
 -- =========================================================
 -- 2. BRANCH
@@ -162,7 +162,7 @@ create table product (
    is_active           number(1) default 1 not null,
    note                clob,
    min_quantity        number(10) default 0 not null,
-   import_price         number(12,2) default 0 not null,
+   import_price        number(12,2) default 0 not null,
    created_at          timestamp(6) with time zone default systimestamp,
    updated_at          timestamp(6) with time zone default systimestamp,
    constraint pk_product primary key ( product_id ),
@@ -171,7 +171,7 @@ create table product (
    constraint ck_product_cost_price check ( cost_price >= 0 ),
    constraint ck_product_import_price check ( import_price >= 0 ),
    constraint ck_product_is_active check ( is_active in ( 0,
-                                                        1 ) )
+                                                          1 ) )
     --0: INACTIVE; 1: ACTIVE
 );
 
@@ -276,7 +276,7 @@ create table room (
    constraint fk_room_type foreign key ( type_room_id )
       references type_room ( type_room_id ),
    constraint uq_room_number unique ( branch_id,
-                                       room_number ),
+                                      room_number ),
    constraint ck_room_status
       check ( status in ( 'AVAILABLE',
                           'IN_USE',
@@ -327,7 +327,7 @@ create table booking_services (
    booking_service_id varchar2(10) not null,
    booking_id         varchar2(10) not null,
    service_id         varchar2(10),
-   pet_id            varchar2(10),
+   pet_id             varchar2(10),
    employee_id        varchar2(10),
    scheduled_at       timestamp(6) with time zone,
    status             nvarchar2(20) not null,
@@ -427,16 +427,16 @@ create table orders (
 -- 18. ORDER_DETAILS
 -- =========================================================
 create table order_details (
-   order_detail_id varchar2(10) not null,
+   order_detail_id    varchar2(10) not null,
    booking_service_id varchar2(10),
-   booking_room_id varchar2(10),
-   service_id      varchar2(10),
-   order_id        varchar2(10) not null,
-   note            clob,
-   quantity        number(10,2) default 1 not null,
-   unit_price      number(12,2) not null,
-   line_total      number(12,2) not null,
-   created_at      timestamp(6) with time zone default systimestamp,
+   booking_room_id    varchar2(10),
+   service_id         varchar2(10),
+   order_id           varchar2(10) not null,
+   note               clob,
+   quantity           number(10,2) default 1 not null,
+   unit_price         number(12,2) not null,
+   line_total         number(12,2) not null,
+   created_at         timestamp(6) with time zone default systimestamp,
    constraint pk_order_details primary key ( order_detail_id ),
    constraint fk_od_booking_service foreign key ( booking_service_id )
       references booking_services ( booking_service_id ),
@@ -514,16 +514,16 @@ create table pet_health_record (
 -- =========================================================
 create table service_product_standard (
    service_product_standard_id varchar2(10) not null,
-   service_id    varchar2(10) not null,
-   product_id    varchar2(10) not null,
-   species       varchar2(20) not null,
-   min_weight_kg number(5,2) not null,
-   max_weight_kg number(5,2) not null,
-   usage_amount  number(10,2) not null,
-   usage_unit    varchar2(10) not null,
-   note          clob,
-   created_at    timestamp(6) with time zone default systimestamp,
-   updated_at    timestamp(6) with time zone default systimestamp,
+   service_id                  varchar2(10) not null,
+   product_id                  varchar2(10) not null,
+   species                     varchar2(20) not null,
+   min_weight_kg               number(5,2) not null,
+   max_weight_kg               number(5,2) not null,
+   usage_amount                number(10,2) not null,
+   usage_unit                  varchar2(10) not null,
+   note                        clob,
+   created_at                  timestamp(6) with time zone default systimestamp,
+   updated_at                  timestamp(6) with time zone default systimestamp,
    constraint pk_service_product_standard primary key ( service_product_standard_id ),
    constraint fk_sps_service foreign key ( service_id )
       references services ( service_id ),
@@ -575,16 +575,16 @@ create table goods_receipt (
 -- 23. GOODS_RECEIPT_DETAIL
 -- =========================================================
 create table goods_receipt_detail (
-   goods_receipt_id        varchar2(10) not null,
-   product_id              varchar2(10) not null,
-   quantity                number(12,2) not null,
-   unit                    varchar2(20) not null,
-   line_total              number(12,2) default 0 not null,
-   note                    clob,
-   created_at              timestamp(6) with time zone,
-   updated_at              timestamp(6) with time zone,
+   goods_receipt_id varchar2(10) not null,
+   product_id       varchar2(10) not null,
+   quantity         number(12,2) not null,
+   unit             varchar2(20) not null,
+   line_total       number(12,2) default 0 not null,
+   note             clob,
+   created_at       timestamp(6) with time zone,
+   updated_at       timestamp(6) with time zone,
    constraint pk_goods_receipt_detail primary key ( goods_receipt_id,
-                                                        product_id ),
+                                                    product_id ),
    constraint fk_grd_receipt foreign key ( goods_receipt_id )
       references goods_receipt ( goods_receipt_id ),
    constraint fk_grd_product foreign key ( product_id )
@@ -604,7 +604,7 @@ create table stock_audit (
    note           clob,
    created_at     timestamp(6) with time zone,
    updated_at     timestamp(6) with time zone,
-   constraint pk_stock_audit primary key ( stock_audit_id),
+   constraint pk_stock_audit primary key ( stock_audit_id ),
    constraint fk_sa_branch foreign key ( branch_id )
       references branch ( branch_id ),
    constraint fk_sa_employee foreign key ( employee_id )
@@ -618,17 +618,17 @@ create table stock_audit (
 -- 25. STOCK_AUDIT_DETAIL
 -- =========================================================
 create table stock_audit_detail (
-   stock_audit_id        varchar2(10) not null,
-   product_id            varchar2(10) not null,
-   system_quantity       number(12,2) default 0 not null,
-   actual_quantity       number(12,2) default 0 not null,
-   difference_quantity   number(12,2),
-   difference_rate       number(5,2),
-   note                  clob,
-   created_at            timestamp(6) with time zone,
-   updated_at            timestamp(6) with time zone,
+   stock_audit_id      varchar2(10) not null,
+   product_id          varchar2(10) not null,
+   system_quantity     number(12,2) default 0 not null,
+   actual_quantity     number(12,2) default 0 not null,
+   difference_quantity number(12,2),
+   difference_rate     number(5,2),
+   note                clob,
+   created_at          timestamp(6) with time zone,
+   updated_at          timestamp(6) with time zone,
    constraint pk_stock_audit_detail primary key ( stock_audit_id,
-                                                    product_id ),
+                                                  product_id ),
    constraint fk_sad_audit foreign key ( stock_audit_id )
       references stock_audit ( stock_audit_id ),
    constraint fk_sad_product foreign key ( product_id )
