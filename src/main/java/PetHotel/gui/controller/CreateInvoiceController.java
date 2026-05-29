@@ -273,12 +273,20 @@ public class CreateInvoiceController {
     private void loadSources(String customerId) {
         try {
             tableBookingSource.setItems(FXCollections.observableArrayList(invoiceBUS.findUninvoicedBookingSources(customerId)));
-            tableServiceSource.setItems(FXCollections.observableArrayList(invoiceBUS.findUninvoicedServiceSources(customerId)));
-            clearPreview();
         } catch (Exception ex) {
             ex.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", "Không thể tải nguồn tạo hóa đơn: " + ex.getMessage());
+            tableBookingSource.getItems().clear();
+            showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", "Không thể tải booking chưa tạo hóa đơn: " + ex.getMessage());
         }
+
+        try {
+            tableServiceSource.setItems(FXCollections.observableArrayList(invoiceBUS.findUninvoicedServiceSources(customerId)));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            tableServiceSource.getItems().clear();
+        }
+
+        clearPreview();
     }
 
     private void selectSource(Invoice.InvoiceSource source) {

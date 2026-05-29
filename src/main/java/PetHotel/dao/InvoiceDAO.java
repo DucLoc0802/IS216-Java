@@ -96,9 +96,10 @@ public class InvoiceDAO {
             "      AND fees.total_amount > 0 " +
             "      AND fees.total_amount - NVL(b.deposit_amount, 0) > 0 " +
             "), eligible_service AS ( " +
-            "    SELECT b.customer_id " +
-            "    FROM booking_services bs " +
-            "    JOIN booking b ON b.booking_id = bs.booking_id " +
+            "    SELECT DISTINCT c.customer_id " +
+            "    FROM customer c " +
+            "    JOIN booking b ON b.customer_id = c.customer_id " +
+            "    JOIN booking_services bs ON bs.booking_id = b.booking_id " +
             "    JOIN services s ON s.service_id = bs.service_id " +
             "    WHERE UPPER(NVL(b.status, ' ')) <> 'CANCELLED' " +
             "      AND UPPER(NVL(bs.status, ' ')) <> 'CANCELLED' " +
@@ -500,7 +501,8 @@ public class InvoiceDAO {
         List<Invoice.InvoiceSource> sources = new ArrayList<>();
         String sql =
             "SELECT " +
-            "    bs.booking_service_id, bs.booking_id, b.branch_id, b.customer_id, c.full_name AS customer_name, " +
+            "    bs.booking_service_id, bs.booking_id, b.branch_id, c.customer_id, " +
+            "    c.full_name AS customer_name, c.phone AS customer_phone, " +
             "    ( " +
             "        SELECT LISTAGG(p2.pet_name, ', ') WITHIN GROUP (ORDER BY p2.pet_name) " +
             "        FROM booking_room br2 " +
@@ -513,7 +515,7 @@ public class InvoiceDAO {
             "JOIN booking b ON b.booking_id = bs.booking_id " +
             "JOIN customer c ON c.customer_id = b.customer_id " +
             "JOIN services s ON s.service_id = bs.service_id " +
-            "WHERE b.customer_id = ? " +
+            "WHERE c.customer_id = ? " +
             "  AND b.status <> 'CANCELLED' " +
             "  AND bs.status <> 'CANCELLED' " +
             "  AND NVL(s.base_price, 0) > 0 " +
@@ -882,7 +884,19 @@ public List<Payment> searchPaymentHistory(String keyword, String method, String 
         "  AND (? IS NULL OR p.status = ?) " +
         "  AND (? IS NULL OR p.paid_at >= ?) " +
         "  AND (? IS NULL OR p.paid_at <= ?) " +
-        "ORDER BY p.paid_at DESC, p.payment_id DESC";
+        "ORDER BY " +
+        "  CASE UPPER(NVL(p.status, ' ')) " +
+        "    WHEN 'PENDING' THEN 1 " +
+        "    WHEN 'SUCCESS' THEN 2 " +
+        "    WHEN 'PAID' THEN 2 " +
+        "    WHEN 'COMPLETED' THEN 2 " +
+        "    WHEN 'REFUNDED' THEN 3 " +
+        "    WHEN 'FAILED' THEN 4 " +
+        "    WHEN 'CANCELLED' THEN 4 " +
+        "    WHEN 'CANCELED' THEN 4 " +
+        "    ELSE 5 " +
+        "  END, " +
+        "  p.paid_at DESC, p.payment_id DESC";
 
     try (Connection conn = DBConnection.getConnection();
          PreparedStatement ps = conn.prepareStatement(sql)) {

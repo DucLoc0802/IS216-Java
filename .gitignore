@@ -11,3 +11,4 @@ exports/
 Thumbs.db
 
 .env
+sql/99_test_*.sql
