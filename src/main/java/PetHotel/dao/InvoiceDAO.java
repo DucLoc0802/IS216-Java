@@ -14,6 +14,7 @@ import java.util.Map;
 
 import PetHotel.model.Invoice;
 import PetHotel.model.InvoiceDetail;
+import PetHotel.model.Customer;
 import PetHotel.model.Payment;
 import PetHotel.util.DBConnection;
 
@@ -24,18 +25,125 @@ public class InvoiceDAO {
     "o.order_id AS invoice_id, " +
     "o.customer_id, " +
     "c.full_name AS customer_name, " +
+    "c.phone AS customer_phone, " +
     "o.booking_id, " +
+    "o.created_by_emp, " +
+    "e.full_name AS created_by_emp_name, " +
+    "NVL(b.deposit_amount, 0) AS prepaid_amount, " +
+    "NVL(paid.total_paid, 0) AS paid_amount, " +
     "o.grand_total AS total_amount, " +
+    "CASE " +
+    "  WHEN UPPER(NVL(o.status, ' ')) IN ('PAID', 'CANCELLED', 'CANCELED') THEN 0 " +
+    "  ELSE GREATEST(NVL(o.grand_total, 0) - NVL(paid.total_paid, 0), 0) " +
+    "END AS remaining_amount, " +
     "o.created_at, " +
     "o.status " +
     "FROM orders o " +
     "LEFT JOIN customer c ON c.customer_id = o.customer_id " +
-    "WHERE (? IS NULL OR o.order_id = ?) " +
+    "LEFT JOIN employee e ON e.employee_id = o.created_by_emp " +
+    "LEFT JOIN booking b ON b.booking_id = o.booking_id " +
+    "LEFT JOIN ( " +
+    "  SELECT order_id, SUM(NVL(amount, 0)) AS total_paid " +
+    "  FROM payments " +
+    "  WHERE UPPER(NVL(status, ' ')) IN ('SUCCESS', 'PAID') " +
+    "  GROUP BY order_id " +
+    ") paid ON paid.order_id = o.order_id " +
+    "WHERE (? IS NULL OR LOWER(o.order_id) LIKE LOWER(?) OR LOWER(c.full_name) LIKE LOWER(?) OR NVL(c.phone, ' ') LIKE ?) " +
     "  AND (? IS NULL OR o.customer_id = ?) " +
     "  AND (? IS NULL OR o.created_at >= ?) " +
     "  AND (? IS NULL OR o.created_at <= ?) " +
-    "  AND (? IS NULL OR o.status = ?) " +
-    "ORDER BY o.created_at DESC, o.order_id DESC";
+    "  AND (? IS NULL OR o.status = ? OR (? = 'CANCELLED' AND o.status = 'CANCELED')) " +
+    "ORDER BY " +
+    "  CASE UPPER(NVL(o.status, ' ')) " +
+    "    WHEN 'PENDING' THEN 1 " +
+    "    WHEN 'PARTIAL' THEN 2 " +
+    "    WHEN 'PAID' THEN 3 " +
+    "    WHEN 'CANCELLED' THEN 4 " +
+    "    WHEN 'CANCELED' THEN 4 " +
+    "    ELSE 5 " +
+    "  END, " +
+    "  o.created_at DESC, o.order_id DESC";
+
+    public List<Customer> searchInvoiceCustomers(String keyword) throws SQLException {
+        List<Customer> customers = new ArrayList<>();
+        String sql =
+            "WITH eligible_booking AS ( " +
+            "    SELECT b.booking_id, b.customer_id " +
+            "    FROM booking b " +
+            "    JOIN ( " +
+            "        SELECT " +
+            "            bf.booking_id, " +
+            "            SUM(NVL(tr.base_price_per_day, 0) * " +
+            "                CASE " +
+            "                    WHEN bf.checkin_expected_at IS NOT NULL AND bf.checkout_expected_at IS NOT NULL " +
+            "                    THEN GREATEST(1, CEIL(CAST(bf.checkout_expected_at AS DATE) - CAST(bf.checkin_expected_at AS DATE))) " +
+            "                    ELSE 1 " +
+            "                END) AS total_amount " +
+            "        FROM booking bf " +
+            "        JOIN booking_room br ON br.booking_id = bf.booking_id " +
+            "        JOIN room r ON r.room_id = br.room_id " +
+            "        JOIN type_room tr ON tr.type_room_id = r.type_room_id " +
+            "        WHERE NVL(tr.base_price_per_day, 0) > 0 " +
+            "          AND NOT EXISTS ( " +
+            "              SELECT 1 FROM order_details od " +
+            "              JOIN orders oo ON oo.order_id = od.order_id " +
+            "              WHERE od.booking_room_id = br.booking_room_id " +
+            "                AND UPPER(NVL(oo.status, ' ')) NOT IN ('CANCELLED', 'CANCELED') " +
+            "          ) " +
+            "        GROUP BY bf.booking_id, bf.checkin_expected_at, bf.checkout_expected_at " +
+            "    ) fees ON fees.booking_id = b.booking_id " +
+            "    WHERE UPPER(NVL(b.status, ' ')) <> 'CANCELLED' " +
+            "      AND fees.total_amount > 0 " +
+            "      AND fees.total_amount - NVL(b.deposit_amount, 0) > 0 " +
+            "), eligible_service AS ( " +
+            "    SELECT b.customer_id " +
+            "    FROM booking_services bs " +
+            "    JOIN booking b ON b.booking_id = bs.booking_id " +
+            "    JOIN services s ON s.service_id = bs.service_id " +
+            "    WHERE UPPER(NVL(b.status, ' ')) <> 'CANCELLED' " +
+            "      AND UPPER(NVL(bs.status, ' ')) <> 'CANCELLED' " +
+            "      AND NVL(s.base_price, 0) > 0 " +
+            "      AND NOT EXISTS ( " +
+            "          SELECT 1 " +
+            "          FROM order_details od " +
+            "          JOIN orders oo ON oo.order_id = od.order_id " +
+            "          WHERE od.booking_service_id = bs.booking_service_id " +
+            "            AND UPPER(NVL(oo.status, ' ')) NOT IN ('CANCELLED', 'CANCELED') " +
+            "      ) " +
+            ") " +
+            "SELECT c.customer_id, c.full_name, c.email, c.phone " +
+            "FROM customer c " +
+            "WHERE ( " +
+            "      LOWER(c.full_name) LIKE LOWER(?) " +
+            "      OR NVL(c.phone, ' ') LIKE ? " +
+            "      OR LOWER(c.customer_id) LIKE LOWER(?) " +
+            ") " +
+            "  AND ( " +
+            "      EXISTS (SELECT 1 FROM eligible_booking eb WHERE eb.customer_id = c.customer_id) " +
+            "      OR EXISTS (SELECT 1 FROM eligible_service es WHERE es.customer_id = c.customer_id) " +
+            "  ) " +
+            "ORDER BY c.full_name, c.customer_id";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            String pattern = "%" + (keyword == null ? "" : keyword.trim()) + "%";
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
+            ps.setString(3, pattern);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Customer customer = new Customer();
+                    customer.setCustomerId(rs.getString("customer_id"));
+                    customer.setFullName(rs.getString("full_name"));
+                    customer.setEmail(rs.getString("email"));
+                    customer.setPhone(rs.getString("phone"));
+                    customers.add(customer);
+                }
+            }
+        }
+        return customers;
+    }
     public List<Invoice> searchInvoices(String invoiceId, String customerId, Date fromDate, Date toDate) throws SQLException {
         return searchInvoices(invoiceId, customerId, fromDate, toDate, null);
     }
@@ -49,9 +157,14 @@ public class InvoiceDAO {
             int i = 1;
 
             if (invoiceId != null && !invoiceId.isEmpty()) {
-                ps.setString(i++, invoiceId);
-                ps.setString(i++, invoiceId);
+                String pattern = "%" + invoiceId.trim() + "%";
+                ps.setString(i++, pattern);
+                ps.setString(i++, pattern);
+                ps.setString(i++, pattern);
+                ps.setString(i++, pattern);
             } else {
+                ps.setNull(i++, Types.VARCHAR);
+                ps.setNull(i++, Types.VARCHAR);
                 ps.setNull(i++, Types.VARCHAR);
                 ps.setNull(i++, Types.VARCHAR);
             }
@@ -83,7 +196,9 @@ public class InvoiceDAO {
             if (status != null && !status.trim().isEmpty()) {
                 ps.setString(i++, status.trim());
                 ps.setString(i++, status.trim());
+                ps.setString(i++, status.trim());
             } else {
+                ps.setNull(i++, Types.VARCHAR);
                 ps.setNull(i++, Types.VARCHAR);
                 ps.setNull(i++, Types.VARCHAR);
             }
@@ -103,9 +218,15 @@ public class InvoiceDAO {
         invoice.setId(rs.getString("invoice_id"));
         invoice.setCustomerId(rs.getString("customer_id"));
         invoice.setCustomerName(rs.getString("customer_name"));
+        invoice.setCustomerPhone(rs.getString("customer_phone"));
         invoice.setBookingId(rs.getString("booking_id"));
+        invoice.setCreatedByEmp(rs.getString("created_by_emp"));
+        invoice.setCreatedByEmpName(rs.getString("created_by_emp_name"));
+        invoice.setPrepaidAmount(rs.getDouble("prepaid_amount"));
+        invoice.setPaidAmount(rs.getDouble("paid_amount"));
         invoice.setCreateDate(rs.getTimestamp("created_at"));
         invoice.setTotalAmount(rs.getDouble("total_amount"));
+        invoice.setRemainingAmount(rs.getDouble("remaining_amount"));
         invoice.setStatus(rs.getString("status"));
         return invoice;
     }
@@ -116,12 +237,29 @@ public class InvoiceDAO {
             "o.order_id AS invoice_id, " +
             "o.customer_id, " +
             "c.full_name AS customer_name, " +
+            "c.phone AS customer_phone, " +
             "o.booking_id, " +
+            "o.created_by_emp, " +
+            "e.full_name AS created_by_emp_name, " +
+            "NVL(b.deposit_amount, 0) AS prepaid_amount, " +
+            "NVL(paid.total_paid, 0) AS paid_amount, " +
             "o.grand_total AS total_amount, " +
+            "CASE " +
+            "  WHEN UPPER(NVL(o.status, ' ')) IN ('PAID', 'CANCELLED', 'CANCELED') THEN 0 " +
+            "  ELSE GREATEST(NVL(o.grand_total, 0) - NVL(paid.total_paid, 0), 0) " +
+            "END AS remaining_amount, " +
             "o.created_at, " +
             "o.status " +
             "FROM orders o " +
             "LEFT JOIN customer c ON c.customer_id = o.customer_id " +
+            "LEFT JOIN employee e ON e.employee_id = o.created_by_emp " +
+            "LEFT JOIN booking b ON b.booking_id = o.booking_id " +
+            "LEFT JOIN ( " +
+            "  SELECT order_id, SUM(NVL(amount, 0)) AS total_paid " +
+            "  FROM payments " +
+            "  WHERE UPPER(NVL(status, ' ')) IN ('SUCCESS', 'PAID') " +
+            "  GROUP BY order_id " +
+            ") paid ON paid.order_id = o.order_id " +
             "WHERE o.order_id = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -197,7 +335,11 @@ public class InvoiceDAO {
             "SELECT b.booking_id, b.customer_id, b.branch_id " +
             "FROM booking b " +
             "WHERE b.status <> 'CANCELLED' " +
-            "AND NOT EXISTS (SELECT 1 FROM orders o WHERE o.booking_id = b.booking_id) " +
+            "AND NOT EXISTS ( " +
+            "    SELECT 1 FROM orders o " +
+            "    WHERE o.booking_id = b.booking_id " +
+            "      AND UPPER(NVL(o.status, ' ')) NOT IN ('CANCELLED', 'CANCELED') " +
+            ") " +
             "ORDER BY b.booking_id";
 
         try (Connection conn = DBConnection.getConnection();
@@ -232,7 +374,11 @@ public class InvoiceDAO {
             "LEFT JOIN room r ON r.room_id = br.room_id " +
             "LEFT JOIN type_room tr ON tr.type_room_id = r.type_room_id " +
             "WHERE b.status <> 'CANCELLED' " +
-            "AND NOT EXISTS (SELECT 1 FROM orders o WHERE o.booking_id = b.booking_id) " +
+            "AND NOT EXISTS ( " +
+            "    SELECT 1 FROM orders o " +
+            "    WHERE o.booking_id = b.booking_id " +
+            "      AND UPPER(NVL(o.status, ' ')) NOT IN ('CANCELLED', 'CANCELED') " +
+            ") " +
             "GROUP BY b.booking_id, b.checkin_expected_at, b.checkout_expected_at " +
             "ORDER BY b.booking_id";
 
@@ -246,6 +392,260 @@ public class InvoiceDAO {
         }
 
         return bookingFees;
+    }
+
+    public List<Invoice.InvoiceSource> findUninvoicedBookingSources(String customerId) throws SQLException {
+        List<Invoice.InvoiceSource> sources = new ArrayList<>();
+        String sql =
+            "SELECT " +
+            "    b.booking_id, b.customer_id, c.full_name AS customer_name, b.branch_id, " +
+            "    b.checkin_expected_at, b.checkout_expected_at, b.status, NVL(b.deposit_amount, 0) AS prepaid_amount, " +
+            "    pets.pet_names, fees.room_numbers, fees.total_amount " +
+            "FROM booking b " +
+            "JOIN customer c ON c.customer_id = b.customer_id " +
+            "JOIN ( " +
+            "    SELECT " +
+            "        br.booking_id, " +
+            "        LISTAGG(r.room_number, ', ') WITHIN GROUP (ORDER BY r.room_number) AS room_numbers, " +
+            "        SUM(NVL(tr.base_price_per_day, 0) * " +
+            "            CASE " +
+            "                WHEN bf.checkin_expected_at IS NOT NULL AND bf.checkout_expected_at IS NOT NULL " +
+            "                THEN GREATEST(1, CEIL(CAST(bf.checkout_expected_at AS DATE) - CAST(bf.checkin_expected_at AS DATE))) " +
+            "                ELSE 1 " +
+            "            END) AS total_amount " +
+            "    FROM booking bf " +
+            "    JOIN booking_room br ON br.booking_id = bf.booking_id " +
+            "    JOIN room r ON r.room_id = br.room_id " +
+            "    JOIN type_room tr ON tr.type_room_id = r.type_room_id " +
+            "    WHERE NVL(tr.base_price_per_day, 0) > 0 " +
+            "      AND NOT EXISTS ( " +
+            "          SELECT 1 FROM order_details od " +
+            "          JOIN orders oo ON oo.order_id = od.order_id " +
+            "          WHERE od.booking_room_id = br.booking_room_id " +
+            "            AND UPPER(NVL(oo.status, ' ')) NOT IN ('CANCELLED', 'CANCELED') " +
+            "      ) " +
+            "    GROUP BY br.booking_id, bf.checkin_expected_at, bf.checkout_expected_at " +
+            ") fees ON fees.booking_id = b.booking_id " +
+            "LEFT JOIN ( " +
+            "    SELECT brp_src.booking_id, LISTAGG(brp_src.pet_name, ', ') WITHIN GROUP (ORDER BY brp_src.pet_name) AS pet_names " +
+            "    FROM ( " +
+            "        SELECT DISTINCT br2.booking_id, p2.pet_name " +
+            "        FROM booking_room br2 " +
+            "        JOIN booking_room_pet brp2 ON brp2.booking_room_id = br2.booking_room_id " +
+            "        JOIN pet p2 ON p2.pet_id = brp2.pet_id " +
+            "    ) brp_src " +
+            "    GROUP BY brp_src.booking_id " +
+            ") pets ON pets.booking_id = b.booking_id " +
+            "WHERE b.customer_id = ? " +
+            "  AND b.status <> 'CANCELLED' " +
+            "  AND fees.total_amount > 0 " +
+            "  AND fees.total_amount - NVL(b.deposit_amount, 0) > 0 " +
+            "ORDER BY b.checkin_expected_at DESC NULLS LAST, b.booking_id DESC";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, customerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Invoice.InvoiceSource source = new Invoice.InvoiceSource();
+                    source.setSourceType("BOOKING");
+                    source.setSourceId(rs.getString("booking_id"));
+                    source.setBookingId(rs.getString("booking_id"));
+                    source.setBranchId(rs.getString("branch_id"));
+                    source.setCustomerId(rs.getString("customer_id"));
+                    source.setCustomerName(rs.getString("customer_name"));
+                    source.setPetName(rs.getString("pet_names"));
+                    source.setRoomNumber(rs.getString("room_numbers"));
+                    source.setStartDate(rs.getTimestamp("checkin_expected_at"));
+                    source.setEndDate(rs.getTimestamp("checkout_expected_at"));
+                    source.setStatus(rs.getString("status"));
+                    source.setTotalAmount(rs.getDouble("total_amount"));
+                    source.setPrepaidAmount(rs.getDouble("prepaid_amount"));
+                    sources.add(source);
+                }
+            }
+        }
+        return sources;
+    }
+
+    public Map<String, Double> findBookingPrepaidAmounts(String customerId) throws SQLException {
+        Map<String, Double> prepaidAmounts = new LinkedHashMap<>();
+        String sql =
+            "SELECT b.booking_id, NVL(b.deposit_amount, 0) AS prepaid_amount " +
+            "FROM booking b " +
+            "WHERE b.customer_id = ? " +
+            "  AND b.status <> 'CANCELLED' " +
+            "  AND NOT EXISTS ( " +
+            "      SELECT 1 " +
+            "      FROM order_details od " +
+            "      JOIN booking_room obr ON obr.booking_room_id = od.booking_room_id " +
+            "      JOIN orders oo ON oo.order_id = od.order_id " +
+            "      WHERE obr.booking_id = b.booking_id " +
+            "        AND UPPER(NVL(oo.status, ' ')) NOT IN ('CANCELLED', 'CANCELED') " +
+            "  )";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, customerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    prepaidAmounts.put(rs.getString("booking_id"), rs.getDouble("prepaid_amount"));
+                }
+            }
+        }
+        return prepaidAmounts;
+    }
+
+    public List<Invoice.InvoiceSource> findUninvoicedServiceSources(String customerId) throws SQLException {
+        List<Invoice.InvoiceSource> sources = new ArrayList<>();
+        String sql =
+            "SELECT " +
+            "    bs.booking_service_id, bs.booking_id, b.branch_id, b.customer_id, c.full_name AS customer_name, " +
+            "    ( " +
+            "        SELECT LISTAGG(p2.pet_name, ', ') WITHIN GROUP (ORDER BY p2.pet_name) " +
+            "        FROM booking_room br2 " +
+            "        JOIN booking_room_pet brp2 ON brp2.booking_room_id = br2.booking_room_id " +
+            "        JOIN pet p2 ON p2.pet_id = brp2.pet_id " +
+            "        WHERE br2.booking_id = b.booking_id " +
+            "    ) AS pet_name, " +
+            "    s.service_name, bs.scheduled_at, bs.status, NVL(s.base_price, 0) AS total_amount " +
+            "FROM booking_services bs " +
+            "JOIN booking b ON b.booking_id = bs.booking_id " +
+            "JOIN customer c ON c.customer_id = b.customer_id " +
+            "JOIN services s ON s.service_id = bs.service_id " +
+            "WHERE b.customer_id = ? " +
+            "  AND b.status <> 'CANCELLED' " +
+            "  AND bs.status <> 'CANCELLED' " +
+            "  AND NVL(s.base_price, 0) > 0 " +
+            "  AND NOT EXISTS ( " +
+            "      SELECT 1 FROM order_details od " +
+            "      JOIN orders oo ON oo.order_id = od.order_id " +
+            "      WHERE od.booking_service_id = bs.booking_service_id " +
+            "        AND UPPER(NVL(oo.status, ' ')) NOT IN ('CANCELLED', 'CANCELED') " +
+            "  ) " +
+            "ORDER BY bs.scheduled_at DESC NULLS LAST, bs.booking_service_id DESC";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, customerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Invoice.InvoiceSource source = new Invoice.InvoiceSource();
+                    source.setSourceType("GROOMING");
+                    source.setSourceId(rs.getString("booking_service_id"));
+                    source.setBookingId(rs.getString("booking_id"));
+                    source.setBranchId(rs.getString("branch_id"));
+                    source.setCustomerId(rs.getString("customer_id"));
+                    source.setCustomerName(rs.getString("customer_name"));
+                    source.setPetName(rs.getString("pet_name"));
+                    source.setServiceName(rs.getString("service_name"));
+                    source.setScheduledAt(rs.getTimestamp("scheduled_at"));
+                    source.setStatus(rs.getString("status"));
+                    source.setTotalAmount(rs.getDouble("total_amount"));
+                    sources.add(source);
+                }
+            }
+        }
+        return sources;
+    }
+
+    public List<InvoiceDetail> buildInvoiceDetailsForSource(String sourceType, String sourceId, String orderId)
+            throws SQLException {
+        if ("BOOKING".equalsIgnoreCase(sourceType)) {
+            return buildBookingInvoiceDetails(sourceId, orderId);
+        }
+        if ("GROOMING".equalsIgnoreCase(sourceType) || "SERVICE".equalsIgnoreCase(sourceType)) {
+            return buildServiceInvoiceDetails(sourceId, orderId);
+        }
+        throw new IllegalArgumentException("Nguồn tạo hóa đơn không hợp lệ.");
+    }
+
+    private List<InvoiceDetail> buildBookingInvoiceDetails(String bookingId, String orderId) throws SQLException {
+        List<InvoiceDetail> details = new ArrayList<>();
+        String sql =
+            "SELECT " +
+            "    br.booking_room_id, r.room_number, tr.type_name, NVL(tr.base_price_per_day, 0) AS unit_price, " +
+            "    CASE " +
+            "        WHEN b.checkin_expected_at IS NOT NULL AND b.checkout_expected_at IS NOT NULL " +
+            "        THEN GREATEST(1, CEIL(CAST(b.checkout_expected_at AS DATE) - CAST(b.checkin_expected_at AS DATE))) " +
+            "        ELSE 1 " +
+            "    END AS quantity " +
+            "FROM booking b " +
+            "JOIN booking_room br ON br.booking_id = b.booking_id " +
+            "JOIN room r ON r.room_id = br.room_id " +
+            "JOIN type_room tr ON tr.type_room_id = r.type_room_id " +
+            "WHERE b.booking_id = ? " +
+            "  AND b.status <> 'CANCELLED' " +
+            "  AND NVL(tr.base_price_per_day, 0) > 0 " +
+            "  AND NOT EXISTS ( " +
+            "      SELECT 1 FROM order_details od " +
+            "      JOIN orders oo ON oo.order_id = od.order_id " +
+            "      WHERE od.booking_room_id = br.booking_room_id " +
+            "        AND UPPER(NVL(oo.status, ' ')) NOT IN ('CANCELLED', 'CANCELED') " +
+            "  ) " +
+            "ORDER BY br.booking_room_id";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, bookingId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    double quantity = rs.getDouble("quantity");
+                    double unitPrice = rs.getDouble("unit_price");
+                    InvoiceDetail detail = new InvoiceDetail();
+                    detail.setOrderId(orderId);
+                    detail.setBookingRoomId(rs.getString("booking_room_id"));
+                    detail.setNote("Tiền phòng " + rs.getString("room_number") + " - " + rs.getString("type_name"));
+                    detail.setQuantity(quantity);
+                    detail.setUnitPrice(unitPrice);
+                    detail.setLineTotal(quantity * unitPrice);
+                    details.add(detail);
+                }
+            }
+        }
+        return details;
+    }
+
+    private List<InvoiceDetail> buildServiceInvoiceDetails(String bookingServiceId, String orderId) throws SQLException {
+        List<InvoiceDetail> details = new ArrayList<>();
+        String sql =
+            "SELECT bs.booking_service_id, s.service_name, NVL(s.base_price, 0) AS unit_price " +
+            "FROM booking_services bs " +
+            "JOIN booking b ON b.booking_id = bs.booking_id " +
+            "JOIN services s ON s.service_id = bs.service_id " +
+            "WHERE bs.booking_service_id = ? " +
+            "  AND b.status <> 'CANCELLED' " +
+            "  AND bs.status <> 'CANCELLED' " +
+            "  AND NVL(s.base_price, 0) > 0 " +
+            "  AND NOT EXISTS ( " +
+            "      SELECT 1 FROM order_details od " +
+            "      JOIN orders oo ON oo.order_id = od.order_id " +
+            "      WHERE od.booking_service_id = bs.booking_service_id " +
+            "        AND UPPER(NVL(oo.status, ' ')) NOT IN ('CANCELLED', 'CANCELED') " +
+            "  )";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, bookingServiceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    double unitPrice = rs.getDouble("unit_price");
+                    InvoiceDetail detail = new InvoiceDetail();
+                    detail.setOrderId(orderId);
+                    detail.setBookingServiceId(rs.getString("booking_service_id"));
+                    detail.setNote("Dịch vụ grooming: " + valueOrDefault(rs.getString("service_name"), bookingServiceId));
+                    detail.setQuantity(1);
+                    detail.setUnitPrice(unitPrice);
+                    detail.setLineTotal(unitPrice);
+                    details.add(detail);
+                }
+            }
+        }
+        return details;
+    }
+
+    private String valueOrDefault(String value, String defaultValue) {
+        return value == null || value.trim().isEmpty() ? defaultValue : value.trim();
     }
 
     public boolean createInvoice(Invoice invoice) throws SQLException {
@@ -567,7 +967,7 @@ public boolean cancelInvoice(String orderId) throws SQLException {
         "UPDATE orders " +
         "SET status = 'CANCELLED' " +
         "WHERE order_id = ? " +
-        "AND status IN ('PENDING', 'PARTIAL')";
+        "AND status = 'PENDING'";
 
     try (Connection conn = DBConnection.getConnection();
          PreparedStatement ps = conn.prepareStatement(sql)) {
