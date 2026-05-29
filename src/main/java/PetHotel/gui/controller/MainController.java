@@ -13,12 +13,12 @@ import java.io.IOException;
 public class MainController {
     private static MainController activeInstance;
 
-    // ÄÃ¢y lÃ  cÃ¡i khung trá»‘ng Ä‘á»ƒ "thay ruá»™t"
+    // Đây là cái khung trống để "thay ruột"
     @FXML
     private StackPane contentArea;
 
-    // --- QUAN TRá»ŒNG: CÆ¡ cháº¿ tá»± Ä‘á»™ng Inject (BÆ¡m) Controller cá»§a JavaFX ---
-    // TÃªn biáº¿n Báº®T BUá»˜C pháº£i lÃ : [giÃ¡ trá»‹ cá»§a fx:id] + "Controller"
+    // --- QUAN TRỌNG: Cơ chế tự động Inject (Bơm) Controller của JavaFX ---
+    // Tên biến BẮT BUỘC phải là: [giá trị của fx:id] + "Controller"
     
     @FXML 
     private SidebarController sidebarController; 
@@ -29,12 +29,12 @@ public class MainController {
     @FXML
     public void initialize() {
         activeInstance = this;
-        // Kiá»ƒm tra xem JavaFX Ä‘Ã£ "bÆ¡m" thÃ nh cÃ´ng cÃ¡c sub-controller vÃ o chÆ°a
+        // Kiểm tra xem JavaFX đã "bơm" thành công các sub-controller vào chưa
         if (sidebarController != null) {
-            System.out.println("ÄÃ£ káº¿t ná»‘i Sidebar thÃ nh cÃ´ng!");
-            // Truyá»n chÃ­nh MainController nÃ y cho Sidebar, Ä‘á»ƒ Sidebar cÃ³ thá»ƒ mÆ°á»£n hÃ m loadView()
+            System.out.println("Đã kết nối Sidebar thành công!");
+            // Truyền chính MainController này cho Sidebar, để Sidebar có thể mượn hàm loadView()
             sidebarController.setMainController(this);
-            // Truyá»n AuthBUS tá»« SessionManager (Ä‘Ã£ Ä‘Æ°á»£c LoginController khá»Ÿi táº¡o) cho Sidebar
+            // Truyền AuthBUS từ SessionManager (đã được LoginController khởi tạo) cho Sidebar
             AuthBUS sharedAuthBUS = SessionManager.getInstance().getAuthBUS();
             if (sharedAuthBUS != null) {
                 sidebarController.setAuthBUS(sharedAuthBUS);
@@ -42,30 +42,28 @@ public class MainController {
         }
         
         if (topbarController != null) {
-            System.out.println("ÄÃ£ káº¿t ná»‘i Topbar thÃ nh cÃ´ng!");
+            System.out.println("Đã kết nối Topbar thành công!");
         }
 
-        // Vá»«a Ä‘Äƒng nháº­p vÃ o, load mÃ n hÃ¬nh máº·c Ä‘á»‹nh theo role.
+        // Vừa đăng nhập vào, load ngay trang tổng quan (dashboard-home.fxml)
         AppUser currentUser = SessionManager.getInstance().getCurrentUser();
-        loadDefaultViewByRole(currentUser);
-    }
-
-    private void loadDefaultViewByRole(AppUser currentUser) {
-        // Tất cả các vai trò đều hiển thị Dashboard (Tổng Quan Hôm Nay) làm màn hình mặc định sau khi đăng nhập
-        loadView("DashboardHome.fxml");
-        setTopbarTitle("Tổng Quan Hôm Nay", "Trang chủ");
-    }
-
-    private void setTopbarTitle(String title, String subtitle) {
-        if (topbarController != null) {
-            topbarController.setTitle(title, subtitle);
+        if (currentUser != null && currentUser.getRole() == Role.PET_CARE_STAFF) {
+            loadView("GroomingManagement.fxml");
+            if (topbarController != null) {
+                topbarController.setTitle("Grooming", "Công việc grooming được phân công");
+            }
+            if (sidebarController != null) {
+                sidebarController.setActiveGroomingMenu();
+            }
+        } else {
+            loadView("DashboardHome.fxml");
         }
     }
 
-    // HÃ m "Thay ruá»™t" huyá»n thoáº¡i
+    // Hàm "Thay ruột" huyền thoại
     public void loadView(String fxmlFileName) {
         try {
-            System.out.println("Äang táº£i view: " + fxmlFileName);
+            System.out.println("Đang tải view: " + fxmlFileName);
 
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/PetHotel/gui/view/" + fxmlFileName)
@@ -76,21 +74,21 @@ public class MainController {
             contentArea.getChildren().clear();
             contentArea.getChildren().add(view);
 
-            System.out.println("Táº£i view thÃ nh cÃ´ng: " + fxmlFileName);
+            System.out.println("Tải view thành công: " + fxmlFileName);
 
         } catch (Exception e) {
-            System.err.println("Lá»—i khÃ´ng táº£i Ä‘Æ°á»£c file: " + fxmlFileName);
+            System.err.println("Lỗi không tải được file: " + fxmlFileName);
             e.printStackTrace();
 
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Lá»—i táº£i giao diá»‡n");
-            alert.setHeaderText("KhÃ´ng thá»ƒ má»Ÿ " + fxmlFileName);
+            alert.setTitle("Lỗi tải giao diện");
+            alert.setHeaderText("Không thể mở " + fxmlFileName);
             alert.setContentText(e.getMessage());
             alert.showAndWait();
         }
     }
     
-    // HÃ m há»— trá»£ Ä‘á»ƒ Topbar Ä‘á»•i dÃ²ng chá»¯ TiÃªu Ä‘á» (VÃ­ dá»¥: "Quáº£n lÃ½ khÃ¡ch hÃ ng")
+    // Hàm hỗ trợ để Topbar đổi dòng chữ Tiêu đề (Ví dụ: "Quản lý khách hàng")
     public void showPetManagement(String selectedPetId) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/PetHotel/gui/view/PetManagement.fxml"));
@@ -100,10 +98,10 @@ public class MainController {
             contentArea.getChildren().add(view);
 
             if (topbarController != null) {
-                topbarController.setTitle("ThÃƒÂº CÃ†Â°ng", "QuÃ¡ÂºÂ£n lÃƒÂ½ hÃ¡Â»â€œ sÃ†Â¡ thÃƒÂº cÃ†Â°ng");
+                topbarController.setTitle("ThÃº CÆ°ng", "Quáº£n lÃ½ há»“ sÆ¡ thÃº cÆ°ng");
             }
             if (topbarController != null) {
-                topbarController.setTitle("ThÃº CÆ°ng", "Danh sÃ¡ch thÃº cÆ°ng táº¡i chi nhÃ¡nh");
+                topbarController.setTitle("Thú Cưng", "Danh sách thú cưng tại chi nhánh");
             }
             if (sidebarController != null) {
                 sidebarController.setActivePetMenu();
@@ -114,7 +112,7 @@ public class MainController {
                 controller.selectAndOpenPet(selectedPetId);
             }
         } catch (IOException e) {
-            System.err.println("LÃ¡Â»â€”i khÃƒÂ´ng tÃ¡ÂºÂ£i Ã„â€˜Ã†Â°Ã¡Â»Â£c file: PetManagement.fxml");
+            System.err.println("Lá»—i khÃ´ng táº£i Ä‘Æ°á»£c file: PetManagement.fxml");
             e.printStackTrace();
         }
     }
