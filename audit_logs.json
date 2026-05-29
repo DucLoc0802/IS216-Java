@@ -56,3 +56,4 @@
 {"logId":"LOG244311","employeeId":"EMP001","employeeName":"Nguyễn Văn A","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-29T15:41:12.418517600+07:00"}
 {"logId":"LOG455499","employeeId":"EMP_ADMIN","employeeName":"Quản Trị Viên Hệ Thống","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-29T15:41:14.956883300+07:00"}
 {"logId":"LOG240297","employeeId":"EMP001","employeeName":"Nguyễn Văn A","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-29T15:48:46.425154500+07:00"}
+{"logId":"LOG749234","employeeId":"EMP001","employeeName":"Nguyễn Văn A","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-29T16:02:20.217136100+07:00"}
