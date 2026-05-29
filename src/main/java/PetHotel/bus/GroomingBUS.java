@@ -521,4 +521,188 @@ public int getEmployeeTaskCountByStatus(
 
     return bookingServiceDAO.countEmployeeTasksByDateAndStatus(employeeId, dateStr, status);
 }
+
+/**
+ * Xác nhận hoàn thành dịch vụ grooming với trừ tồn kho.
+ *
+ * Luồng xử lý trong transaction:
+ * 1. Lấy thông tin booking_service, pet, service
+ * 2. Kiểm tra quyền (chỉ PET_CARE_STAFF/BRANCH_MANAGER/ADMIN, và PET_CARE_STAFF chỉ hoàn thành công việc của mình)
+ * 3. Kiểm tra status = IN_PROGRESS
+ * 4. Lấy danh sách vật tư tiêu hao từ SERVICE_PRODUCT_STANDARD
+ * 5. Kiểm tra tồn kho cho tất cả vật tư có actualAmount > 0
+ * 6. Nếu đủ tồn: trừ inventory + update status DONE + ghi note
+ * 7. Nếu không đủ: rollback + throw exception
+ *
+ * @param bookingServiceId     Mã công việc dịch vụ
+ * @param materialRows         Danh sách vật tư với số lượng thực tế (từ dialog)
+ * @param completionNote       Ghi chú bổ sung từ dialog (nếu có)
+ * @param currentUser          Người dùng đang đăng nhập
+ * @throws ValidationException Nếu vi phạm quy tắc nghiệp vụ
+ * @throws SQLException        Nếu lỗi database hoặc không đủ tồn kho
+ */
+public void completeGroomingServiceWithMaterials(
+        String bookingServiceId,
+        java.util.List<PetHotel.model.MaterialUsageConfirmRow> materialRows,
+        String completionNote,
+        AppUser currentUser
+) throws ValidationException, SQLException {
+
+    if (currentUser == null) {
+        throw new ValidationException("Chưa đăng nhập");
+    }
+
+    // Kiểm tra quyền
+    if (!currentUser.hasRole(Role.PET_CARE_STAFF)
+            && !currentUser.hasRole(Role.BRANCH_MANAGER)
+            && !currentUser.hasRole(Role.ADMIN)) {
+        throw new ValidationException("Bạn không có quyền xác nhận hoàn thành dịch vụ");
+    }
+
+    if (bookingServiceId == null || bookingServiceId.trim().isEmpty()) {
+        throw new ValidationException("Mã công việc không hợp lệ");
+    }
+
+    // Lấy thông tin chi tiết để validate
+    PetHotel.dao.BookingServiceDAO bsDAO = new PetHotel.dao.BookingServiceDAO();
+    PetHotel.model.BookingService bs = bsDAO.findCompletionContext(bookingServiceId.trim());
+
+    if (bs == null) {
+        throw new ValidationException("Không tìm thấy công việc dịch vụ");
+    }
+
+    // Nhân viên chăm sóc chỉ hoàn thành công việc của mình
+    if (currentUser.getRole() == Role.PET_CARE_STAFF
+            && !bs.getEmployeeId().equals(currentUser.getEmployeeId())) {
+        throw new ValidationException("Bạn chỉ có thể hoàn thành công việc của mình");
+    }
+
+    // Chỉ hoàn thành nếu status = IN_PROGRESS
+    if (!BookingService.STATUS_IN_PROGRESS.equals(bs.getStatus())) {
+        throw new ValidationException("Chỉ công việc đang thực hiện (IN_PROGRESS) mới có thể hoàn thành");
+    }
+
+    // Tham chiếu branch_id từ booking
+    String branchId = null;
+    if (bs instanceof PetHotel.model.BookingService) {
+        // Sử dụng reflection hoặc getter để lấy branchId
+        // Vì BookingService có thể không có field branchId trực tiếp
+        // ta cần lấy từ booking
+        PetHotel.dao.BookingDAO bookingDAO = new PetHotel.dao.BookingDAO();
+        PetHotel.model.Booking booking = bookingDAO.findById(bs.getBookingId());
+        if (booking != null) {
+            branchId = booking.getBranchId();
+        }
+    }
+
+    if (branchId == null) {
+        throw new ValidationException("Không xác định được chi nhánh");
+    }
+
+    // Kiểm tra tồn kho và trừ kho trong transaction
+    java.sql.Connection conn = null;
+    try {
+        conn = PetHotel.util.DBConnection.getConnection();
+        conn.setAutoCommit(false);
+
+        PetHotel.dao.InventoryDAO invDAO = new PetHotel.dao.InventoryDAO();
+
+        // Kiểm tra tồn kho cho tất cả vật tư có actualAmount > 0
+        java.util.List<String> missingProducts = new java.util.ArrayList<>();
+        if (materialRows != null) {
+            for (PetHotel.model.MaterialUsageConfirmRow row : materialRows) {
+                java.math.BigDecimal actualAmount = row.getActualAmount();
+                if (actualAmount != null && actualAmount.compareTo(java.math.BigDecimal.ZERO) > 0) {
+                    java.math.BigDecimal currentQty = invDAO.getQuantity(branchId, row.getProductId(), conn);
+                    if (currentQty.compareTo(actualAmount) < 0) {
+                        missingProducts.add(row.getProductName() + " (tồn: " + currentQty + ", cần: " + actualAmount + ")");
+                    }
+                }
+            }
+        }
+
+        if (!missingProducts.isEmpty()) {
+            throw new SQLException("Tồn kho không đủ cho sản phẩm: " + String.join(", ", missingProducts));
+        }
+
+        // Trừ kho
+        if (materialRows != null) {
+            for (PetHotel.model.MaterialUsageConfirmRow row : materialRows) {
+                java.math.BigDecimal actualAmount = row.getActualAmount();
+                if (actualAmount != null && actualAmount.compareTo(java.math.BigDecimal.ZERO) > 0) {
+                    int updated = invDAO.subtractInventory(branchId, row.getProductId(), actualAmount, conn);
+                    if (updated == 0) {
+                        throw new SQLException("Không thể trừ tồn sản phẩm: " + row.getProductName());
+                    }
+                }
+            }
+        }
+
+        // Ghi thông tin vật tư vào note
+        String noteContent = buildMaterialNote(bs, materialRows, completionNote);
+
+        // Update booking_services: status = DONE, append note
+        bsDAO.completeServiceAndAppendNote(bookingServiceId.trim(), noteContent, conn);
+
+        conn.commit();
+
+    } catch (SQLException e) {
+        if (conn != null) {
+            try {
+                conn.rollback();
+            } catch (SQLException ignored) {}
+        }
+        throw e;
+    } finally {
+        if (conn != null) {
+            try {
+                conn.setAutoCommit(true);
+                conn.close();
+            } catch (SQLException ignored) {}
+        }
+    }
+}
+
+/**
+ * Xây dựng nội dung ghi chú vật tư sử dụng.
+ */
+private String buildMaterialNote(
+        BookingService bs,
+        java.util.List<PetHotel.model.MaterialUsageConfirmRow> materialRows,
+        String completionNote) {
+
+    StringBuilder note = new StringBuilder();
+    note.append("[Hoàn thành dịch vụ]\n");
+    
+    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    String timestamp = java.time.OffsetDateTime.now().format(formatter);
+    note.append("Thời gian: ").append(timestamp).append("\n");
+
+    if (bs.getEmployeeId() != null) {
+        note.append("Nhân viên: ").append(bs.getEmployeeId()).append("\n");
+    }
+
+    // Nếu có vật tư
+    if (materialRows != null && !materialRows.isEmpty()) {
+        note.append("Vật tư sử dụng:\n");
+        for (PetHotel.model.MaterialUsageConfirmRow row : materialRows) {
+            java.math.BigDecimal actualAmount = row.getActualAmount();
+            if (actualAmount != null && actualAmount.compareTo(java.math.BigDecimal.ZERO) > 0) {
+                note.append("* ").append(row.getProductId())
+                    .append(" | ").append(row.getProductName())
+                    .append(" | Định mức: ").append(row.getStandardAmount()).append(row.getStandardUnit())
+                    .append(" | Thực tế: ").append(actualAmount).append(row.getStandardUnit())
+                    .append("\n");
+            }
+        }
+    } else {
+        note.append("Dịch vụ chưa cấu hình vật tư tiêu hao.\n");
+    }
+
+    if (completionNote != null && !completionNote.trim().isEmpty()) {
+        note.append("Ghi chú: ").append(completionNote.trim()).append("\n");
+    }
+
+    return note.toString();
+}
 }

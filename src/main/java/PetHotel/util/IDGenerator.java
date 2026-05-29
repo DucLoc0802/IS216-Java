@@ -98,15 +98,56 @@ public class IDGenerator {
     }
 
     public static synchronized String nextGoodsReceiptId() throws SQLException {
-        return nextId("GR", "SELECT MAX(goods_receipt_id) FROM goods_receipt");
+        String sql =
+            "SELECT NVL(MAX(TO_NUMBER(SUBSTR(goods_receipt_id, 3))), 0) + 1 AS next_id " +
+            "FROM goods_receipt " +
+            "WHERE REGEXP_LIKE(goods_receipt_id, '^GR[0-9]{3}$')";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return String.format("GR%03d", rs.getInt("next_id"));
+            }
+        }
+        return "GR001";
     }
 
     public static synchronized String nextStockAuditId() throws SQLException {
-        return nextId("SA", "SELECT MAX(stock_audit_id) FROM stock_audit");
+        String sql =
+            "SELECT NVL(MAX(TO_NUMBER(SUBSTR(stock_audit_id, 3))), 0) + 1 AS next_id " +
+            "FROM stock_audit " +
+            "WHERE REGEXP_LIKE(stock_audit_id, '^SA[0-9]{3}$')";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return String.format("SA%03d", rs.getInt("next_id"));
+            }
+        }
+        return "SA001";
     }
 
     public static synchronized String nextMaterialWasteId() throws SQLException {
         return nextId("MW", "SELECT MAX(material_waste_id) FROM material_waste");
+    }
+
+    public static synchronized String nextProductId() throws SQLException {
+        String sql =
+            "SELECT NVL(MAX(TO_NUMBER(SUBSTR(product_id, 3))), 0) + 1 AS next_id " +
+            "FROM product " +
+            "WHERE REGEXP_LIKE(product_id, '^PR[0-9]{3}$')";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return String.format("PR%03d", rs.getInt("next_id"));
+            }
+        }
+
+        return "PR001";
     }
 
     /**

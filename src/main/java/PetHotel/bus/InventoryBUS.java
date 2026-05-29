@@ -3,6 +3,7 @@ package PetHotel.bus;
 import PetHotel.dao.InventoryDAO;
 import PetHotel.exception.ValidationException;
 import PetHotel.model.AppUser;
+import PetHotel.model.BranchInventory;
 import PetHotel.model.CategoryProduct;
 import PetHotel.model.GoodsReceipt;
 import PetHotel.model.GoodsReceiptDetail;
@@ -28,6 +29,11 @@ public class InventoryBUS {
         return inventoryDAO.findCategories();
     }
 
+    public List<String> getBranchIds(AppUser currentUser) throws SQLException {
+        requireManager(currentUser, "Bạn không có quyền xem kho.");
+        return inventoryDAO.findBranchIds();
+    }
+
     public List<Product> getProducts(AppUser currentUser) throws SQLException {
         requireInventoryView(currentUser);
         return inventoryDAO.findProducts();
@@ -49,6 +55,60 @@ public class InventoryBUS {
         requireInventoryView(currentUser);
         requireBranch(branchId);
         return inventoryDAO.findInventory(branchId, keyword, categoryId, status);
+    }
+
+    public List<BranchInventory> searchInventory(
+            String branchId,
+            String keyword,
+            String stockStatus,
+            AppUser currentUser
+    ) throws SQLException {
+        requireManager(currentUser, "Bạn không có quyền xem tồn kho.");
+        if (currentUser.getRole() == Role.BRANCH_MANAGER) {
+            requireBranch(branchId);
+        }
+        return inventoryDAO.searchInventory(branchId, keyword, stockStatus);
+    }
+
+    public BranchInventory findByBranchAndProduct(String branchId, String productId, AppUser currentUser)
+            throws SQLException {
+        requireManager(currentUser, "Bạn không có quyền xem tồn kho.");
+        requireBranch(branchId);
+        requireText(productId, "Mã sản phẩm không hợp lệ.");
+        return inventoryDAO.findByBranchAndProduct(branchId.trim(), productId.trim());
+    }
+
+    public void upsertInventory(String branchId, String productId, BigDecimal quantityDelta, AppUser currentUser)
+            throws SQLException {
+        requireManager(currentUser, "Bạn không có quyền cập nhật tồn kho.");
+        requireBranch(branchId);
+        requireText(productId, "Mã sản phẩm không hợp lệ.");
+        if (quantityDelta == null) {
+            throw new ValidationException("Số lượng thay đổi không hợp lệ.");
+        }
+        inventoryDAO.upsertInventory(branchId.trim(), productId.trim(), quantityDelta);
+    }
+
+    public void updateInventoryQuantity(String branchId, String productId, BigDecimal actualQuantity, AppUser currentUser)
+            throws SQLException {
+        requireManager(currentUser, "Bạn không có quyền cập nhật tồn kho.");
+        requireBranch(branchId);
+        requireText(productId, "Mã sản phẩm không hợp lệ.");
+        if (actualQuantity == null || actualQuantity.compareTo(BigDecimal.ZERO) < 0) {
+            throw new ValidationException("Số lượng tồn phải lớn hơn hoặc bằng 0.");
+        }
+        inventoryDAO.updateInventoryQuantity(branchId.trim(), productId.trim(), actualQuantity);
+    }
+
+    public void updateReorderPoint(String branchId, String productId, BigDecimal reorderPoint, AppUser currentUser)
+            throws SQLException {
+        requireManager(currentUser, "Bạn không có quyền cập nhật điểm đặt hàng.");
+        requireBranch(branchId);
+        requireText(productId, "Mã sản phẩm không hợp lệ.");
+        if (reorderPoint != null && reorderPoint.compareTo(BigDecimal.ZERO) < 0) {
+            throw new ValidationException("Điểm đặt hàng lại phải lớn hơn hoặc bằng 0.");
+        }
+        inventoryDAO.updateReorderPoint(branchId.trim(), productId.trim(), reorderPoint);
     }
 
     public InventoryItem getInventoryItem(String branchId, String productId, AppUser currentUser)

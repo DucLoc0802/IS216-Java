@@ -55,6 +55,22 @@ public class BookingDAO {
         "  AND (? = 'ALL' OR b.status = ?) " +
         "ORDER BY b.created_at DESC";
 
+    private static final String SQL_FIND_BY_ID =
+        "SELECT b.booking_id, b.customer_id, b.branch_id, " +
+        "       b.checkin_expected_at, b.checkout_expected_at, " +
+        "       b.status, b.deposit_amount, b.special_note, " +
+        "       b.created_at, b.updated_at, " +
+        "       c.full_name AS customer_name, " +
+        "       p.pet_name, " +
+        "       r.room_number " +
+        "FROM booking b " +
+        "LEFT JOIN customer c ON b.customer_id = c.customer_id " +
+        "LEFT JOIN booking_room br ON b.booking_id = br.booking_id " +
+        "LEFT JOIN room r ON br.room_id = r.room_id " +
+        "LEFT JOIN booking_room_pet brp ON br.booking_room_id = brp.booking_room_id " +
+        "LEFT JOIN pet p ON brp.pet_id = p.pet_id " +
+        "WHERE b.booking_id = ?";
+    
     private static final String SQL_INSERT =
         "INSERT INTO booking (booking_id, customer_id, branch_id, " +
         "       checkin_expected_at, checkout_expected_at, status, " +
@@ -319,6 +335,22 @@ public class BookingDAO {
                 conn.setAutoCommit(true);
             }
         }
+    }
+
+    public Booking findById(String bookingId) throws SQLException {
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(SQL_FIND_BY_ID)) {
+
+            ps.setString(1, bookingId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
+            }
+        }
+
+        return null;
     }
 
     // ── Private Helpers ──────────────────────────────────────────

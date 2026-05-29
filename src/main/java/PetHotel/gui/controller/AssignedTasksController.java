@@ -440,20 +440,12 @@ public class AssignedTasksController {
             return;
         }
 
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Xác nhận hoàn thành dịch vụ");
-        confirm.setHeaderText("Xác nhận dịch vụ grooming đã hoàn tất?");
-        confirm.setContentText(
-                "Mã công việc: " + task.getBookingServiceId()
-                + "\nThú cưng: " + valueOrDash(task.getPetName())
-                + "\nDịch vụ: " + valueOrDash(task.getServiceName())
-        );
-
-        Optional<ButtonType> result = confirm.showAndWait();
-
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            updateTaskStatus(task, BookingService.STATUS_DONE);
-        }
+        // Mở dialog xác nhận hoàn thành với trừ tồn kho
+        CompleteServiceMaterialController.openDialog(task, currentUser, () -> {
+            loadTasks();
+            loadStatistics();
+            detailsPanel.setVisible(false);
+        });
     }
 
     private void updateTaskStatus(BookingService task, String newStatus) {

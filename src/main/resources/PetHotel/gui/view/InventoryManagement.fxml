@@ -1,233 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.geometry.*?>
-<?import javafx.collections.FXCollections?>
-<?import java.lang.String?>
+<?import java.net.URL?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 
-<VBox spacing="20" styleClass="main-content"
-      stylesheets="@../css/style.css"
-      xmlns="http://javafx.com/javafx/25"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="PetHotel.gui.controller.InventoryController">
-
+<VBox spacing="20" styleClass="main-content" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="PetHotel.gui.controller.InventoryController">
     <HBox alignment="CENTER_LEFT" spacing="12">
         <HBox alignment="CENTER_LEFT" spacing="8">
-            <Region styleClass="section-header-line"/>
+            <Region styleClass="section-header-line" />
             <VBox spacing="2">
-                <Label text="Quản Lý Kho Hàng" styleClass="section-header"/>
-                <Label text="Tồn kho · Nhập hàng · Cảnh báo mức thấp"
-                       style="-fx-font-size:11px; -fx-text-fill: -ph-text-muted;"/>
+                <Label styleClass="section-header" text="Quản Lý Tồn Kho" />
+                <Label style="-fx-font-size:11px; -fx-text-fill: -ph-text-muted;" text="Xem tồn kho sản phẩm/vật tư tiêu hao theo chi nhánh" />
             </VBox>
         </HBox>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Button fx:id="btnAddImportTop" text="Nhập Hàng"          styleClass="action-btn action-btn-primary"
-                onAction="#onAddImport"/>
-        <Button fx:id="btnAdjustStockTop" text="Điều Chỉnh Tồn Kho" styleClass="action-btn action-btn-amber"
-                onAction="#onAdjustStock"/>
-        <Button fx:id="btnRecordWasteTop" text="Ghi Nhận Tiêu Hao" styleClass="action-btn action-btn-outline"
-                onAction="#onRecordWaste"/>
+        <Region HBox.hgrow="ALWAYS" />
+        <Label fx:id="totalLabel" style="-fx-font-size:11px; -fx-text-fill: -ph-text-muted;" text="Hiển thị 0 dòng tồn kho" />
     </HBox>
 
-    <HBox spacing="14">
-        <VBox styleClass="stat-card stat-card-brown" HBox.hgrow="ALWAYS">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="" styleClass="stat-icon"/>
-                <VBox spacing="2">
-                    <Label text="Tổng SKU Quản Lý" styleClass="stat-label"/>
-                    <Label fx:id="statTotalSKU" text="—" styleClass="stat-value"/>
-                </VBox>
-            </HBox>
-            <Label text="Mặt hàng đang theo dõi" styleClass="stat-sublabel"/>
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
+        <VBox spacing="3">
+            <Label styleClass="filter-label" text="Chi nhánh" />
+            <ComboBox fx:id="branchCombo" onAction="#onSearch" prefWidth="150" styleClass="filter-combo" />
         </VBox>
-        <VBox styleClass="stat-card stat-card-green" HBox.hgrow="ALWAYS">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="" styleClass="stat-icon"/>
-                <VBox spacing="2">
-                    <Label text="Đủ Tồn Kho" styleClass="stat-label"/>
-                    <Label fx:id="statOkStock" text="—" styleClass="stat-value"/>
-                </VBox>
-            </HBox>
-            <Label text="Sản phẩm trên mức tối thiểu" styleClass="stat-sublabel"/>
+
+        <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
+            <Label styleClass="search-icon" text="" />
+            <TextField fx:id="searchField" onAction="#onSearch" promptText="Tìm sản phẩm..." styleClass="search-input" HBox.hgrow="ALWAYS" />
+        </HBox>
+
+        <VBox spacing="3">
+            <Label styleClass="filter-label" text="Trạng thái tồn" />
+            <ComboBox fx:id="stockStatusCombo" onAction="#onSearch" prefWidth="140" styleClass="filter-combo" />
         </VBox>
-        <VBox styleClass="stat-card stat-card-amber" HBox.hgrow="ALWAYS">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="" styleClass="stat-icon"/>
-                <VBox spacing="2">
-                    <Label text="Tồn Kho Thấp" styleClass="stat-label"/>
-                    <Label fx:id="statLowStock" text="—" styleClass="stat-value"/>
-                </VBox>
-            </HBox>
-            <Label text="Cần nhập thêm sớm" styleClass="stat-sublabel"/>
-        </VBox>
-        <VBox styleClass="stat-card stat-card-red" HBox.hgrow="ALWAYS">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="" styleClass="stat-icon"/>
-                <VBox spacing="2">
-                    <Label text="Nguy Hiểm / Hết" styleClass="stat-label"/>
-                    <Label fx:id="statCriticalStock" text="—" styleClass="stat-value"/>
-                </VBox>
-            </HBox>
-            <Label text="Cần nhập ngay hôm nay" styleClass="stat-sublabel"/>
-        </VBox>
-        <VBox styleClass="stat-card stat-card-blue" HBox.hgrow="ALWAYS">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="" styleClass="stat-icon"/>
-                <VBox spacing="2">
-                    <Label text="Nhập Hàng Tháng Này" styleClass="stat-label"/>
-                    <Label fx:id="statMonthImport" text="—" styleClass="stat-value"/>
-                </VBox>
-            </HBox>
-            <Label text="Tổng đợt nhập trong tháng" styleClass="stat-sublabel"/>
-        </VBox>
+
+        <Button onAction="#onSearch" style="-fx-padding: 7 18 7 18;" styleClass="action-btn action-btn-primary" text="Tìm" />
+        <Button onAction="#onClearFilter" style="-fx-padding: 7 14 7 14;" styleClass="action-btn action-btn-outline" text="Xóa lọc" />
     </HBox>
 
-    <VBox fx:id="lowStockAlertPanel" styleClass="content-panel alert-panel" spacing="12">
-        <HBox alignment="CENTER_LEFT">
-            <HBox alignment="CENTER_LEFT" spacing="8">
-                <Region styleClass="section-header-line"/>
-                <Label text="Cảnh Báo Tồn Kho Thấp — Cần Hành Động Ngay"
-                       styleClass="panel-title panel-title-alert"/>
-            </HBox>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Tạo Phiếu Nhập Hàng" styleClass="action-btn action-btn-amber"
-                    onAction="#onAddImport" style="-fx-padding: 6 14 6 14;"/>
-        </HBox>
-
-        <ScrollPane fitToHeight="true" prefHeight="110"
-                    style="-fx-background:transparent; -fx-background-color:transparent;">
-            <HBox fx:id="lowStockCards" spacing="12" style="-fx-padding: 2 0 4 0;">
-                <VBox styleClass="inv-card inv-card-critical" prefWidth="160" spacing="4">
-                    <Label text="Thức ăn hạt Premium" styleClass="inv-product-name" wrapText="true"/>
-                    <HBox alignment="CENTER_LEFT" spacing="4">
-                        <Label text="3" styleClass="inv-qty-big inv-qty-critical"/>
-                        <Label text="túi còn lại" styleClass="inv-unit"/>
-                    </HBox>
-                    <Label text="Tối thiểu: 10 túi" styleClass="stock-qty stock-qty-critical"/>
-                    <Button text="Nhập Ngay" styleClass="action-btn action-btn-danger"
-                            onAction="#onAddImport" style="-fx-padding: 4 10 4 10; -fx-font-size:11px;"/>
-                </VBox>
-                <VBox styleClass="inv-card inv-card-low" prefWidth="160" spacing="4">
-                    <Label text="Dầu gội thú cưng" styleClass="inv-product-name" wrapText="true"/>
-                    <HBox alignment="CENTER_LEFT" spacing="4">
-                        <Label text="5" styleClass="inv-qty-big inv-qty-low"/>
-                        <Label text="chai còn lại" styleClass="inv-unit"/>
-                    </HBox>
-                    <Label text="Tối thiểu: 15 chai" styleClass="stock-qty stock-qty-low"/>
-                    <Button text="Nhập Thêm" styleClass="action-btn action-btn-amber"
-                            onAction="#onAddImport" style="-fx-padding: 4 10 4 10; -fx-font-size:11px;"/>
-                </VBox>
-            </HBox>
-        </ScrollPane>
+    <VBox spacing="12" styleClass="content-panel" VBox.vgrow="ALWAYS">
+        <TableView fx:id="inventoryTable" styleClass="data-table" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colProductId" prefWidth="95" text="Mã sản phẩm" />
+                <TableColumn fx:id="colProductName" prefWidth="220" text="Tên sản phẩm" />
+                <TableColumn fx:id="colCategoryName" prefWidth="140" text="Loại sản phẩm" />
+                <TableColumn fx:id="colUnit" prefWidth="85" text="Đơn vị" />
+                <TableColumn fx:id="colQuantity" prefWidth="110" text="Số lượng tồn" />
+                <TableColumn fx:id="colReorderPoint" prefWidth="135" text="Điểm đặt hàng lại" />
+                <TableColumn fx:id="colStockStatus" prefWidth="120" text="Trạng thái tồn" />
+                <TableColumn fx:id="colLastUpdated" prefWidth="170" text="Cập nhật lần cuối" />
+            </columns>
+            <placeholder>
+                <Label styleClass="table-empty" text="Không có dữ liệu tồn kho" />
+            </placeholder>
+        </TableView>
     </VBox>
 
-    <VBox styleClass="content-panel" spacing="14" VBox.vgrow="ALWAYS">
-
-        <HBox spacing="0" style="-fx-background-color: #FAF5F0; -fx-background-radius: 8px; -fx-padding: 4;">
-            <ToggleButton fx:id="tabStock"   text="Tồn Kho Hiện Tại"
-                          styleClass="period-btn period-btn-active" selected="true"
-                          onAction="#onTabStock"   prefWidth="200"/>
-            <ToggleButton fx:id="tabImport"  text="Lịch Sử Nhập Hàng"
-                          styleClass="period-btn"
-                          onAction="#onTabImport"  prefWidth="200"/>
-        </HBox>
-
-        <VBox fx:id="stockPanel" spacing="12" VBox.vgrow="ALWAYS">
-            <HBox alignment="CENTER_LEFT" spacing="12">
-                <HBox styleClass="search-box" alignment="CENTER_LEFT" spacing="8" prefWidth="280">
-                    <Label text="" styleClass="search-icon"/>
-                    <TextField fx:id="searchStock" promptText="Tìm sản phẩm..."
-                               styleClass="search-input" onAction="#onSearchStock"/>
-                </HBox>
-                <ComboBox fx:id="filterStockCat" styleClass="filter-combo" prefWidth="150"
-                          promptText="Danh mục"/>
-                <ComboBox fx:id="filterStockStatus" styleClass="filter-combo" prefWidth="140"
-                          promptText="Tình trạng">
-                    <items>
-                        <FXCollections fx:factory="observableArrayList">
-                            <String fx:value="Tất cả"/>
-                            <String fx:value="Đủ hàng"/>
-                            <String fx:value="Tồn kho thấp"/>
-                            <String fx:value="Nguy hiểm"/>
-                            <String fx:value="Hết hàng"/>
-                        </FXCollections>
-                    </items>
-                </ComboBox>
-                <Button text="Lọc" styleClass="action-btn action-btn-primary"
-                        onAction="#onFilterStock" style="-fx-padding: 7 16 7 16;"/>
-            </HBox>
-
-            <TableView fx:id="stockTable" styleClass="data-table" VBox.vgrow="ALWAYS">
-                <columns>
-                    <TableColumn fx:id="colSkuId"     text="Mã SP"           prefWidth="90"/>
-                    <TableColumn fx:id="colSkuName"   text="Tên Sản Phẩm"    prefWidth="200"/>
-                    <TableColumn fx:id="colSkuCat"    text="Danh Mục"        prefWidth="130"/>
-                    <TableColumn fx:id="colSkuUnit"   text="ĐVT"             prefWidth="70"/>
-                    <TableColumn fx:id="colSkuQty"    text="Tồn Kho"         prefWidth="90"/>
-                    <TableColumn fx:id="colSkuMin"    text="Mức Tối Thiểu"   prefWidth="130"/>
-                    <TableColumn fx:id="colSkuStatus" text="Tình Trạng"      prefWidth="120"/>
-                    <TableColumn fx:id="colSkuAction" text="Thao Tác"        prefWidth="120" resizable="false"/>
-                </columns>
-                <placeholder>
-                    <Label text="Không có dữ liệu tồn kho" styleClass="table-empty"/>
-                </placeholder>
-            </TableView>
-        </VBox>
-
-        <VBox fx:id="importPanel" spacing="12" VBox.vgrow="ALWAYS" visible="false" managed="false">
-            <HBox alignment="CENTER_LEFT" spacing="12">
-                <HBox styleClass="search-box" alignment="CENTER_LEFT" spacing="8" prefWidth="260">
-                    <Label text="" styleClass="search-icon"/>
-                    <TextField fx:id="searchImport" promptText="Mã phiếu, tên sản phẩm..."
-                               styleClass="search-input" onAction="#onSearchImport"/>
-                </HBox>
-                <VBox spacing="3">
-                    <Label text="Từ ngày" styleClass="filter-label"/>
-                    <DatePicker fx:id="importDateFrom" styleClass="filter-combo" prefWidth="140"/>
-                </VBox>
-                <VBox spacing="3">
-                    <Label text="Đến ngày" styleClass="filter-label"/>
-                    <DatePicker fx:id="importDateTo" styleClass="filter-combo" prefWidth="140"/>
-                </VBox>
-                <Button text="Lọc" styleClass="action-btn action-btn-primary"
-                        onAction="#onFilterImport" style="-fx-padding: 7 16 7 16;"/>
-                <Button text="Nhập Hàng" styleClass="action-btn action-btn-primary"
-                        onAction="#onAddImport"/>
-            </HBox>
-
-            <HBox styleClass="action-toolbar" alignment="CENTER_LEFT">
-                <Button fx:id="btnEditImport"   text="Sửa Phiếu"  styleClass="action-btn action-btn-outline"
-                        onAction="#onEditImport"   disable="true"/>
-                <Button fx:id="btnDeleteImport" text="Xóa Phiếu"  styleClass="action-btn action-btn-danger"
-                        onAction="#onDeleteImport" disable="true"/>
-            </HBox>
-
-            <TableView fx:id="importTable" styleClass="data-table" VBox.vgrow="ALWAYS"
-                       onMouseClicked="#onImportTableClick">
-                <columns>
-                    <TableColumn fx:id="colImportId"       text="Mã Phiếu"       prefWidth="100"/>
-                    <TableColumn fx:id="colImportDate"     text="Ngày Nhập"       prefWidth="110"/>
-                    <TableColumn fx:id="colImportProduct"  text="Sản Phẩm"        prefWidth="180"/>
-                    <TableColumn fx:id="colImportQty"      text="Số Lượng"        prefWidth="100"/>
-                    <TableColumn fx:id="colImportUnit"     text="ĐVT"             prefWidth="70"/>
-                    <TableColumn fx:id="colImportPrice"    text="Đơn Giá Nhập"   prefWidth="120"/>
-                    <TableColumn fx:id="colImportTotal"    text="Tổng Tiền"       prefWidth="120"/>
-                    <TableColumn fx:id="colImportSupplier" text="Nguồn Nhập"     prefWidth="150"/>
-                    <TableColumn fx:id="colImportNote"     text="Ghi Chú"         prefWidth="130"/>
-                </columns>
-                <placeholder>
-                    <Label text="Không có lịch sử nhập hàng" styleClass="table-empty"/>
-                </placeholder>
-            </TableView>
-
-            <HBox alignment="CENTER_RIGHT" spacing="10">
-                <Label fx:id="importPageInfo" text="Hiển thị 0 / 0 phiếu nhập"
-                       style="-fx-font-size:11px; -fx-text-fill: -ph-text-muted;"/>
-                <Pagination fx:id="importPagination" pageCount="1" maxPageIndicatorCount="5"/>
-            </HBox>
-        </VBox>
-
-    </VBox>
-
+    <stylesheets>
+        <URL value="@../css/style.css" />
+    </stylesheets>
 </VBox>

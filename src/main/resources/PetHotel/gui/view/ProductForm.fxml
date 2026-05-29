@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox maxWidth="600" prefWidth="600" spacing="0"
+      styleClass="form-root"
+      stylesheets="@../css/style.css"
+      xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="PetHotel.gui.controller.ProductFormController">
+
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="form-header">
+        <Label styleClass="form-header-icon" text="" />
+        <VBox spacing="2">
+            <Label fx:id="titleLabel" styleClass="form-header-title" text="Thêm Sản Phẩm" />
+            <Label fx:id="subtitleLabel" styleClass="form-header-subtitle" text="Tạo sản phẩm/vật tư tiêu hao dùng cho dịch vụ" />
+        </VBox>
+        <Region HBox.hgrow="ALWAYS" />
+        <Button onAction="#handleCancel" styleClass="form-close-btn" text="Đóng" />
+    </HBox>
+
+    <VBox spacing="16" styleClass="form-body">
+        <Label styleClass="form-section-title" text="Thông Tin Cơ Bản" />
+
+        <HBox spacing="14">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Mã Sản Phẩm" />
+                <TextField fx:id="productIdField" disable="true" promptText="Tự sinh" styleClass="form-field" />
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Tên Sản Phẩm *" />
+                <TextField fx:id="productNameField" promptText="VD: Dầu gội lông mềm" styleClass="form-field" />
+                <Label fx:id="nameErrorLabel" styleClass="form-error" text="" />
+            </VBox>
+        </HBox>
+
+        <Separator styleClass="form-divider" />
+
+        <Label styleClass="form-section-title" text="Phân Loại &amp; Đơn Vị" />
+
+        <HBox spacing="14">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Loại Sản Phẩm" />
+                <ComboBox fx:id="categoryCombo" styleClass="form-combo" />
+                <Label fx:id="categoryErrorLabel" styleClass="form-error" text="" />
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Đơn Vị Tính *" />
+                <TextField fx:id="unitField" promptText="chai, hộp, cái..." styleClass="form-field" />
+                <Label fx:id="unitErrorLabel" styleClass="form-error" text="" />
+            </VBox>
+        </HBox>
+
+        <Separator styleClass="form-divider" />
+
+        <Label styleClass="form-section-title" text="Giá &amp; Tồn Kho" />
+
+        <HBox spacing="14">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Giá Nhập (VNĐ)" />
+                <TextField fx:id="importPriceField" promptText="0" styleClass="form-field" />
+                <Label fx:id="priceErrorLabel" styleClass="form-error" text="" />
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Tồn Tối Thiểu" />
+                <TextField fx:id="minQuantityField" promptText="0" styleClass="form-field" />
+                <Label fx:id="minQuantityErrorLabel" styleClass="form-error" text="" />
+            </VBox>
+        </HBox>
+
+        <CheckBox fx:id="activeCheck" selected="true" text="Đang sử dụng" />
+
+        <Separator styleClass="form-divider" />
+
+        <Label styleClass="form-section-title" text="Ghi Chú" />
+        <VBox spacing="4">
+            <TextArea fx:id="noteArea" prefRowCount="4" promptText="Ghi chú nội bộ..." styleClass="form-area" wrapText="true" />
+            <Label fx:id="noteErrorLabel" styleClass="form-error" text="" />
+        </VBox>
+
+        <Label styleClass="form-hint" text="Thông tin được đánh dấu (*) là bắt buộc" />
+    </VBox>
+
+    <HBox alignment="CENTER_RIGHT" spacing="10" styleClass="form-footer">
+        <Region HBox.hgrow="ALWAYS" />
+        <Button onAction="#handleCancel" styleClass="btn-secondary" text="Hủy" />
+        <Button fx:id="saveButton" onAction="#handleSave" styleClass="btn-primary" text="Thêm Sản Phẩm" />
+    </HBox>
+</VBox>

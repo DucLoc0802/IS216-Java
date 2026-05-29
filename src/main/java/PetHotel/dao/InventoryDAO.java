@@ -1,13 +1,5 @@
 package PetHotel.dao;
 
-import PetHotel.model.CategoryProduct;
-import PetHotel.model.GoodsReceipt;
-import PetHotel.model.GoodsReceiptDetail;
-import PetHotel.model.InventoryItem;
-import PetHotel.model.Product;
-import PetHotel.util.DBConnection;
-import PetHotel.util.IDGenerator;
-
 import java.math.BigDecimal;
 import java.sql.CallableStatement;
 import java.sql.Clob;
@@ -22,6 +14,15 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+
+import PetHotel.model.BranchInventory;
+import PetHotel.model.CategoryProduct;
+import PetHotel.model.GoodsReceipt;
+import PetHotel.model.GoodsReceiptDetail;
+import PetHotel.model.InventoryItem;
+import PetHotel.model.Product;
+import PetHotel.util.DBConnection;
+import PetHotel.util.IDGenerator;
 
 public class InventoryDAO {
     private static final String RECEIPT_SUMMARY_SELECT =
@@ -58,6 +59,20 @@ public class InventoryDAO {
         return categories;
     }
 
+    public List<String> findBranchIds() throws SQLException {
+        String sql = "SELECT branch_id FROM branch WHERE is_active = 1 ORDER BY branch_id";
+
+        List<String> branchIds = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                branchIds.add(rs.getString("branch_id"));
+            }
+        }
+        return branchIds;
+    }
+
     public List<Product> findProducts() throws SQLException {
         String sql =
             "SELECT p.product_id, p.product_category_id, cp.category_name, p.product_name, p.unit, p.cost_price " +
@@ -89,6 +104,177 @@ public class InventoryDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? mapProduct(rs) : null;
             }
+        }
+    }
+
+    public List<BranchInventory> searchInventory(String branchId, String keyword, String stockStatus)
+            throws SQLException {
+        String sql =
+            "SELECT bi.branch_id, b.branch_name, bi.product_id, p.product_name, p.product_category_id, " +
+            "       cp.category_name, p.unit, bi.quantity_in_stock, bi.reorder_point, bi.last_updated " +
+            "FROM branch_inventory bi " +
+            "JOIN branch b ON b.branch_id = bi.branch_id " +
+            "JOIN product p ON p.product_id = bi.product_id " +
+            "LEFT JOIN category_product cp ON cp.product_category_id = p.product_category_id " +
+            "WHERE (? IS NULL OR bi.branch_id = ?) " +
+            "  AND (? IS NULL OR LOWER(p.product_id) LIKE LOWER(?) " +
+            "       OR LOWER(p.product_name) LIKE LOWER(?) OR LOWER(cp.category_name) LIKE LOWER(?)) " +
+            "ORDER BY b.branch_id, p.product_name";
+
+        List<BranchInventory> items = new ArrayList<>();
+        String normalizedBranchId = normalize(branchId);
+        String normalizedKeyword = normalize(keyword);
+        String pattern = normalizedKeyword == null ? null : "%" + normalizedKeyword + "%";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, normalizedBranchId);
+            ps.setString(2, normalizedBranchId);
+            ps.setString(3, normalizedKeyword);
+            ps.setString(4, pattern);
+            ps.setString(5, pattern);
+            ps.setString(6, pattern);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    BranchInventory item = mapBranchInventory(rs);
+                    if (matchesBranchInventoryStatus(item, stockStatus)) {
+                        items.add(item);
+                    }
+                }
+            }
+        }
+        return items;
+    }
+
+    public BranchInventory findByBranchAndProduct(String branchId, String productId) throws SQLException {
+        String sql =
+            "SELECT bi.branch_id, b.branch_name, bi.product_id, p.product_name, p.product_category_id, " +
+            "       cp.category_name, p.unit, bi.quantity_in_stock, bi.reorder_point, bi.last_updated " +
+            "FROM branch_inventory bi " +
+            "JOIN branch b ON b.branch_id = bi.branch_id " +
+            "JOIN product p ON p.product_id = bi.product_id " +
+            "LEFT JOIN category_product cp ON cp.product_category_id = p.product_category_id " +
+            "WHERE bi.branch_id = ? AND bi.product_id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, branchId);
+            ps.setString(2, productId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? mapBranchInventory(rs) : null;
+            }
+        }
+    }
+
+    public void upsertInventory(String branchId, String productId, BigDecimal quantityDelta) throws SQLException {
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false);
+            upsertInventory(conn, branchId, productId, quantityDelta);
+            conn.commit();
+        } catch (SQLException e) {
+            DBConnection.rollbackQuietly(conn);
+            throw e;
+        } finally {
+            closeTxConnection(conn);
+        }
+    }
+
+    public void updateInventoryQuantity(String branchId, String productId, BigDecimal actualQuantity)
+            throws SQLException {
+        if (actualQuantity == null || actualQuantity.compareTo(BigDecimal.ZERO) < 0) {
+            throw new SQLException("Số lượng tồn không được nhỏ hơn 0.");
+        }
+
+        String sql =
+            "MERGE INTO branch_inventory bi " +
+            "USING (SELECT ? AS branch_id, ? AS product_id, ? AS quantity_in_stock FROM dual) src " +
+            "ON (bi.branch_id = src.branch_id AND bi.product_id = src.product_id) " +
+            "WHEN MATCHED THEN UPDATE SET bi.quantity_in_stock = src.quantity_in_stock, bi.last_updated = SYSTIMESTAMP " +
+            "WHEN NOT MATCHED THEN INSERT (branch_id, product_id, quantity_in_stock, reorder_point, last_updated) " +
+            "VALUES (src.branch_id, src.product_id, src.quantity_in_stock, 0, SYSTIMESTAMP)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, branchId);
+            ps.setString(2, productId);
+            ps.setBigDecimal(3, actualQuantity);
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateReorderPoint(String branchId, String productId, BigDecimal reorderPoint) throws SQLException {
+        if (reorderPoint != null && reorderPoint.compareTo(BigDecimal.ZERO) < 0) {
+            throw new SQLException("Điểm đặt hàng lại không được nhỏ hơn 0.");
+        }
+
+        String sql =
+            "MERGE INTO branch_inventory bi " +
+            "USING (SELECT ? AS branch_id, ? AS product_id, ? AS reorder_point FROM dual) src " +
+            "ON (bi.branch_id = src.branch_id AND bi.product_id = src.product_id) " +
+            "WHEN MATCHED THEN UPDATE SET bi.reorder_point = src.reorder_point, bi.last_updated = SYSTIMESTAMP " +
+            "WHEN NOT MATCHED THEN INSERT (branch_id, product_id, quantity_in_stock, reorder_point, last_updated) " +
+            "VALUES (src.branch_id, src.product_id, 0, src.reorder_point, SYSTIMESTAMP)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, branchId);
+            ps.setString(2, productId);
+            if (reorderPoint == null) {
+                ps.setNull(3, Types.NUMERIC);
+            } else {
+                ps.setBigDecimal(3, reorderPoint);
+            }
+            ps.executeUpdate();
+        }
+    }
+
+    public void upsertInventory(Connection conn, String branchId, String productId, BigDecimal quantityDelta)
+            throws SQLException {
+        BigDecimal delta = quantityDelta == null ? BigDecimal.ZERO : quantityDelta;
+        BigDecimal currentQuantity = null;
+
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT quantity_in_stock FROM branch_inventory " +
+                "WHERE branch_id = ? AND product_id = ? FOR UPDATE")) {
+            ps.setString(1, branchId);
+            ps.setString(2, productId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    currentQuantity = rs.getBigDecimal(1);
+                }
+            }
+        }
+
+        if (currentQuantity == null) {
+            if (delta.compareTo(BigDecimal.ZERO) < 0) {
+                throw new SQLException("Không thể tạo tồn kho âm cho sản phẩm " + productId + ".");
+            }
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO branch_inventory (branch_id, product_id, quantity_in_stock, reorder_point, last_updated) " +
+                    "VALUES (?, ?, ?, 0, SYSTIMESTAMP)")) {
+                ps.setString(1, branchId);
+                ps.setString(2, productId);
+                ps.setBigDecimal(3, delta);
+                ps.executeUpdate();
+            }
+            return;
+        }
+
+        BigDecimal newQuantity = currentQuantity.add(delta);
+        if (newQuantity.compareTo(BigDecimal.ZERO) < 0) {
+            throw new SQLException("Tồn kho không được nhỏ hơn 0 cho sản phẩm " + productId + ".");
+        }
+
+        try (PreparedStatement ps = conn.prepareStatement(
+                "UPDATE branch_inventory SET quantity_in_stock = ?, last_updated = SYSTIMESTAMP " +
+                "WHERE branch_id = ? AND product_id = ?")) {
+            ps.setBigDecimal(1, newQuantity);
+            ps.setString(2, branchId);
+            ps.setString(3, productId);
+            ps.executeUpdate();
         }
     }
 
@@ -642,6 +828,24 @@ public class InventoryDAO {
         return item;
     }
 
+    private BranchInventory mapBranchInventory(ResultSet rs) throws SQLException {
+        BranchInventory item = new BranchInventory();
+        item.setBranchId(rs.getString("branch_id"));
+        item.setBranchName(rs.getString("branch_name"));
+        item.setProductId(rs.getString("product_id"));
+        item.setProductName(rs.getString("product_name"));
+        item.setProductCategoryId(rs.getString("product_category_id"));
+        item.setCategoryName(rs.getString("category_name"));
+        item.setUnit(rs.getString("unit"));
+        item.setQuantityInStock(rs.getBigDecimal("quantity_in_stock"));
+        item.setReorderPoint(rs.getBigDecimal("reorder_point"));
+        Timestamp lastUpdated = rs.getTimestamp("last_updated");
+        if (lastUpdated != null) {
+            item.setLastUpdated(lastUpdated.toInstant().atOffset(ZoneOffset.UTC));
+        }
+        return item;
+    }
+
     private GoodsReceipt mapGoodsReceipt(ResultSet rs) throws SQLException {
         GoodsReceipt receipt = new GoodsReceipt();
         receipt.setGoodsReceiptId(rs.getString("goods_receipt_id"));
@@ -689,6 +893,14 @@ public class InventoryDAO {
         return item.getStatus().equals(normalized);
     }
 
+    private boolean matchesBranchInventoryStatus(BranchInventory item, String status) {
+        String normalized = normalize(status);
+        if (normalized == null || BranchInventory.STATUS_ALL.equalsIgnoreCase(normalized)) {
+            return true;
+        }
+        return item.getStockStatus().equals(normalized);
+    }
+
     private Timestamp toTimestamp(LocalDate date) {
         LocalDate value = date == null ? LocalDate.now() : date;
         return Timestamp.valueOf(value.atStartOfDay());
@@ -720,6 +932,76 @@ public class InventoryDAO {
         if (conn != null) {
             conn.setAutoCommit(true);
             conn.close();
+        }
+    }
+
+    /**
+     * Lấy số lượng tồn kho từ BRANCH_INVENTORY.
+     * Nếu không có bản ghi thì trả về 0.
+     * 
+     * @param branchId
+     * @param productId
+     * @param conn Connection được sử dụng trong transaction
+     * @return Số lượng tồn kho
+     * @throws SQLException
+     */
+    public BigDecimal getQuantity(String branchId, String productId, Connection conn) throws SQLException {
+        String sql =
+            "SELECT quantity_in_stock FROM branch_inventory " +
+            "WHERE branch_id = ? AND product_id = ?";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, branchId);
+            ps.setString(2, productId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    BigDecimal qty = rs.getBigDecimal("quantity_in_stock");
+                    return qty != null ? qty : BigDecimal.ZERO;
+                }
+            }
+        }
+
+        return BigDecimal.ZERO;
+    }
+
+    /**
+     * Trừ tồn kho trong BRANCH_INVENTORY.
+     * 
+     * SQL:
+     *   UPDATE branch_inventory
+     *   SET quantity_in_stock = quantity_in_stock - ?,
+     *       last_updated = SYSTIMESTAMP
+     *   WHERE branch_id = ? AND product_id = ?
+     *   AND quantity_in_stock >= ?
+     *
+     * Nếu executeUpdate trả về 0 thì không đủ tồn hoặc không có bản ghi.
+     *
+     * @param branchId
+     * @param productId
+     * @param amount    Số lượng trừ (phải > 0)
+     * @param conn      Connection được sử dụng trong transaction
+     * @return Số hàng bị update (1 = thành công, 0 = không đủ tồn)
+     * @throws SQLException
+     */
+    public int subtractInventory(String branchId, String productId, BigDecimal amount, Connection conn)
+            throws SQLException {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new SQLException("Số lượng trừ phải lớn hơn 0");
+        }
+
+        String sql =
+            "UPDATE branch_inventory " +
+            "SET quantity_in_stock = quantity_in_stock - ?, " +
+            "    last_updated = SYSTIMESTAMP " +
+            "WHERE branch_id = ? AND product_id = ? " +
+            "  AND quantity_in_stock >= ?";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBigDecimal(1, amount);
+            ps.setString(2, branchId);
+            ps.setString(3, productId);
+            ps.setBigDecimal(4, amount);
+            return ps.executeUpdate();
         }
     }
 }

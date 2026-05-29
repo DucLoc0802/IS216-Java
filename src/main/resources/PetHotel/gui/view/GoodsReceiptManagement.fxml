@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="20" styleClass="main-content" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="PetHotel.gui.controller.GoodsReceiptController">
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <HBox alignment="CENTER_LEFT" spacing="8">
+            <Region styleClass="section-header-line" />
+            <VBox spacing="2">
+                <Label styleClass="section-header" text="Nhập Kho" />
+                <Label style="-fx-font-size:11px; -fx-text-fill: -ph-text-muted;" text="Lập, sửa, duyệt và hủy phiếu nhập kho" />
+            </VBox>
+        </HBox>
+        <Region HBox.hgrow="ALWAYS" />
+        <Label fx:id="totalLabel" style="-fx-font-size:11px; -fx-text-fill: -ph-text-muted;" text="Hiển thị 0 phiếu nhập" />
+    </HBox>
+
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
+        <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
+            <Label styleClass="search-icon" text="" />
+            <TextField fx:id="searchField" onAction="#onSearch" promptText="Tìm mã phiếu / nhà cung cấp..." styleClass="search-input" HBox.hgrow="ALWAYS" />
+        </HBox>
+        <VBox spacing="3">
+            <Label styleClass="filter-label" text="Trạng thái" />
+            <ComboBox fx:id="statusFilter" onAction="#onSearch" prefWidth="130" styleClass="filter-combo" />
+        </VBox>
+        <VBox spacing="3">
+            <Label styleClass="filter-label" text="Từ ngày" />
+            <DatePicker fx:id="fromDatePicker" onAction="#onSearch" prefWidth="135" styleClass="filter-combo" />
+        </VBox>
+        <VBox spacing="3">
+            <Label styleClass="filter-label" text="Đến ngày" />
+            <DatePicker fx:id="toDatePicker" onAction="#onSearch" prefWidth="135" styleClass="filter-combo" />
+        </VBox>
+        <Button onAction="#onSearch" styleClass="action-btn action-btn-primary" text="Tìm" />
+        <Button onAction="#onClearFilter" styleClass="action-btn action-btn-outline" text="Xóa lọc" />
+    </HBox>
+
+    <HBox spacing="18" VBox.vgrow="ALWAYS">
+        <VBox spacing="12" styleClass="content-panel" HBox.hgrow="ALWAYS">
+            <HBox alignment="CENTER_LEFT" spacing="8" styleClass="action-toolbar">
+                <Button onAction="#onNewReceipt" styleClass="action-btn action-btn-primary" text="Lập Phiếu Nhập" />
+                <Button fx:id="btnEditReceipt" disable="true" onAction="#onEditReceipt" styleClass="action-btn action-btn-outline" text="Sửa phiếu" />
+                <Button fx:id="btnApproveReceipt" disable="true" onAction="#onApproveReceipt" styleClass="action-btn action-btn-primary" text="Duyệt phiếu" />
+                <Button fx:id="btnCancelReceipt" disable="true" onAction="#onCancelReceipt" styleClass="action-btn action-btn-danger" text="Hủy phiếu" />
+            </HBox>
+
+            <TableView fx:id="receiptTable" styleClass="data-table" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colReceiptId" prefWidth="85" text="Mã phiếu" />
+                    <TableColumn fx:id="colBranchId" prefWidth="85" text="Chi nhánh" />
+                    <TableColumn fx:id="colEmployeeName" prefWidth="135" text="Nhân viên lập" />
+                    <TableColumn fx:id="colSupplierName" prefWidth="135" text="Nhà cung cấp" />
+                    <TableColumn fx:id="colReceiptDate" prefWidth="95" text="Ngày nhập" />
+                    <TableColumn fx:id="colTotalQuantity" prefWidth="105" text="Tổng số lượng" />
+                    <TableColumn fx:id="colTotalItemCount" prefWidth="105" text="Tổng mặt hàng" />
+                    <TableColumn fx:id="colStatus" prefWidth="90" text="Trạng thái" />
+                    <TableColumn fx:id="colActions" prefWidth="170" text="Thao tác" />
+                </columns>
+                <placeholder>
+                    <Label styleClass="table-empty" text="Không có phiếu nhập" />
+                </placeholder>
+            </TableView>
+        </VBox>
+
+        <VBox minWidth="390" prefWidth="430" spacing="12" styleClass="content-panel">
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <Region styleClass="section-header-line" />
+                <Label fx:id="formTitle" styleClass="panel-title" text="Lập phiếu nhập" />
+            </HBox>
+
+            <HBox spacing="10">
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label styleClass="form-label" text="Chi nhánh" />
+                    <ComboBox fx:id="branchCombo" prefWidth="130" styleClass="form-combo" />
+                </VBox>
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label styleClass="form-label" text="Ngày nhập" />
+                    <DatePicker fx:id="receiptDatePicker" prefWidth="150" styleClass="form-combo" />
+                </VBox>
+            </HBox>
+
+            <VBox spacing="3">
+                <Label styleClass="form-label" text="Nhà cung cấp" />
+                <TextField fx:id="supplierField" promptText="Nhập nhà cung cấp..." styleClass="form-field" />
+            </VBox>
+
+            <VBox spacing="3">
+                <Label styleClass="form-label" text="Ghi chú" />
+                <TextArea fx:id="receiptNoteArea" prefRowCount="2" promptText="Ghi chú phiếu nhập..." styleClass="form-area" wrapText="true" />
+            </VBox>
+
+            <HBox spacing="8">
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label styleClass="form-label" text="Sản phẩm" />
+                    <ComboBox fx:id="productCombo" prefWidth="160" styleClass="form-combo" />
+                </VBox>
+                <VBox spacing="3">
+                    <Label styleClass="form-label" text="Số lượng" />
+                    <TextField fx:id="quantityField" prefWidth="80" promptText="0" styleClass="form-field" />
+                </VBox>
+            </HBox>
+
+            <HBox spacing="8">
+                <VBox spacing="3">
+                    <Label styleClass="form-label" text="Đơn vị" />
+                    <TextField fx:id="unitField" prefWidth="80" styleClass="form-field" />
+                </VBox>
+                <VBox spacing="3">
+                    <Label styleClass="form-label" text="Thành tiền" />
+                    <TextField fx:id="lineTotalField" prefWidth="110" promptText="Tự tính nếu rỗng" styleClass="form-field" />
+                </VBox>
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label styleClass="form-label" text="Ghi chú dòng" />
+                    <TextField fx:id="detailNoteField" promptText="Ghi chú..." styleClass="form-field" />
+                </VBox>
+            </HBox>
+
+            <HBox alignment="CENTER_RIGHT" spacing="8">
+                <Button onAction="#onAddDetailLine" styleClass="action-btn action-btn-outline" text="Thêm dòng sản phẩm" />
+                <Button onAction="#onRemoveDetailLine" styleClass="action-btn action-btn-danger" text="Xóa dòng" />
+            </HBox>
+
+            <TableView fx:id="detailTable" prefHeight="170" styleClass="data-table">
+                <columns>
+                    <TableColumn fx:id="colDetailProduct" prefWidth="150" text="Sản phẩm" />
+                    <TableColumn fx:id="colDetailQuantity" prefWidth="75" text="Số lượng" />
+                    <TableColumn fx:id="colDetailUnit" prefWidth="60" text="Đơn vị" />
+                    <TableColumn fx:id="colDetailLineTotal" prefWidth="95" text="Thành tiền" />
+                    <TableColumn fx:id="colDetailNote" prefWidth="110" text="Ghi chú" />
+                </columns>
+                <placeholder>
+                    <Label styleClass="table-empty" text="Chưa có dòng sản phẩm" />
+                </placeholder>
+            </TableView>
+
+            <Region VBox.vgrow="ALWAYS" />
+            <HBox alignment="CENTER_RIGHT" spacing="8">
+                <Button onAction="#onSaveDraft" styleClass="action-btn action-btn-outline" text="Lưu nháp" />
+                <Button onAction="#onSaveAndApprove" styleClass="action-btn action-btn-primary" text="Duyệt phiếu" />
+            </HBox>
+        </VBox>
+    </HBox>
+
+    <stylesheets>
+        <URL value="@../css/style.css" />
+    </stylesheets>
+</VBox>

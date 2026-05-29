@@ -159,4 +159,3 @@ INSERT INTO room (room_id, branch_id, type_room_id, room_number, status)
 VALUES ('R005', 'BR001', 'TYPE03', '301', 'AVAILABLE');
 
 COMMIT;
-
