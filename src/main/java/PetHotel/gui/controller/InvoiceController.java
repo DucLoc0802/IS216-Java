@@ -986,6 +986,242 @@ public class InvoiceController {
         methodBox.setPrefWidth(260);
 
         TextField amountField = new TextField();
+        amountField.setPromptText("Nhập tiền khách đưa");
+        amountField.setPrefHeight(38);
+        amountField.setPrefWidth(260);
+
+        Button exactAmountButton = new Button("Đủ tiền");
+        exactAmountButton.setStyle(
+            "-fx-background-color: #F4E8DC;" +
+            "-fx-text-fill: #6B3A1E;" +
+            "-fx-font-weight: bold;" +
+            "-fx-background-radius: 8;" +
+            "-fx-padding: 8 12;"
+        );
+
+        Label title = new Label("Thanh toán hóa đơn");
+        title.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2B2118;");
+
+        Label subtitle = new Label("Nhập số tiền khách đưa. Hệ thống tự tính tiền thối và chỉ ghi nhận đúng số tiền còn phải thu.");
+        subtitle.setWrapText(true);
+        subtitle.setStyle("-fx-font-size: 12px; -fx-text-fill: #6B5B4D;");
+
+        Label remainingCaption = new Label("Cần thu");
+        remainingCaption.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #6B5B4D;");
+
+        Label remainingValue = new Label(moneyFormat.format(remainingAmount) + " VNĐ");
+        remainingValue.setStyle("-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #A64B2A;");
+
+        VBox amountCard = new VBox(6, remainingCaption, remainingValue);
+        amountCard.setStyle(
+            "-fx-background-color: #FFF7F0;" +
+            "-fx-background-radius: 12;" +
+            "-fx-border-color: #E5D3C3;" +
+            "-fx-border-radius: 12;" +
+            "-fx-padding: 16 18;"
+        );
+
+        Label methodLabel = new Label("Phương thức");
+        methodLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2B2118;");
+
+        Label amountLabel = new Label("Khách đưa");
+        amountLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2B2118;");
+
+        Label receivedCaption = new Label("Đã nhập");
+        receivedCaption.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6B5B4D;");
+        Label receivedValue = new Label(formatMoneyVnd(0));
+        receivedValue.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2B2118;");
+
+        Label balanceCaption = new Label("Còn thiếu");
+        balanceCaption.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6B5B4D;");
+        Label balanceValue = new Label(formatMoneyVnd(remainingAmount));
+        balanceValue.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #B91C1C;");
+
+        GridPane previewGrid = new GridPane();
+        previewGrid.setHgap(14);
+        previewGrid.setVgap(4);
+        previewGrid.setStyle(
+            "-fx-background-color: #FAF7F3;" +
+            "-fx-background-radius: 10;" +
+            "-fx-padding: 10 12;"
+        );
+        previewGrid.add(receivedCaption, 0, 0);
+        previewGrid.add(balanceCaption, 1, 0);
+        previewGrid.add(receivedValue, 0, 1);
+        previewGrid.add(balanceValue, 1, 1);
+
+        Label errorLabel = new Label("");
+        errorLabel.setWrapText(true);
+        errorLabel.setMinHeight(18);
+        errorLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #B91C1C;");
+
+        HBox amountInputBox = new HBox(8, amountField, exactAmountButton);
+        amountInputBox.setAlignment(Pos.CENTER_LEFT);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(14);
+        grid.setVgap(10);
+        grid.add(methodLabel, 0, 0);
+        grid.add(methodBox, 1, 0);
+        grid.add(amountLabel, 0, 1);
+        grid.add(amountInputBox, 1, 1);
+        grid.add(previewGrid, 1, 2);
+        grid.add(errorLabel, 1, 3);
+
+        VBox content = new VBox(16, new VBox(4, title, subtitle), amountCard, grid);
+        content.setPrefWidth(500);
+        content.setStyle("-fx-background-color: #FFFFFF; -fx-padding: 22;");
+
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().setPrefWidth(550);
+        dialog.getDialogPane().setStyle("-fx-background-color: #FFFFFF;");
+
+        Button payButton = (Button) dialog.getDialogPane().lookupButton(payButtonType);
+        Button cancelButton = (Button) dialog.getDialogPane().lookupButton(cancelButtonType);
+        payButton.setDisable(true);
+        payButton.setStyle(
+            "-fx-background-color: #A64B2A;" +
+            "-fx-text-fill: white;" +
+            "-fx-font-weight: bold;" +
+            "-fx-background-radius: 8;" +
+            "-fx-padding: 8 18;" +
+            "-fx-min-width: 112;"
+        );
+        cancelButton.setStyle(
+            "-fx-background-color: white;" +
+            "-fx-text-fill: #6B5B4D;" +
+            "-fx-font-weight: bold;" +
+            "-fx-border-color: #E5D3C3;" +
+            "-fx-border-radius: 8;" +
+            "-fx-background-radius: 8;" +
+            "-fx-padding: 8 18;" +
+            "-fx-min-width: 112;"
+        );
+
+        Runnable refreshPreview = () -> updatePaymentPreview(
+            amountField.getText(),
+            remainingAmount,
+            receivedValue,
+            balanceCaption,
+            balanceValue,
+            errorLabel,
+            payButton
+        );
+
+        amountField.textProperty().addListener((obs, oldValue, newValue) -> refreshPreview.run());
+        amountField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
+            if (!isFocused) {
+                formatPaymentAmountField(amountField);
+            }
+        });
+
+        exactAmountButton.setOnAction(event -> {
+            amountField.setText(moneyFormat.format(remainingAmount));
+            amountField.requestFocus();
+            amountField.positionCaret(amountField.getText().length());
+        });
+
+        methodBox.valueProperty().addListener((obs, oldValue, newValue) -> {
+            boolean cashPayment = "CASH".equals(toDatabasePaymentMethod(newValue));
+            amountField.setEditable(cashPayment);
+            amountField.setDisable(!cashPayment);
+            exactAmountButton.setDisable(!cashPayment);
+            amountLabel.setText(cashPayment ? "Khách đưa" : "Số tiền");
+            if (!cashPayment) {
+                amountField.setText(moneyFormat.format(remainingAmount));
+            }
+            refreshPreview.run();
+        });
+
+        payButton.addEventFilter(ActionEvent.ACTION, event -> {
+            String error = validatePaymentAmount(amountField.getText(), remainingAmount);
+            if (error != null) {
+                errorLabel.setText(error);
+                event.consume();
+            }
+        });
+
+        dialog.setResultConverter(button -> {
+            if (button == payButtonType) {
+                double amount = parsePaymentAmount(amountField.getText());
+                return new PaymentInput(toDatabasePaymentMethod(methodBox.getValue()), amount);
+            }
+            return null;
+        });
+
+        refreshPreview.run();
+        Platform.runLater(amountField::requestFocus);
+        return dialog.showAndWait();
+    }
+
+    private void updatePaymentPreview(String rawValue,
+                                      double remainingAmount,
+                                      Label receivedValue,
+                                      Label balanceCaption,
+                                      Label balanceValue,
+                                      Label errorLabel,
+                                      Button payButton) {
+        try {
+            double tenderedAmount = parsePaymentAmount(rawValue);
+            double shortage = Math.max(remainingAmount - tenderedAmount, 0);
+            double change = Math.max(tenderedAmount - remainingAmount, 0);
+            receivedValue.setText(formatMoneyVnd(tenderedAmount));
+            if (change > 0) {
+                balanceCaption.setText("Tiền thối");
+                balanceValue.setText(formatMoneyVnd(change));
+                balanceValue.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #15803D;");
+            } else {
+                balanceCaption.setText("Còn thiếu");
+                balanceValue.setText(formatMoneyVnd(shortage));
+                balanceValue.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #B91C1C;");
+            }
+
+            String error = validatePaymentAmount(rawValue, remainingAmount);
+            errorLabel.setText(error == null ? "" : error);
+            payButton.setDisable(error != null);
+        } catch (NumberFormatException ex) {
+            receivedValue.setText(formatMoneyVnd(0));
+            balanceCaption.setText("Còn thiếu");
+            balanceValue.setText(formatMoneyVnd(remainingAmount));
+            balanceValue.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #B91C1C;");
+            String error = validatePaymentAmount(rawValue, remainingAmount);
+            errorLabel.setText(error == null ? "" : error);
+            payButton.setDisable(true);
+        }
+    }
+
+    private void formatPaymentAmountField(TextField amountField) {
+        try {
+            double amount = parsePaymentAmount(amountField.getText());
+            amountField.setText(new DecimalFormat("#,###").format(amount));
+        } catch (NumberFormatException ignored) {
+            // Keep the user's invalid input visible so the validation message remains clear.
+        }
+    }
+
+    private Optional<PaymentInput> showLegacyPaymentDialog(double remaining) {
+        DecimalFormat moneyFormat = new DecimalFormat("#,###");
+        double remainingAmount = Math.max(remaining, 0);
+        Dialog<PaymentInput> dialog = new Dialog<>();
+        dialog.setTitle("Thanh toán hóa đơn");
+        dialog.setHeaderText(null);
+
+        ButtonType payButtonType = new ButtonType("Thanh toán", ButtonType.OK.getButtonData());
+        ButtonType cancelButtonType = new ButtonType("Hủy", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getDialogPane().getButtonTypes().addAll(payButtonType, cancelButtonType);
+
+        ComboBox<String> methodBox = new ComboBox<>(FXCollections.observableArrayList(
+            "Tiền mặt",
+            "Chuyển khoản",
+            "Thẻ",
+            "Ví điện tử"
+        ));
+        methodBox.setValue("Tiền mặt");
+        methodBox.setMaxWidth(Double.MAX_VALUE);
+        methodBox.setPrefHeight(38);
+        methodBox.setPrefWidth(260);
+
+        TextField amountField = new TextField();
         amountField.setPromptText("Nhập số tiền thanh toán");
         amountField.setPrefHeight(38);
         amountField.setPrefWidth(260);
@@ -1107,7 +1343,14 @@ public class InvoiceController {
     }
 
     private double parsePaymentAmount(String rawValue) {
-        return Double.parseDouble(rawValue.trim().replace(",", ""));
+        if (rawValue == null) {
+            throw new NumberFormatException("empty amount");
+        }
+        String normalized = rawValue.replaceAll("[^0-9]", "");
+        if (normalized.isEmpty()) {
+            throw new NumberFormatException("empty amount");
+        }
+        return Double.parseDouble(normalized);
     }
 
     private Optional<String> showCancelInvoiceDialog(String orderId) {

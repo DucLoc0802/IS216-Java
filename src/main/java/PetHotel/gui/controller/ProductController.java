@@ -78,6 +78,12 @@ public class ProductController {
     }
 
     private void setupRoleUi() {
+        boolean canViewImportPrice = currentUser != null
+            && currentUser.getRole() != Role.RECEPTIONIST
+            && currentUser.getRole() != Role.PET_CARE_STAFF;
+        colImportPrice.setVisible(canViewImportPrice);
+        colImportPrice.setManaged(canViewImportPrice);
+
         showManaged(btnAddProduct, canManage);
         showManaged(btnAddCategory, canManage);
         btnEdit.setDisable(true);

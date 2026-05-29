@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import PetHotel.bus.GroomingBUS;
+import PetHotel.dao.BookingServiceDAO;
 import PetHotel.dao.ServiceProductStandardDAO;
 import PetHotel.exception.ValidationException;
 import PetHotel.model.AppUser;
@@ -54,6 +55,7 @@ public class CompleteServiceMaterialController {
     private Runnable onSuccess;
 
     private final GroomingBUS groomingBUS = new GroomingBUS();
+    private final BookingServiceDAO bookingServiceDAO = new BookingServiceDAO();
     private final ServiceProductStandardDAO spsDAO = new ServiceProductStandardDAO();
 
     /**
@@ -100,7 +102,7 @@ public class CompleteServiceMaterialController {
      * Khởi tạo dữ liệu cho dialog.
      */
     private void initData(BookingService bs, AppUser user, Runnable callback) {
-        this.bookingService = bs;
+        this.bookingService = resolveCompletionContext(bs);
         this.currentUser = user;
         this.onSuccess = callback;
 
@@ -125,7 +127,22 @@ public class CompleteServiceMaterialController {
             lblWeight.setText("—");
         }
 
+        lblWeight.setText(formatWeight(bookingService.getPetWeightKg()));
         lblEmployee.setText(valueOrDash(bookingService.getEmployeeId()));
+    }
+
+    private BookingService resolveCompletionContext(BookingService bs) {
+        if (bs == null || bs.getBookingServiceId() == null) {
+            return bs;
+        }
+
+        try {
+            BookingService fullContext = bookingServiceDAO.findCompletionContext(bs.getBookingServiceId());
+            return fullContext != null ? fullContext : bs;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return bs;
+        }
     }
 
     /**
@@ -174,8 +191,6 @@ public class CompleteServiceMaterialController {
 
         // Cột số lượng thực tế - cho phép chỉnh sửa
         colActualAmount.setCellFactory(col -> new TableCell<MaterialUsageConfirmRow, String>() {
-            private javafx.scene.control.TextField textField;
-
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
@@ -185,23 +200,24 @@ public class CompleteServiceMaterialController {
                 }
 
                 MaterialUsageConfirmRow row = getTableView().getItems().get(getIndex());
-                if (textField == null) {
-                    textField = new javafx.scene.control.TextField();
-                    textField.setPrefWidth(100);
-                    textField.setStyle("-fx-font-size: 11px;");
-                    textField.textProperty().addListener((obs, oldVal, newVal) -> {
-                        try {
-                            if (newVal != null && !newVal.isEmpty()) {
-                                row.setActualAmount(new java.math.BigDecimal(newVal));
-                            }
-                        } catch (NumberFormatException e) {
-                            // Ignore invalid input
-                        }
-                    });
-                }
-
+                javafx.scene.control.TextField textField = new javafx.scene.control.TextField();
+                textField.setPrefWidth(100);
+                textField.setStyle("-fx-font-size: 11px;");
                 java.math.BigDecimal amount = row.getActualAmount();
                 textField.setText(amount != null ? amount.toPlainString() : "0");
+                textField.textProperty().addListener((obs, oldVal, newVal) -> {
+                    try {
+                        if (newVal != null && !newVal.trim().isEmpty()) {
+                            java.math.BigDecimal parsed = new java.math.BigDecimal(newVal.trim());
+                            if (parsed.compareTo(java.math.BigDecimal.ZERO) >= 0) {
+                                row.setActualAmount(parsed);
+                                textField.setStyle("-fx-font-size: 11px;");
+                            }
+                        }
+                    } catch (NumberFormatException e) {
+                        textField.setStyle("-fx-font-size: 11px; -fx-border-color: #dc2626;");
+                    }
+                });
                 setGraphic(textField);
             }
         });
@@ -299,6 +315,18 @@ public class CompleteServiceMaterialController {
     }
 
     // ── Helper Methods ──────────────────────────────────────────
+
+    private String formatWeight(Double weightKg) {
+        if (weightKg == null || weightKg <= 0) {
+            return valueOrDash(null);
+        }
+
+        if (Math.rint(weightKg) == weightKg) {
+            return String.format("%.0f kg", weightKg);
+        }
+
+        return String.format("%.2f kg", weightKg);
+    }
 
     private String valueOrDash(Object value) {
         return value == null ? "—" : value.toString();

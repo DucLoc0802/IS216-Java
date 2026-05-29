@@ -17,6 +17,8 @@ public class Invoice {
     private double prepaidAmount;
     private double paidAmount;
     private double remainingAmount;
+    private double customerTenderedAmount;
+    private double changeAmount;
     private String status;          // PENDING, PAID, PARTIAL...
 
     public Invoice() {
@@ -171,6 +173,22 @@ public class Invoice {
 
     public void setRemainingAmount(double remainingAmount) {
         this.remainingAmount = remainingAmount;
+    }
+
+    public double getCustomerTenderedAmount() {
+        return customerTenderedAmount;
+    }
+
+    public void setCustomerTenderedAmount(double customerTenderedAmount) {
+        this.customerTenderedAmount = customerTenderedAmount;
+    }
+
+    public double getChangeAmount() {
+        return changeAmount;
+    }
+
+    public void setChangeAmount(double changeAmount) {
+        this.changeAmount = changeAmount;
     }
 
     public String getStatus() {

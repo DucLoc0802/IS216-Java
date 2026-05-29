@@ -583,8 +583,8 @@ public void completeGroomingServiceWithMaterials(
     }
 
     // Tham chiếu branch_id từ booking
-    String branchId = null;
-    if (bs instanceof PetHotel.model.BookingService) {
+    String branchId = bs.getBranchId();
+    if ((branchId == null || branchId.trim().isEmpty()) && bs instanceof PetHotel.model.BookingService) {
         // Sử dụng reflection hoặc getter để lấy branchId
         // Vì BookingService có thể không có field branchId trực tiếp
         // ta cần lấy từ booking
@@ -595,11 +595,13 @@ public void completeGroomingServiceWithMaterials(
         }
     }
 
-    if (branchId == null) {
+    if (branchId == null || branchId.trim().isEmpty()) {
         throw new ValidationException("Không xác định được chi nhánh");
     }
 
     // Kiểm tra tồn kho và trừ kho trong transaction
+    branchId = branchId.trim();
+
     java.sql.Connection conn = null;
     try {
         conn = PetHotel.util.DBConnection.getConnection();
@@ -611,8 +613,9 @@ public void completeGroomingServiceWithMaterials(
         java.util.List<String> missingProducts = new java.util.ArrayList<>();
         if (materialRows != null) {
             for (PetHotel.model.MaterialUsageConfirmRow row : materialRows) {
-                java.math.BigDecimal actualAmount = row.getActualAmount();
-                if (actualAmount != null && actualAmount.compareTo(java.math.BigDecimal.ZERO) > 0) {
+                validateMaterialRow(row);
+                java.math.BigDecimal actualAmount = toInventoryQuantity(row);
+                if (actualAmount.compareTo(java.math.BigDecimal.ZERO) > 0) {
                     java.math.BigDecimal currentQty = invDAO.getQuantity(branchId, row.getProductId(), conn);
                     if (currentQty.compareTo(actualAmount) < 0) {
                         missingProducts.add(row.getProductName() + " (tồn: " + currentQty + ", cần: " + actualAmount + ")");
@@ -628,8 +631,8 @@ public void completeGroomingServiceWithMaterials(
         // Trừ kho
         if (materialRows != null) {
             for (PetHotel.model.MaterialUsageConfirmRow row : materialRows) {
-                java.math.BigDecimal actualAmount = row.getActualAmount();
-                if (actualAmount != null && actualAmount.compareTo(java.math.BigDecimal.ZERO) > 0) {
+                java.math.BigDecimal actualAmount = toInventoryQuantity(row);
+                if (actualAmount.compareTo(java.math.BigDecimal.ZERO) > 0) {
                     int updated = invDAO.subtractInventory(branchId, row.getProductId(), actualAmount, conn);
                     if (updated == 0) {
                         throw new SQLException("Không thể trừ tồn sản phẩm: " + row.getProductName());
@@ -666,6 +669,76 @@ public void completeGroomingServiceWithMaterials(
 /**
  * Xây dựng nội dung ghi chú vật tư sử dụng.
  */
+private void validateMaterialRow(PetHotel.model.MaterialUsageConfirmRow row)
+        throws ValidationException {
+    if (row == null) {
+        throw new ValidationException("Du lieu vat tu khong hop le.");
+    }
+
+    if (row.getProductId() == null || row.getProductId().trim().isEmpty()) {
+        throw new ValidationException("Vat tu chua co ma san pham.");
+    }
+
+    java.math.BigDecimal actualAmount = row.getActualAmount();
+    if (actualAmount == null) {
+        row.setActualAmount(java.math.BigDecimal.ZERO);
+        return;
+    }
+
+    if (actualAmount.compareTo(java.math.BigDecimal.ZERO) < 0) {
+        throw new ValidationException("So luong vat tu khong duoc nho hon 0.");
+    }
+}
+
+private java.math.BigDecimal toInventoryQuantity(PetHotel.model.MaterialUsageConfirmRow row) {
+    java.math.BigDecimal amount = row.getActualAmount();
+    if (amount == null) {
+        return java.math.BigDecimal.ZERO;
+    }
+
+    String fromUnit = normalizeUnit(row.getStandardUnit());
+    String toUnit = normalizeUnit(row.getProductUnit());
+    if (toUnit == null) {
+        toUnit = baseUnit(fromUnit);
+    }
+
+    if (fromUnit == null || fromUnit.equals(toUnit)) {
+        return amount;
+    }
+
+    if ("KG".equals(fromUnit) && "G".equals(toUnit)) {
+        return amount.multiply(java.math.BigDecimal.valueOf(1000));
+    }
+    if ("G".equals(fromUnit) && "KG".equals(toUnit)) {
+        return amount.divide(java.math.BigDecimal.valueOf(1000));
+    }
+    if ("L".equals(fromUnit) && "ML".equals(toUnit)) {
+        return amount.multiply(java.math.BigDecimal.valueOf(1000));
+    }
+    if ("ML".equals(fromUnit) && "L".equals(toUnit)) {
+        return amount.divide(java.math.BigDecimal.valueOf(1000));
+    }
+
+    return amount;
+}
+
+private String normalizeUnit(String unit) {
+    if (unit == null || unit.trim().isEmpty()) {
+        return null;
+    }
+    return unit.trim().toUpperCase(java.util.Locale.ROOT);
+}
+
+private String baseUnit(String unit) {
+    if ("KG".equals(unit)) {
+        return "G";
+    }
+    if ("L".equals(unit)) {
+        return "ML";
+    }
+    return unit;
+}
+
 private String buildMaterialNote(
         BookingService bs,
         java.util.List<PetHotel.model.MaterialUsageConfirmRow> materialRows,

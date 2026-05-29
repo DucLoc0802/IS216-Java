@@ -39,6 +39,7 @@ public class BookingService {
     private String serviceName;
     private String petName;
     private String petSpecies;
+    private Double petWeightKg;
     private String customerName;
     private String customerPhone;
     private String customerAddress;
@@ -117,6 +118,14 @@ public class BookingService {
 
     public void setPetSpecies(String petSpecies) {
         this.petSpecies = petSpecies;
+    }
+
+    public Double getPetWeightKg() {
+        return petWeightKg;
+    }
+
+    public void setPetWeightKg(Double petWeightKg) {
+        this.petWeightKg = petWeightKg;
     }
 
     public String getCustomerName() {

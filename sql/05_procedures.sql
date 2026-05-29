@@ -787,7 +787,7 @@ BEGIN
         updated_at = SYSTIMESTAMP
     WHERE booking_service_id = p_booking_service_id;
 
-    -- Trigger trg_bks_inventory_sync sẽ xử lý trừ/hoàn kho nếu cần
+    -- Ton kho duoc xu ly trong luong xac nhan hoan thanh cua ung dung.
 
 EXCEPTION
     WHEN NO_DATA_FOUND THEN

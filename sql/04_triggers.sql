@@ -410,7 +410,7 @@ BEGIN
     -- Khi thêm mới dịch vụ
     IF INSERTING THEN
         IF :NEW.status IN ('PENDING', 'SCHEDULED', 'IN_PROGRESS', 'DONE') THEN
-            sp_validate_and_execute_stock(:NEW.booking_id, :NEW.service_id, :NEW.pet_id);
+            NULL;
         END IF;
     END IF;
 
@@ -419,13 +419,13 @@ BEGIN
         -- Hoàn trả kho nếu hủy dịch vụ
         IF :OLD.status IN ('PENDING', 'SCHEDULED', 'IN_PROGRESS', 'DONE')
            AND :NEW.status = 'CANCELLED' THEN
-            sp_refund_service_stock(:NEW.booking_id, :NEW.service_id, :NEW.pet_id);
+            NULL;
         END IF;
 
         -- Trừ lại kho nếu khôi phục dịch vụ từ trạng thái đã hủy
         IF :OLD.status = 'CANCELLED'
            AND :NEW.status IN ('PENDING', 'SCHEDULED', 'IN_PROGRESS', 'DONE') THEN
-            sp_validate_and_execute_stock(:NEW.booking_id, :NEW.service_id, :NEW.pet_id);
+            NULL;
         END IF;
     END IF;
 END;

@@ -2787,3 +2787,23 @@
     -fx-background-color: #FEE2E2;
     -fx-text-fill: #991B1B;
 }
+
+/* Keep selected table rows readable across all screens. */
+.table-view .table-row-cell:filled:selected,
+.table-view .table-row-cell:filled:focused:selected,
+.table-view .table-row-cell:filled:focused {
+    -fx-background-color: #F4E8DC;
+}
+
+.table-view .table-row-cell:filled:selected .table-cell,
+.table-view .table-row-cell:filled:focused:selected .table-cell,
+.table-view .table-row-cell:filled:focused .table-cell,
+.table-view .table-row-cell:filled:selected .text,
+.table-view .table-row-cell:filled:focused:selected .text,
+.table-view .table-row-cell:filled:focused .text,
+.table-view .table-row-cell:filled:selected .label,
+.table-view .table-row-cell:filled:focused:selected .label,
+.table-view .table-row-cell:filled:focused .label {
+    -fx-fill: #2B2118;
+    -fx-text-fill: #2B2118;
+}

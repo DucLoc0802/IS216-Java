@@ -21,7 +21,7 @@ public class ServiceProductStandardDAO {
         String sql =
             "SELECT sps.service_product_standard_id, sps.service_id, sps.product_id, " +
             "       p.product_name, sps.species, sps.min_weight_kg, sps.max_weight_kg, " +
-            "       sps.usage_amount, sps.usage_unit, sps.note, sps.created_at, sps.updated_at " +
+            "       sps.usage_amount, sps.usage_unit, DBMS_LOB.SUBSTR(sps.note, 4000, 1) AS note, sps.created_at, sps.updated_at " +
             "FROM service_product_standard sps " +
             "JOIN product p ON sps.product_id = p.product_id " +
             "WHERE sps.service_id = ? " +
@@ -112,8 +112,10 @@ public class ServiceProductStandardDAO {
         List<MaterialUsageConfirmRow> list = new ArrayList<>();
 
         String sql =
-            "SELECT sps.product_id, " +
+            "SELECT sps.service_product_standard_id, " +
+            "       sps.product_id, " +
             "       p.product_name, " +
+            "       p.unit AS product_unit, " +
             "       sps.usage_amount, " +
             "       sps.usage_unit, " +
             "       sps.note, " +
@@ -136,6 +138,39 @@ public class ServiceProductStandardDAO {
             "WHERE bs.booking_service_id = ? " +
             "ORDER BY p.product_name";
 
+        sql =
+            "SELECT sps.service_product_standard_id, " +
+            "       sps.product_id, " +
+            "       p.product_name, " +
+            "       p.unit AS product_unit, " +
+            "       sps.usage_amount, " +
+            "       sps.usage_unit, " +
+            "       sps.note, " +
+            "       NVL(bi.quantity_in_stock, 0) AS inventory_quantity " +
+            "FROM booking_services bs " +
+            "JOIN ( " +
+            "    SELECT pet_id, weight_kg, " +
+            "           CASE " +
+            "             WHEN UPPER(CAST(species AS VARCHAR2(30))) IN ('DOG', 'CHO') THEN 'DOG' " +
+            "             WHEN UPPER(CAST(species AS VARCHAR2(30))) IN ('CAT', 'MEO') THEN 'CAT' " +
+            "             ELSE UPPER(CAST(species AS VARCHAR2(30))) " +
+            "           END AS normalized_species " +
+            "    FROM pet " +
+            ") pet ON bs.pet_id = pet.pet_id " +
+            "JOIN service_product_standard sps " +
+            "  ON sps.service_id = bs.service_id " +
+            " AND sps.species = pet.normalized_species " +
+            " AND pet.weight_kg >= sps.min_weight_kg " +
+            " AND pet.weight_kg <= sps.max_weight_kg " +
+            "JOIN product p ON sps.product_id = p.product_id " +
+            "LEFT JOIN branch_inventory bi " +
+            "  ON bi.product_id = sps.product_id " +
+            " AND bi.branch_id = ? " +
+            "WHERE bs.booking_service_id = ? " +
+            "ORDER BY p.product_name";
+
+        sql = buildStandardsForBookingServiceSql();
+
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -146,8 +181,10 @@ public class ServiceProductStandardDAO {
                 while (rs.next()) {
                     MaterialUsageConfirmRow row = new MaterialUsageConfirmRow();
 
+                    row.setServiceProductStandardId(rs.getString("service_product_standard_id"));
                     row.setProductId(rs.getString("product_id"));
                     row.setProductName(rs.getString("product_name"));
+                    row.setProductUnit(rs.getString("product_unit"));
 
                     BigDecimal standardAmount = rs.getBigDecimal("usage_amount");
                     row.setStandardAmount(standardAmount);
@@ -182,6 +219,50 @@ public class ServiceProductStandardDAO {
         }
 
         return "SPS001";
+    }
+
+    private String buildStandardsForBookingServiceSql() {
+        return
+            "WITH params AS ( " +
+            "  SELECT CAST(? AS VARCHAR2(10)) AS branch_id, CAST(? AS VARCHAR2(10)) AS booking_service_id FROM dual " +
+            "), context AS ( " +
+            "  SELECT bs.service_id, pet.weight_kg, " +
+            "         CASE " +
+            "           WHEN UPPER(CAST(pet.species AS VARCHAR2(30))) IN ('DOG', 'CHO') THEN 'DOG' " +
+            "           WHEN UPPER(CAST(pet.species AS VARCHAR2(30))) IN ('CAT', 'MEO') THEN 'CAT' " +
+            "           ELSE UPPER(CAST(pet.species AS VARCHAR2(30))) " +
+            "         END AS normalized_species " +
+            "  FROM booking_services bs " +
+            "  JOIN params prm ON prm.booking_service_id = bs.booking_service_id " +
+            "  JOIN pet pet ON bs.pet_id = pet.pet_id " +
+            "), ranked_standard AS ( " +
+            "  SELECT sps.service_product_standard_id, sps.product_id, sps.usage_amount, sps.usage_unit, " +
+            "         DBMS_LOB.SUBSTR(sps.note, 4000, 1) AS note, " +
+            "         CASE WHEN ctx.weight_kg >= sps.min_weight_kg AND ctx.weight_kg <= sps.max_weight_kg THEN 0 ELSE 1 END AS match_rank, " +
+            "         ROW_NUMBER() OVER ( " +
+            "           PARTITION BY sps.product_id " +
+            "           ORDER BY " +
+            "             CASE WHEN ctx.weight_kg >= sps.min_weight_kg AND ctx.weight_kg <= sps.max_weight_kg THEN 0 ELSE 1 END, " +
+            "             CASE " +
+            "               WHEN ctx.weight_kg < sps.min_weight_kg THEN sps.min_weight_kg - ctx.weight_kg " +
+            "               WHEN ctx.weight_kg > sps.max_weight_kg THEN ctx.weight_kg - sps.max_weight_kg " +
+            "               ELSE 0 " +
+            "             END, " +
+            "             sps.min_weight_kg DESC " +
+            "         ) AS rn " +
+            "  FROM context ctx " +
+            "  JOIN service_product_standard sps " +
+            "    ON sps.service_id = ctx.service_id " +
+            "   AND sps.species = ctx.normalized_species " +
+            ") " +
+            "SELECT rs.service_product_standard_id, rs.product_id, p.product_name, p.unit AS product_unit, " +
+            "       rs.usage_amount, rs.usage_unit, rs.note, NVL(bi.quantity_in_stock, 0) AS inventory_quantity " +
+            "FROM ranked_standard rs " +
+            "JOIN product p ON p.product_id = rs.product_id " +
+            "CROSS JOIN params prm " +
+            "LEFT JOIN branch_inventory bi ON bi.product_id = rs.product_id AND bi.branch_id = prm.branch_id " +
+            "WHERE rs.rn = 1 " +
+            "ORDER BY rs.match_rank, p.product_name";
     }
 
     private ServiceProductStandard mapRow(ResultSet rs) throws SQLException {
