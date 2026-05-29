@@ -237,4 +237,12 @@ public class InvoiceBUS {
     private boolean isCancelable(String status) {
         return isPayable(status);
     }
+
+    public List<Invoice> getBranchInvoices(String branchId) {
+        try {
+            return invoiceDAO.getBranchInvoices(branchId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi database khi lấy danh sách hóa đơn chi nhánh.", e);
+        }
+    }
 }

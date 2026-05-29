@@ -82,8 +82,6 @@ private void applyRolePermissions(Role role) {
     switch (role) {
         case RECEPTIONIST:
             // 1. NHÂN VIÊN LỄ TÂN
-            // Ẩn Dashboard
-            hideMenu(menuDashboard); 
             
             // Ẩn các menu liên quan đến nghiệp vụ không liên quan
             hideMenu(menuAssignedTasks);
@@ -104,7 +102,6 @@ private void applyRolePermissions(Role role) {
             showMenu(menuGrooming);
             // 2. NHÂN VIÊN CHĂM SÓC
             // Chỉ tương tác với Thú cưng và Grooming (cập nhật trạng thái, sức khoẻ)
-            hideMenu(menuDashboard);
             hideMenu(menuCustomer);
             hideMenu(menuBooking);
             hideMenu(menuService);
@@ -135,7 +132,6 @@ private void applyRolePermissions(Role role) {
         case ADMIN:
             // 4. ADMIN (Quản trị viên hệ thống)
             // Chỉ quản lý cấu hình hệ thống: Tài khoản, Phân quyền, Danh mục Phòng. Không vận hành hàng ngày.
-            hideMenu(menuDashboard);
             hideMenu(menuCustomer);
             hideMenu(menuPet);
             hideMenu(menuBooking);
@@ -180,7 +176,6 @@ private void applyRolePermissions(Role role) {
 
         default:
             // Nếu không xác định được role, ẩn tất cả, chỉ để lại menu trống (người dùng chỉ có thể Đăng xuất)
-            hideMenu(menuDashboard);
             hideMenu(menuCustomer);
             hideMenu(menuPet);
             hideMenu(menuBooking);
@@ -257,10 +252,8 @@ private void applyRolePermissions(Role role) {
             if (mainController != null && menuType != null) {
                 switch (menuType) {
                     case "dashboard":
-                        if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER) {
-                            mainController.loadView("DashboardHome.fxml");
-                            mainController.getTopbarController().setTitle("Dashboard", "Trang chủ");
-                        }
+                        mainController.loadView("DashboardHome.fxml");
+                        mainController.getTopbarController().setTitle("Tổng Quan Hôm Nay", "Trang chủ");
                         break;
                     case "customer":
                         mainController.loadView("CustomerManagement.fxml");
@@ -307,8 +300,8 @@ private void applyRolePermissions(Role role) {
                         mainController.loadView("InvoiceManagement.fxml");
                         mainController.getTopbarController().setTitle("Hóa Đơn", "Quản lý hóa đơn");
                         break;
-                    case "account":
-                        if (currentRole == Role.ADMIN) {
+                     case "account":
+                        if (currentRole == Role.ADMIN || currentRole == Role.CEO) {
                             mainController.loadView("AccountManagement.fxml");
                             mainController.getTopbarController().setTitle("Tài Khoản", "Quản lý tài khoản");
                         }
@@ -320,7 +313,7 @@ private void applyRolePermissions(Role role) {
                         }
                         break;
                     case "report":
-                        if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER) {
+                        if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER || currentRole == Role.CEO) {
                             mainController.loadView("ReportManagement.fxml");
                             mainController.getTopbarController().setTitle("Báo Cáo", "Thống kê & báo cáo");
                         }
@@ -339,7 +332,7 @@ private void applyRolePermissions(Role role) {
                         mainController.getTopbarController().setTitle("Thú Cưng", "Quản lý hồ sơ thú cưng");
                         break;
                     case "inventory":
-                        if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER) {
+                        if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER || currentRole == Role.CEO) {
                             mainController.loadView("InventoryManagement.fxml");
                             mainController.getTopbarController().setTitle("Kho Hàng", "Quản lý nhập xuất tồn kho");
                         }

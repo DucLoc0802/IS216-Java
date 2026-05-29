@@ -95,6 +95,11 @@ public class AccountBUS {
 
         try {
             appUserDAO.insert(newUser);
+
+            // Ghi audit log
+            String actorFullName = (actor.getEmployee() != null) ? actor.getEmployee().getFullName() : actor.getUserName();
+            AuditLogLocalService.log(actor.getEmployeeId(), actorFullName, "Tạo tài khoản", "Đã tạo tài khoản mới '" + username + "' cho nhân viên " + employeeId + " với vai trò " + role.getDisplayName());
+
         } catch (SQLException e) {
             String msg = e.getMessage();
             if (msg != null && msg.toUpperCase().contains("UQ_APP_USER_USERNAME")) {
@@ -123,6 +128,11 @@ public class AccountBUS {
                 throw new AuthorizationException("Chi CEO moi co the khoa tai khoan Admin.");
             }
             appUserDAO.setActive(targetEmployeeId, false);
+
+            // Ghi audit log
+            String actorFullName = (actor.getEmployee() != null) ? actor.getEmployee().getFullName() : actor.getUserName();
+            AuditLogLocalService.log(actor.getEmployeeId(), actorFullName, "Khóa tài khoản", "Đã khóa tài khoản của nhân viên: " + targetEmployeeId);
+
         } catch (SQLException e) {
             throw new RuntimeException("Loi database khi khoa tai khoan.", e);
         }
@@ -137,6 +147,11 @@ public class AccountBUS {
                 throw new NotFoundException("Khong tim thay tai khoan: " + targetEmployeeId);
             }
             appUserDAO.setActive(targetEmployeeId, true);
+
+            // Ghi audit log
+            String actorFullName = (actor.getEmployee() != null) ? actor.getEmployee().getFullName() : actor.getUserName();
+            AuditLogLocalService.log(actor.getEmployeeId(), actorFullName, "Mở khóa tài khoản", "Đã mở khóa tài khoản của nhân viên: " + targetEmployeeId);
+
         } catch (SQLException e) {
             throw new RuntimeException("Loi database khi mo khoa tai khoan.", e);
         }
@@ -153,6 +168,11 @@ public class AccountBUS {
             }
             String newHash = PasswordUtil.hashPassword(newPassword);
             appUserDAO.changePassword(targetEmployeeId, newHash, null);
+
+            // Ghi audit log
+            String actorFullName = (actor.getEmployee() != null) ? actor.getEmployee().getFullName() : actor.getUserName();
+            AuditLogLocalService.log(actor.getEmployeeId(), actorFullName, "Đặt lại mật khẩu", "Đã đặt lại mật khẩu của nhân viên: " + targetEmployeeId);
+
         } catch (SQLException e) {
             throw new RuntimeException("Loi database khi dat lai mat khau.", e);
         }
@@ -179,6 +199,11 @@ public class AccountBUS {
             }
 
             appUserDAO.updateRole(targetEmployeeId, newRole);
+
+            // Ghi audit log
+            String actorFullName = (actor.getEmployee() != null) ? actor.getEmployee().getFullName() : actor.getUserName();
+            AuditLogLocalService.log(actor.getEmployeeId(), actorFullName, "Cập nhật vai trò", "Đã cập nhật vai trò của nhân viên " + targetEmployeeId + " thành " + newRole.getDisplayName());
+
         } catch (SQLException e) {
             throw new RuntimeException("Loi database khi cap nhat vai tro.", e);
         }

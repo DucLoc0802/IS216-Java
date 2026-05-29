@@ -22,7 +22,11 @@ public class InvoiceDAO {
     "SELECT " +
     "o.order_id AS invoice_id, " +
     "o.customer_id, " +
-    "o.booking_id, " +
+    "(SELECT MIN(COALESCE(bs.booking_id, br.booking_id)) " +
+    "   FROM order_details od " +
+    "   LEFT JOIN booking_services bs ON od.booking_service_id = bs.booking_service_id " +
+    "   LEFT JOIN booking_room br ON od.booking_room_id = br.booking_room_id " +
+    "  WHERE od.order_id = o.order_id) AS booking_id, " +
     "o.grand_total AS total_amount, " +
     "o.created_at, " +
     "o.status " +
@@ -428,5 +432,29 @@ public boolean updateOrderStatus(String orderId, String status) throws SQLExcept
 
 public boolean cancelInvoice(String orderId) throws SQLException {
     return updateOrderStatus(orderId, "CANCELLED");
+}
+
+public List<Invoice> getBranchInvoices(String branchId) throws SQLException {
+    List<Invoice> list = new ArrayList<>();
+    String sql = "SELECT order_id AS invoice_id, customer_id, grand_total AS total_amount, created_at, status, branch_id " +
+                 "FROM orders " +
+                 "WHERE branch_id = ? AND status != 'CANCELLED'";
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, branchId);
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Invoice inv = new Invoice();
+                inv.setId(rs.getString("invoice_id"));
+                inv.setCustomerId(rs.getString("customer_id"));
+                inv.setTotalAmount(rs.getDouble("total_amount"));
+                inv.setCreateDate(rs.getTimestamp("created_at"));
+                inv.setStatus(rs.getString("status"));
+                inv.setBranchId(rs.getString("branch_id"));
+                list.add(inv);
+            }
+        }
+    }
+    return list;
 }
 }

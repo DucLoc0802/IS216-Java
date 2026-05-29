@@ -224,4 +224,26 @@ public class EmployeeDAO {
             ? null
             : trimmed;
     }
+
+    public int getBookingCountByEmployee(String employeeId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM orders WHERE created_by_emp = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, employeeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    public int getGroomingCountByEmployee(String employeeId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM booking_services WHERE employee_id = ? AND status = 'DONE'";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, employeeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
 }

@@ -24,17 +24,7 @@
 
     <Region HBox.hgrow="ALWAYS" />
 
-    <!-- Global search -->
-    <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-box">
-        <Label styleClass="search-icon" text="" />
-        <TextField fx:id="globalSearch" onAction="#onSearch" promptText="Tìm kiếm nhanh..." styleClass="search-input" />
-    </HBox>
 
-    <!-- Notification bell -->
-    <StackPane onMouseClicked="#onNotification" styleClass="notif-wrapper">
-        <Button styleClass="topbar-icon-btn" text="" />
-        <Label fx:id="notifBadge" styleClass="notif-badge" text="3" />
-    </StackPane>
 
     <!-- Branch selector -->
     <HBox alignment="CENTER" onMouseClicked="#onBranchSwitch" spacing="6" styleClass="branch-selector">

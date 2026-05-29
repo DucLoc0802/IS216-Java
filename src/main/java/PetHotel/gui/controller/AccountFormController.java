@@ -14,6 +14,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -22,6 +23,7 @@ import javafx.util.StringConverter;
 
 public class AccountFormController {
 
+    @FXML private Label lblTitle;
     @FXML private TextField txtUsername;
     @FXML private PasswordField txtPassword;
     @FXML private ComboBox<Employee> cbEmployee;
@@ -58,6 +60,13 @@ public class AccountFormController {
     public void setEditData(AppUser user) {
         isEditMode = true;
         this.editingEmployeeId = user.getEmployeeId();
+
+        if (lblTitle != null) {
+            lblTitle.setText("Cập Nhật Tài Khoản");
+        }
+        if (btnSave != null) {
+            btnSave.setText("Cập Nhật");
+        }
 
         txtUsername.setText(user.getUserName());
         txtUsername.setDisable(true);
