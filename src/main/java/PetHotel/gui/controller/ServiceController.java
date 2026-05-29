@@ -98,22 +98,25 @@ public class ServiceController {
         }
 
         // Chỉ hiển thị nút "Thêm Dịch Vụ Mới" và "Thêm Loại Dịch Vụ" cho Quản lý chi nhánh
+        boolean canManageService = currentUser.hasRole(Role.BRANCH_MANAGER);
         if (btnAddService != null) {
-        btnAddService.setVisible(currentUser.hasRole(Role.BRANCH_MANAGER));
-    }
+            btnAddService.setVisible(canManageService);
+            btnAddService.setManaged(canManageService);
+        }
 
-    if (btnAddCategory != null) {
-        btnAddCategory.setVisible(currentUser.hasRole(Role.BRANCH_MANAGER));
-    }
+        if (btnAddCategory != null) {
+            btnAddCategory.setVisible(canManageService);
+            btnAddCategory.setManaged(canManageService);
+        }
 
-    if (btnMaterialStandard != null) {
-        boolean canManageMaterial =
-                currentUser.hasRole(Role.BRANCH_MANAGER)
-                || currentUser.hasRole(Role.ADMIN);
+        if (btnMaterialStandard != null) {
+            boolean canManageMaterial =
+                    currentUser.hasRole(Role.BRANCH_MANAGER)
+                    || currentUser.hasRole(Role.ADMIN);
 
-        btnMaterialStandard.setVisible(canManageMaterial);
-        btnMaterialStandard.setManaged(canManageMaterial);
-    }
+            btnMaterialStandard.setVisible(canManageMaterial);
+            btnMaterialStandard.setManaged(canManageMaterial);
+        }
 
         setupTableColumns();
         setupCategoryFilter();

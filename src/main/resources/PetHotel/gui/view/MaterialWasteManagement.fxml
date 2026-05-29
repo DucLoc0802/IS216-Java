@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="18" styleClass="main-content" stylesheets="@../css/style.css"
+      xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="PetHotel.gui.controller.MaterialWasteManagementController">
+
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <Region styleClass="section-header-line" />
+        <VBox spacing="2">
+            <Label styleClass="section-header" text="Ghi Nhận Hao Hụt Vật Liệu" />
+            <Label styleClass="ph-page-subtitle" text="Lập phiếu hao hụt và chờ quản lý chi nhánh duyệt" />
+        </VBox>
+        <Region HBox.hgrow="ALWAYS" />
+        <Button fx:id="btnAddWaste"
+                minWidth="145"
+                onAction="#onAddWaste"
+                styleClass="action-btn action-btn-primary"
+                text="Lập Phiếu Hao Hụt" />
+    </HBox>
+
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
+        <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
+            <Label styleClass="search-icon" text="" />
+            <TextField fx:id="searchField"
+                       onAction="#onSearch"
+                       promptText="Tìm theo mã phiếu, mã/tên sản phẩm, nhân viên..."
+                       styleClass="search-input"
+                       HBox.hgrow="ALWAYS" />
+        </HBox>
+        <VBox spacing="3">
+            <Label styleClass="filter-label" text="Trạng thái" />
+            <ComboBox fx:id="statusFilter" onAction="#onSearch" prefWidth="150" styleClass="filter-combo" />
+        </VBox>
+        <Button minWidth="72" onAction="#onSearch" styleClass="action-btn action-btn-primary" text="Tìm" />
+        <Button minWidth="92" onAction="#onClearFilter" styleClass="action-btn action-btn-outline" text="Xóa lọc" />
+    </HBox>
+
+    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="action-toolbar">
+        <Button fx:id="btnApproveWaste"
+                disable="true"
+                minWidth="105"
+                onAction="#onApproveWaste"
+                styleClass="action-btn action-btn-primary"
+                text="Duyệt Phiếu" />
+        <Button fx:id="btnRejectWaste"
+                disable="true"
+                minWidth="95"
+                onAction="#onRejectWaste"
+                styleClass="action-btn action-btn-danger"
+                text="Hủy Phiếu" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Label fx:id="totalLabel" styleClass="ph-page-info" text="Hiển thị 0 phiếu hao hụt" />
+    </HBox>
+
+    <VBox spacing="12" styleClass="content-panel" VBox.vgrow="ALWAYS">
+        <TableView fx:id="wasteTable" VBox.vgrow="ALWAYS">
+            <styleClass>
+                <String fx:value="data-table" />
+                <String fx:value="management-table" />
+            </styleClass>
+            <columns>
+                <TableColumn fx:id="colWasteId" minWidth="105" prefWidth="120" text="Mã phiếu" />
+                <TableColumn fx:id="colProduct" minWidth="190" prefWidth="230" text="Sản phẩm" />
+                <TableColumn fx:id="colEmployee" minWidth="145" prefWidth="175" text="Nhân viên lập" />
+                <TableColumn fx:id="colBranch" minWidth="90" prefWidth="105" text="Chi nhánh" />
+                <TableColumn fx:id="colQuantity" minWidth="115" prefWidth="135" text="Số lượng" />
+                <TableColumn fx:id="colReason" minWidth="220" prefWidth="280" text="Lý do" />
+                <TableColumn fx:id="colRecordedAt" minWidth="135" prefWidth="155" text="Ngày lập" />
+                <TableColumn fx:id="colStatus" minWidth="115" prefWidth="135" text="Trạng thái" />
+                <TableColumn fx:id="colActions" minWidth="210" prefWidth="220" resizable="false" text="Thao tác" />
+            </columns>
+            <placeholder>
+                <Label styleClass="table-empty" text="Không có phiếu hao hụt vật liệu" />
+            </placeholder>
+        </TableView>
+    </VBox>
+
+</VBox>

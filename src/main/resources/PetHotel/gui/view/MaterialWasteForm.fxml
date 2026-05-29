@@ -20,19 +20,19 @@
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="form-header">
         <Label styleClass="form-header-icon" text="" />
         <VBox spacing="2">
-            <Label styleClass="form-header-title" text="Ghi Nhận Tiêu Hao Vật Tư" />
-            <Label fx:id="lblContext" styleClass="form-header-subtitle" text="Ghi nhận vật tư đã dùng trong dịch vụ" />
+            <Label styleClass="form-header-title" text="Ghi Nhận Hao Hụt Vật Liệu" />
+            <Label fx:id="lblContext" styleClass="form-header-subtitle" text="Lập phiếu hao hụt vật liệu và chờ quản lý duyệt" />
         </VBox>
         <Region HBox.hgrow="ALWAYS" />
         <Button onAction="#handleCancel" styleClass="form-close-btn" text="Đóng" />
     </HBox>
 
     <VBox spacing="16" styleClass="form-body">
-        <Label styleClass="form-section-title" text="Vật Tư Tiêu Hao" />
+        <Label styleClass="form-section-title" text="Vật Liệu Hao Hụt" />
 
         <VBox spacing="4">
-            <Label styleClass="form-label" text="Vật Tư *" />
-            <ComboBox fx:id="cmbProduct" styleClass="form-combo" promptText="Chọn vật tư đã sử dụng" />
+            <Label styleClass="form-label" text="Vật Liệu *" />
+            <ComboBox fx:id="cmbProduct" styleClass="form-combo" promptText="Chọn vật liệu hao hụt" />
             <Label fx:id="lblProductError" styleClass="form-error" text="" />
         </VBox>
 
@@ -42,7 +42,7 @@
                 <Label fx:id="lblAvailableQty" styleClass="detail-value" text="—" />
             </VBox>
             <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Số Lượng Tiêu Hao *" />
+                <Label styleClass="form-label" text="Số Lượng Hao Hụt *" />
                 <TextField fx:id="txtQuantity" styleClass="form-field" promptText="VD: 50" />
                 <Label fx:id="lblQuantityError" styleClass="form-error" text="" />
             </VBox>
@@ -52,7 +52,7 @@
         <Label styleClass="form-section-title" text="Lý Do" />
 
         <VBox spacing="4">
-            <Label styleClass="form-label" text="Lý Do Tiêu Hao *" />
+            <Label styleClass="form-label" text="Lý Do Hao Hụt *" />
             <ComboBox fx:id="cmbReason" styleClass="form-combo" promptText="Chọn hoặc nhập lý do" />
             <Label fx:id="lblReasonError" styleClass="form-error" text="" />
         </VBox>
@@ -60,16 +60,16 @@
         <VBox spacing="4">
             <Label styleClass="form-label" text="Ghi Chú" />
             <TextArea fx:id="txtNote" prefRowCount="3" wrapText="true" styleClass="form-area"
-                      promptText="VD: Dịch vụ tắm chó size lớn, dùng dầu gội 80ml..." />
+                      promptText="VD: Dùng vượt định mức do lông dày, đổ/rơi vãi khi thao tác..." />
         </VBox>
 
         <Label fx:id="lblGeneralError" styleClass="form-error" text="" />
-        <Label styleClass="form-hint" text="Sau khi lưu, tồn kho sẽ được trừ ngay theo số lượng tiêu hao đã ghi nhận." />
+        <Label styleClass="form-hint" text="Sau khi lưu, phiếu ở trạng thái chờ duyệt. Tồn kho chỉ trừ khi quản lý duyệt phiếu." />
     </VBox>
 
     <HBox alignment="CENTER_RIGHT" spacing="10" styleClass="form-footer">
         <Region HBox.hgrow="ALWAYS" />
         <Button onAction="#handleCancel" styleClass="btn-secondary" text="Hủy" />
-        <Button onAction="#handleSave" styleClass="btn-primary" text="Ghi Nhận" />
+        <Button onAction="#handleSave" styleClass="btn-primary" text="Lập Phiếu" />
     </HBox>
 </VBox>

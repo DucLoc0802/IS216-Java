@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.net.URL?>
+<?import java.lang.String?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
@@ -11,50 +11,63 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="20" styleClass="main-content" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="PetHotel.gui.controller.InventoryController">
+<VBox spacing="18" styleClass="main-content" stylesheets="@../css/style.css"
+      xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="PetHotel.gui.controller.InventoryController">
+
     <HBox alignment="CENTER_LEFT" spacing="12">
-        <HBox alignment="CENTER_LEFT" spacing="8">
-            <Region styleClass="section-header-line" />
-            <VBox spacing="2">
-                <Label styleClass="section-header" text="Quản Lý Tồn Kho" />
-                <Label style="-fx-font-size:11px; -fx-text-fill: -ph-text-muted;" text="Xem tồn kho sản phẩm/vật tư tiêu hao theo chi nhánh" />
-            </VBox>
-        </HBox>
+        <Region styleClass="section-header-line" />
+        <VBox spacing="2">
+            <Label styleClass="section-header" text="Quản Lý Tồn Kho" />
+            <Label styleClass="ph-page-subtitle" text="Xem tồn kho sản phẩm/vật tư tiêu hao theo chi nhánh" />
+        </VBox>
         <Region HBox.hgrow="ALWAYS" />
-        <Label fx:id="totalLabel" style="-fx-font-size:11px; -fx-text-fill: -ph-text-muted;" text="Hiển thị 0 dòng tồn kho" />
+        <Label fx:id="totalLabel" styleClass="ph-page-info" text="Hiển thị 0 dòng tồn kho" />
     </HBox>
 
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
         <VBox spacing="3">
             <Label styleClass="filter-label" text="Chi nhánh" />
-            <ComboBox fx:id="branchCombo" onAction="#onSearch" prefWidth="150" styleClass="filter-combo" />
+            <ComboBox fx:id="branchCombo" onAction="#onSearch" prefWidth="155" styleClass="filter-combo" />
         </VBox>
-
         <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
             <Label styleClass="search-icon" text="" />
-            <TextField fx:id="searchField" onAction="#onSearch" promptText="Tìm sản phẩm..." styleClass="search-input" HBox.hgrow="ALWAYS" />
+            <TextField fx:id="searchField"
+                       onAction="#onSearch"
+                       promptText="Tìm sản phẩm..."
+                       styleClass="search-input"
+                       HBox.hgrow="ALWAYS" />
         </HBox>
-
         <VBox spacing="3">
             <Label styleClass="filter-label" text="Trạng thái tồn" />
-            <ComboBox fx:id="stockStatusCombo" onAction="#onSearch" prefWidth="140" styleClass="filter-combo" />
+            <ComboBox fx:id="stockStatusCombo" onAction="#onSearch" prefWidth="160" styleClass="filter-combo" />
         </VBox>
-
-        <Button onAction="#onSearch" style="-fx-padding: 7 18 7 18;" styleClass="action-btn action-btn-primary" text="Tìm" />
-        <Button onAction="#onClearFilter" style="-fx-padding: 7 14 7 14;" styleClass="action-btn action-btn-outline" text="Xóa lọc" />
+        <Button minWidth="72"
+                onAction="#onSearch"
+                styleClass="action-btn action-btn-primary"
+                text="Tìm" />
+        <Button minWidth="92"
+                onAction="#onClearFilter"
+                styleClass="action-btn action-btn-outline"
+                text="Xóa lọc" />
     </HBox>
 
     <VBox spacing="12" styleClass="content-panel" VBox.vgrow="ALWAYS">
-        <TableView fx:id="inventoryTable" styleClass="data-table" VBox.vgrow="ALWAYS">
+        <TableView fx:id="inventoryTable" VBox.vgrow="ALWAYS">
+            <styleClass>
+                <String fx:value="data-table" />
+                <String fx:value="management-table" />
+            </styleClass>
             <columns>
-                <TableColumn fx:id="colProductId" prefWidth="95" text="Mã sản phẩm" />
-                <TableColumn fx:id="colProductName" prefWidth="220" text="Tên sản phẩm" />
-                <TableColumn fx:id="colCategoryName" prefWidth="140" text="Loại sản phẩm" />
-                <TableColumn fx:id="colUnit" prefWidth="85" text="Đơn vị" />
-                <TableColumn fx:id="colQuantity" prefWidth="110" text="Số lượng tồn" />
-                <TableColumn fx:id="colReorderPoint" prefWidth="135" text="Điểm đặt hàng lại" />
-                <TableColumn fx:id="colStockStatus" prefWidth="120" text="Trạng thái tồn" />
-                <TableColumn fx:id="colLastUpdated" prefWidth="170" text="Cập nhật lần cuối" />
+                <TableColumn fx:id="colProductId" minWidth="110" prefWidth="125" text="Mã sản phẩm" />
+                <TableColumn fx:id="colProductName" minWidth="220" prefWidth="270" text="Tên sản phẩm" />
+                <TableColumn fx:id="colCategoryName" minWidth="155" prefWidth="185" text="Loại sản phẩm" />
+                <TableColumn fx:id="colUnit" minWidth="85" prefWidth="100" text="Đơn vị" />
+                <TableColumn fx:id="colQuantity" minWidth="115" prefWidth="135" text="Số lượng tồn" />
+                <TableColumn fx:id="colReorderPoint" minWidth="140" prefWidth="165" text="Điểm đặt hàng lại" />
+                <TableColumn fx:id="colStockStatus" minWidth="130" prefWidth="155" text="Trạng thái tồn" />
+                <TableColumn fx:id="colLastUpdated" minWidth="170" prefWidth="200" text="Cập nhật lần cuối" />
             </columns>
             <placeholder>
                 <Label styleClass="table-empty" text="Không có dữ liệu tồn kho" />
@@ -62,7 +75,4 @@
         </TableView>
     </VBox>
 
-    <stylesheets>
-        <URL value="@../css/style.css" />
-    </stylesheets>
 </VBox>

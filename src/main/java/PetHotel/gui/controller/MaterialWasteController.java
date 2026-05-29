@@ -1,6 +1,7 @@
 package PetHotel.gui.controller;
 
 import PetHotel.bus.InventoryBUS;
+import PetHotel.bus.MaterialWasteBUS;
 import PetHotel.model.AppUser;
 import PetHotel.model.BookingService;
 import PetHotel.model.InventoryItem;
@@ -36,6 +37,7 @@ public class MaterialWasteController {
     @FXML private Label lblGeneralError;
 
     private final InventoryBUS inventoryBUS = new InventoryBUS();
+    private final MaterialWasteBUS materialWasteBUS = new MaterialWasteBUS();
     private AppUser currentUser;
     private Runnable onSaved;
     private String preselectedProductId;
@@ -63,7 +65,7 @@ public class MaterialWasteController {
             controller.selectProduct(productId);
 
             Stage stage = new Stage();
-            stage.setTitle("Ghi Nhận Tiêu Hao Vật Tư");
+            stage.setTitle("Ghi Nhận Hao Hụt Vật Liệu");
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setResizable(false);
             stage.setScene(new Scene(root));
@@ -79,19 +81,19 @@ public class MaterialWasteController {
         setupProductCombo();
         cmbReason.setEditable(true);
         cmbReason.setItems(FXCollections.observableArrayList(
-            "Tiêu hao theo dịch vụ grooming",
+            "Sai số khi sử dụng so với định mức",
+            "Đổ/rơi vãi trong quá trình grooming",
             "Vật tư hư hỏng",
-            "Vật tư hết hạn",
-            "Sai lệch nhỏ khi sử dụng"
+            "Vật tư hết hạn"
         ));
-        cmbReason.setValue("Tiêu hao theo dịch vụ grooming");
+        cmbReason.setValue("Sai số khi sử dụng so với định mức");
         loadProducts();
         clearErrorsOnInput();
     }
 
     private void setContext(BookingService task) {
         if (task == null) {
-            lblContext.setText("Ghi nhận vật tư đã dùng và trừ tồn kho thực tế.");
+            lblContext.setText("Lập phiếu hao hụt vật liệu và chờ quản lý duyệt.");
             return;
         }
         lblContext.setText("Công việc " + task.getBookingServiceId()
@@ -160,7 +162,7 @@ public class MaterialWasteController {
             String reason = cmbReason.getEditor().getText();
             String note = buildNote();
 
-            inventoryBUS.recordMaterialWaste(
+            materialWasteBUS.createWasteRequest(
                 resolveBranchId(),
                 product.getProductId(),
                 quantity,
@@ -169,7 +171,7 @@ public class MaterialWasteController {
                 currentUser
             );
 
-            new Alert(Alert.AlertType.INFORMATION, "Đã ghi nhận tiêu hao và trừ tồn kho.", ButtonType.OK).showAndWait();
+            new Alert(Alert.AlertType.INFORMATION, "Đã lập phiếu hao hụt và chuyển sang trạng thái chờ duyệt.", ButtonType.OK).showAndWait();
             if (onSaved != null) {
                 onSaved.run();
             }

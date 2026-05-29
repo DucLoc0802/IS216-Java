@@ -28,12 +28,14 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class ProductFormController {
+    private static final List<String> ALLOWED_UNITS = List.of("G", "KG", "L", "ML");
+
     @FXML private Label titleLabel;
     @FXML private Label subtitleLabel;
     @FXML private TextField productIdField;
     @FXML private TextField productNameField;
     @FXML private ComboBox<String> categoryCombo;
-    @FXML private TextField unitField;
+    @FXML private ComboBox<String> unitField;
     @FXML private TextField importPriceField;
     @FXML private TextField minQuantityField;
     @FXML private CheckBox activeCheck;
@@ -81,6 +83,7 @@ public class ProductFormController {
     public void initialize() {
         currentUser = SessionManager.getInstance().getCurrentUser();
         setupCategories();
+        setupUnits();
         setupClearErrorHandlers();
     }
 
@@ -102,10 +105,14 @@ public class ProductFormController {
         }
     }
 
+    private void setupUnits() {
+        unitField.setItems(FXCollections.observableArrayList(ALLOWED_UNITS));
+    }
+
     private void setupClearErrorHandlers() {
         productNameField.textProperty().addListener((obs, oldValue, newValue) -> nameErrorLabel.setText(""));
         categoryCombo.valueProperty().addListener((obs, oldValue, newValue) -> categoryErrorLabel.setText(""));
-        unitField.textProperty().addListener((obs, oldValue, newValue) -> unitErrorLabel.setText(""));
+        unitField.valueProperty().addListener((obs, oldValue, newValue) -> unitErrorLabel.setText(""));
         importPriceField.textProperty().addListener((obs, oldValue, newValue) -> priceErrorLabel.setText(""));
         minQuantityField.textProperty().addListener((obs, oldValue, newValue) -> minQuantityErrorLabel.setText(""));
         noteArea.textProperty().addListener((obs, oldValue, newValue) -> noteErrorLabel.setText(""));
@@ -117,7 +124,7 @@ public class ProductFormController {
         productIdField.clear();
         productNameField.clear();
         selectCategory("Khác");
-        unitField.clear();
+        unitField.setValue(null);
         importPriceField.setText("0");
         minQuantityField.setText("0");
         activeCheck.setSelected(true);
@@ -132,7 +139,7 @@ public class ProductFormController {
         productIdField.setText(valueOrEmpty(product.getProductId()));
         productNameField.setText(valueOrEmpty(product.getProductName()));
         selectCategory(valueOrDefault(product.getProductCategory(), "Khác"));
-        unitField.setText(valueOrEmpty(product.getUnit()));
+        unitField.setValue(normalizeAllowedUnit(product.getUnit()));
         importPriceField.setText(formatDecimal(product.getImportPrice()));
         minQuantityField.setText(formatDecimal(product.getMinQuantity()));
         activeCheck.setSelected(product.isActive());
@@ -184,7 +191,7 @@ public class ProductFormController {
         }
         product.setProductName(productNameField.getText());
         product.setProductCategory(categoryCombo.getValue());
-        product.setUnit(unitField.getText());
+        product.setUnit(unitField.getValue());
         product.setImportPrice(parseDecimal(importPriceField.getText(), "Giá nhập"));
         product.setMinQuantity(parseDecimal(minQuantityField.getText(), "Tồn tối thiểu"));
         product.setActive(editingProduct == null || activeCheck.isSelected());
@@ -276,6 +283,14 @@ public class ProductFormController {
 
     private String valueOrDefault(String value, String defaultValue) {
         return value == null || value.trim().isEmpty() ? defaultValue : value;
+    }
+
+    private String normalizeAllowedUnit(String unit) {
+        if (unit == null) {
+            return null;
+        }
+        String normalized = unit.trim().toUpperCase();
+        return ALLOWED_UNITS.contains(normalized) ? normalized : null;
     }
 
     private void showError(String message) {

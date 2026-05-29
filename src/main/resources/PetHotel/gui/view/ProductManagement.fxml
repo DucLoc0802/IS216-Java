@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.net.URL?>
+<?import java.lang.String?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
@@ -11,77 +11,89 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="20" styleClass="main-content"
+<VBox spacing="18" styleClass="main-content" stylesheets="@../css/style.css"
       xmlns="http://javafx.com/javafx/25"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="PetHotel.gui.controller.ProductController">
 
     <HBox alignment="CENTER_LEFT" spacing="12">
-        <HBox alignment="CENTER_LEFT" spacing="8">
-            <Region styleClass="section-header-line" />
-            <VBox spacing="2">
-                <Label styleClass="section-header" text="Quản Lý Sản Phẩm" />
-                <Label style="-fx-font-size:11px; -fx-text-fill: -ph-text-muted;"
-                       text="Quản lý sản phẩm/vật tư tiêu hao dùng cho dịch vụ" />
-            </VBox>
-        </HBox>
+        <Region styleClass="section-header-line" />
+        <VBox spacing="2">
+            <Label styleClass="section-header" text="Quản Lý Sản Phẩm" />
+            <Label styleClass="ph-page-subtitle" text="Quản lý sản phẩm/vật tư tiêu hao dùng cho dịch vụ" />
+        </VBox>
         <Region HBox.hgrow="ALWAYS" />
-        <Button fx:id="btnAddCategory" onAction="#onAddCategory"
-                styleClass="action-btn action-btn-outline" text="Thêm Loại" />
-        <Button fx:id="btnAddProduct" onAction="#onAddProduct"
-                styleClass="action-btn action-btn-primary" text="Thêm Sản Phẩm" />
+        <Button fx:id="btnAddCategory"
+                minWidth="105"
+                onAction="#onAddCategory"
+                styleClass="action-btn action-btn-outline"
+                text="Thêm Loại" />
+        <Button fx:id="btnAddProduct"
+                minWidth="145"
+                onAction="#onAddProduct"
+                styleClass="action-btn action-btn-primary"
+                text="Thêm Sản Phẩm" />
     </HBox>
 
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
         <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
             <Label styleClass="search-icon" text="" />
-            <TextField fx:id="searchField" onAction="#onSearch"
+            <TextField fx:id="searchField"
+                       onAction="#onSearch"
                        promptText="Tìm theo mã hoặc tên sản phẩm..."
-                       styleClass="search-input" HBox.hgrow="ALWAYS" />
+                       styleClass="search-input"
+                       HBox.hgrow="ALWAYS" />
         </HBox>
-
         <VBox spacing="3">
             <Label styleClass="filter-label" text="Loại sản phẩm" />
-            <ComboBox fx:id="categoryFilter" onAction="#onSearch"
-                      prefWidth="160" styleClass="filter-combo" />
+            <ComboBox fx:id="categoryFilter" onAction="#onSearch" prefWidth="175" styleClass="filter-combo" />
         </VBox>
-
         <VBox spacing="3">
             <Label styleClass="filter-label" text="Trạng thái" />
-            <ComboBox fx:id="statusFilter" onAction="#onSearch"
-                      prefWidth="160" styleClass="filter-combo" />
+            <ComboBox fx:id="statusFilter" onAction="#onSearch" prefWidth="170" styleClass="filter-combo" />
         </VBox>
+        <Button minWidth="72"
+                onAction="#onSearch"
+                styleClass="action-btn action-btn-primary"
+                text="Tìm" />
+        <Button minWidth="92"
+                onAction="#onClearFilter"
+                styleClass="action-btn action-btn-outline"
+                text="Xóa lọc" />
+    </HBox>
 
-        <Button onAction="#onSearch" style="-fx-padding: 7 18 7 18;"
-                styleClass="action-btn action-btn-primary" text="Tìm" />
-        <Button onAction="#onClearFilter" style="-fx-padding: 7 14 7 14;"
-                styleClass="action-btn action-btn-outline" text="Xóa lọc" />
+    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="action-toolbar">
+        <Button fx:id="btnEdit"
+                disable="true"
+                minWidth="72"
+                onAction="#onEditProduct"
+                styleClass="action-btn action-btn-outline"
+                text="Sửa" />
+        <Button fx:id="btnDelete"
+                disable="true"
+                minWidth="118"
+                onAction="#onDeleteProduct"
+                styleClass="action-btn action-btn-danger"
+                text="Ngừng dùng" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Label fx:id="totalLabel" styleClass="ph-page-info" text="Hiển thị 0 sản phẩm" />
     </HBox>
 
     <VBox spacing="12" styleClass="content-panel" VBox.vgrow="ALWAYS">
-        <HBox alignment="CENTER_LEFT" spacing="8" styleClass="action-toolbar">
-            <Button fx:id="btnEdit" disable="true" onAction="#onEditProduct"
-                    styleClass="action-btn action-btn-outline" text="Sửa" />
-            <Button fx:id="btnDelete" disable="true" onAction="#onDeleteProduct"
-                    styleClass="action-btn action-btn-danger" text="Ngừng dùng" />
-            <Region HBox.hgrow="ALWAYS" />
-            <Label fx:id="totalLabel"
-                   style="-fx-font-size:11px; -fx-text-fill: -ph-text-muted;"
-                   text="Hiển thị 0 sản phẩm" />
-        </HBox>
-
-        <TableView fx:id="productTable" onMouseClicked="#onTableClick"
-                   styleClass="data-table" VBox.vgrow="ALWAYS">
+        <TableView fx:id="productTable" onMouseClicked="#onTableClick" VBox.vgrow="ALWAYS">
+            <styleClass>
+                <String fx:value="data-table" />
+                <String fx:value="management-table" />
+            </styleClass>
             <columns>
-                <TableColumn fx:id="colProductId" prefWidth="78" text="Mã SP" />
-                <TableColumn fx:id="colProductName" prefWidth="220" text="Tên sản phẩm" />
-                <TableColumn fx:id="colProductCategory" prefWidth="145" text="Loại sản phẩm" />
-                <TableColumn fx:id="colUnit" prefWidth="85" text="Đơn vị" />
-                <TableColumn fx:id="colImportPrice" prefWidth="125" text="Giá nhập" />
-                <TableColumn fx:id="colMinQuantity" prefWidth="120" text="Tồn tối thiểu" />
-                <TableColumn fx:id="colStatus" prefWidth="130" text="Trạng thái" />
-                <TableColumn fx:id="colActions" minWidth="180" prefWidth="190"
-                             resizable="false" text="Thao tác" />
+                <TableColumn fx:id="colProductId" minWidth="85" prefWidth="95" text="Mã SP" />
+                <TableColumn fx:id="colProductName" minWidth="220" prefWidth="260" text="Tên sản phẩm" />
+                <TableColumn fx:id="colProductCategory" minWidth="155" prefWidth="180" text="Loại sản phẩm" />
+                <TableColumn fx:id="colUnit" minWidth="85" prefWidth="100" text="Đơn vị" />
+                <TableColumn fx:id="colImportPrice" minWidth="125" prefWidth="145" text="Giá nhập" />
+                <TableColumn fx:id="colMinQuantity" minWidth="125" prefWidth="145" text="Tồn tối thiểu" />
+                <TableColumn fx:id="colStatus" minWidth="130" prefWidth="150" text="Trạng thái" />
+                <TableColumn fx:id="colActions" minWidth="230" prefWidth="240" resizable="false" text="Thao tác" />
             </columns>
             <placeholder>
                 <VBox alignment="CENTER" spacing="8">
@@ -91,7 +103,4 @@
         </TableView>
     </VBox>
 
-    <stylesheets>
-        <URL value="@../css/style.css" />
-    </stylesheets>
 </VBox>

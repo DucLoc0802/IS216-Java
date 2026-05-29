@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Set;
 
 public class GoodsReceiptBUS {
+    private static final Set<String> ALLOWED_UNITS = Set.of("G", "KG", "L", "ML");
+
     private final GoodsReceiptDAO goodsReceiptDAO = new GoodsReceiptDAO();
 
     public List<GoodsReceipt> search(String keyword, String status, LocalDate fromDate, LocalDate toDate, AppUser user)
@@ -80,6 +82,10 @@ public class GoodsReceiptBUS {
                 throw new ValidationException("Số lượng nhập phải lớn hơn 0.");
             }
             requireText(detail.getUnit(), "Đơn vị tính không được rỗng.");
+            String unit = detail.getUnit().trim().toUpperCase();
+            if (!ALLOWED_UNITS.contains(unit)) {
+                throw new ValidationException("Đơn vị tính chỉ được là G, KG, L hoặc ML.");
+            }
             if (detail.getLineTotal() != null && detail.getLineTotal().compareTo(BigDecimal.ZERO) < 0) {
                 throw new ValidationException("Thành tiền không được nhỏ hơn 0.");
             }
@@ -154,7 +160,8 @@ public class GoodsReceiptBUS {
         }
         for (GoodsReceiptDetail detail : details) {
             detail.setProductId(normalize(detail.getProductId()));
-            detail.setUnit(normalize(detail.getUnit()));
+            String unit = normalize(detail.getUnit());
+            detail.setUnit(unit == null ? null : unit.toUpperCase());
             detail.setNote(normalize(detail.getNote()));
         }
     }
@@ -165,7 +172,7 @@ public class GoodsReceiptBUS {
             GoodsReceiptDetail copy = new GoodsReceiptDetail();
             copy.setProductId(detail.getProductId().trim());
             copy.setQuantity(detail.getQuantity());
-            copy.setUnit(detail.getUnit().trim());
+            copy.setUnit(detail.getUnit().trim().toUpperCase());
             copy.setLineTotal(detail.getLineTotal());
             copy.setNote(normalize(detail.getNote()));
             normalized.add(copy);

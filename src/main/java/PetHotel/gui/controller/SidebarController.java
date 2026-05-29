@@ -47,6 +47,7 @@ public class SidebarController {
 
     @FXML private VBox groupInventory; // Tiêu đề nhóm Kho
     @FXML private VBox menuProduct;
+    @FXML private VBox menuMaterialWaste;
     @FXML private VBox menuInventory;
     @FXML private VBox menuGoodsReceipt;
     @FXML private VBox menuStockAudit;
@@ -92,6 +93,7 @@ private void applyRolePermissions(Role role) {
             hideMenu(menuInventory);
             hideMenu(menuGoodsReceipt);
             hideMenu(menuStockAudit);
+            hideMenu(menuMaterialWaste);
             hideMenu(menuSupplier);
             hideMenu(groupAdmin);
             hideMenu(menuStaff);
@@ -100,17 +102,19 @@ private void applyRolePermissions(Role role) {
             break;
 
         case PET_CARE_STAFF:
-            hideMenu(menuPet);
+            showMenu(menuPet);
             showMenu(menuGrooming);
             hideMenu(menuCustomer);
             hideMenu(menuBooking);
+            hideMenu(menuService);
+            hideMenu(menuAssignedTasks);
             hideMenu(menuRoom);
             hideMenu(menuInvoice);
-            hideMenu(groupInventory);
             hideMenu(menuInventory);
             hideMenu(menuGoodsReceipt);
             hideMenu(menuStockAudit);
-            hideMenu(menuProduct);
+            showMenu(menuProduct);
+            showMenu(menuMaterialWaste);
             hideMenu(menuSupplier);
             hideMenu(groupAdmin);
             hideMenu(menuStaff);
@@ -135,11 +139,14 @@ private void applyRolePermissions(Role role) {
             hideMenu(menuRoom);
             hideMenu(menuInvoice);
             
-            // Nhóm kho: Ẩn phần quản lý chi tiết, chỉ giữ Inventory để xem thống kê
+            // Ẩn nhóm kho
             hideMenu(menuProduct);
+            hideMenu(menuMaterialWaste);
             hideMenu(menuGoodsReceipt);
             hideMenu(menuStockAudit);
             hideMenu(menuSupplier);
+            hideMenu(groupInventory);
+            hideMenu(menuInventory);
             
             // Nhóm Quản trị: Không trực tiếp sửa nhân viên chi nhánh
             hideMenu(menuStaff);
@@ -161,7 +168,8 @@ private void applyRolePermissions(Role role) {
             hideMenu(menuGoodsReceipt);
             hideMenu(menuStockAudit);
             hideMenu(menuProduct);
-            hideMenu(menuSupplier);
+            hideMenu(menuMaterialWaste);
+
             
             // Nhóm Quản trị: Không trực tiếp sửa nhân viên chi nhánh
             hideMenu(menuStaff);
@@ -180,6 +188,7 @@ private void applyRolePermissions(Role role) {
             hideMenu(menuAssignedTasks);
             hideMenu(groupInventory);
             hideMenu(menuProduct);
+            hideMenu(menuMaterialWaste);
             hideMenu(menuInventory);
             hideMenu(menuGoodsReceipt);
             hideMenu(menuStockAudit);
@@ -292,7 +301,6 @@ private void applyRolePermissions(Role role) {
                     case "service":
                         if (currentRole == Role.ADMIN
                                 || currentRole == Role.RECEPTIONIST
-                                || currentRole == Role.PET_CARE_STAFF
                                 || currentRole == Role.BRANCH_MANAGER) {
                             mainController.loadView("ServiceManagement.fxml");
                             mainController.getTopbarController().setTitle(
@@ -355,7 +363,7 @@ private void applyRolePermissions(Role role) {
                         }
                         break;
                     case "inventory":
-                        if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER || currentRole == Role.CEO) {
+                        if (currentRole == Role.ADMIN || currentRole == Role.BRANCH_MANAGER) {
                             mainController.loadView("InventoryManagement.fxml");
                             mainController.getTopbarController().setTitle("Kho Hàng", "Xem tồn kho theo chi nhánh");
                         }
@@ -377,9 +385,18 @@ private void applyRolePermissions(Role role) {
                     case "product":
                         if (currentRole == Role.ADMIN
                                 || currentRole == Role.BRANCH_MANAGER
-                                || currentRole == Role.RECEPTIONIST) {
+                                || currentRole == Role.RECEPTIONIST
+                                || currentRole == Role.PET_CARE_STAFF) {
                             mainController.loadView("ProductManagement.fxml");
                             mainController.getTopbarController().setTitle("Sản Phẩm", "Quản lý sản phẩm/vật tư tiêu hao");
+                        }
+                        break;
+                    case "material-waste":
+                        if (currentRole == Role.PET_CARE_STAFF
+                                || currentRole == Role.BRANCH_MANAGER
+                                || currentRole == Role.ADMIN) {
+                            mainController.loadView("MaterialWasteManagement.fxml");
+                            mainController.getTopbarController().setTitle("Hao Hụt Vật Liệu", "Lập và duyệt phiếu hao hụt vật liệu");
                         }
                         break;
                     default:

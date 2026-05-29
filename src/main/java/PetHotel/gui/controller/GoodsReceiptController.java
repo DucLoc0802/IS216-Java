@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class GoodsReceiptController {
+    private static final List<String> ALLOWED_UNITS = List.of("G", "KG", "L", "ML");
+
     @FXML private TextField searchField;
     @FXML private ComboBox<String> statusFilter;
     @FXML private DatePicker fromDatePicker;
@@ -56,7 +58,7 @@ public class GoodsReceiptController {
     @FXML private TextArea receiptNoteArea;
     @FXML private ComboBox<Product> productCombo;
     @FXML private TextField quantityField;
-    @FXML private TextField unitField;
+    @FXML private ComboBox<String> unitField;
     @FXML private TextField lineTotalField;
     @FXML private TextField detailNoteField;
     @FXML private TableView<GoodsReceiptDetail> detailTable;
@@ -115,9 +117,12 @@ public class GoodsReceiptController {
     private void setupProductCombo() {
         productCombo.setCellFactory(param -> new ProductCell());
         productCombo.setButtonCell(new ProductCell());
+        unitField.setItems(FXCollections.observableArrayList(ALLOWED_UNITS));
         productCombo.valueProperty().addListener((obs, oldValue, newValue) -> {
             if (newValue != null) {
-                unitField.setText(newValue.getUnit());
+                unitField.setValue(normalizeAllowedUnit(newValue.getUnit()));
+            } else {
+                unitField.setValue(null);
             }
             refreshLineTotal();
         });
@@ -138,6 +143,8 @@ public class GoodsReceiptController {
         colTotalQuantity.setCellValueFactory(cell -> new SimpleStringProperty(numberText(cell.getValue().getTotalQuantity())));
         colTotalItemCount.setCellValueFactory(cell -> new SimpleStringProperty(String.valueOf(cell.getValue().getTotalItemCount())));
         colStatus.setCellValueFactory(cell -> new SimpleStringProperty(valueOrDash(cell.getValue().getStatus())));
+        colActions.setMinWidth(250);
+        colActions.setPrefWidth(260);
         colActions.setCellFactory(column -> new TableCell<>() {
             private final Button editButton = new Button("Sửa");
             private final Button approveButton = new Button("Duyệt");
@@ -145,6 +152,12 @@ public class GoodsReceiptController {
             private final HBox actions = new HBox(6, editButton, approveButton, cancelButton);
 
             {
+                editButton.setMinWidth(72);
+                editButton.setPrefWidth(72);
+                approveButton.setMinWidth(86);
+                approveButton.setPrefWidth(86);
+                cancelButton.setMinWidth(72);
+                cancelButton.setPrefWidth(72);
                 editButton.getStyleClass().addAll("action-btn", "action-btn-outline");
                 approveButton.getStyleClass().addAll("action-btn", "action-btn-primary");
                 cancelButton.getStyleClass().addAll("action-btn", "action-btn-danger");
@@ -244,14 +257,18 @@ public class GoodsReceiptController {
             detail.setProductName(product.getProductName());
             BigDecimal quantity = parseDecimal(quantityField.getText(), "Số lượng");
             detail.setQuantity(quantity);
-            detail.setUnit(unitField.getText());
+            String unit = unitField.getValue();
+            if (unit == null || !ALLOWED_UNITS.contains(unit)) {
+                throw new ValidationException("Đơn vị tính chỉ được là G, KG, L hoặc ML.");
+            }
+            detail.setUnit(unit);
             detail.setLineTotal(resolveLineTotal(product, quantity));
             detail.setNote(detailNoteField.getText());
             detailRows.add(detail);
 
             productCombo.setValue(null);
             quantityField.clear();
-            unitField.clear();
+            unitField.setValue(null);
             lineTotalField.clear();
             detailNoteField.clear();
         } catch (RuntimeException e) {
@@ -409,7 +426,7 @@ public class GoodsReceiptController {
         detailRows.clear();
         productCombo.setValue(null);
         quantityField.clear();
-        unitField.clear();
+        unitField.setValue(null);
         lineTotalField.clear();
         detailNoteField.clear();
     }
@@ -465,6 +482,14 @@ public class GoodsReceiptController {
             : product.getCostPrice();
         BigDecimal safeQuantity = quantity == null ? BigDecimal.ZERO : quantity;
         return costPrice.multiply(safeQuantity);
+    }
+
+    private String normalizeAllowedUnit(String unit) {
+        if (unit == null) {
+            return null;
+        }
+        String normalized = unit.trim().toUpperCase();
+        return ALLOWED_UNITS.contains(normalized) ? normalized : null;
     }
 
     private String resolveCurrentBranch() {

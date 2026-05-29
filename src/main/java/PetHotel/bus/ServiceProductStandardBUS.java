@@ -90,7 +90,7 @@ public class ServiceProductStandardBUS {
 
         String unit = sps.getUsageUnit();
         if (!"ML".equals(unit) && !"L".equals(unit) && !"G".equals(unit) && !"KG".equals(unit)) {
-            throw new ValidationException("Đơn vị chỉ được là ML, L, G hoặc KG.");
+            throw new ValidationException("Đơn vị chỉ được là G, KG, L hoặc ML.");
         }
     }
 

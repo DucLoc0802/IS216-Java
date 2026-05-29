@@ -25,6 +25,8 @@ public class ProductBUS {
         "Khác"
     );
 
+    private static final Set<String> ALLOWED_UNITS = Set.of("G", "KG", "L", "ML");
+
     private final ProductDAO productDAO = new ProductDAO();
 
     public List<Product> getProducts(String keyword, String category, String status) throws SQLException {
@@ -94,6 +96,10 @@ public class ProductBUS {
         if (normalize(product.getUnit()) == null) {
             throw new ValidationException("Đơn vị tính không được rỗng.");
         }
+        String normalizedUnit = product.getUnit().trim().toUpperCase();
+        if (!ALLOWED_UNITS.contains(normalizedUnit)) {
+            throw new ValidationException("Đơn vị tính chỉ được là G, KG, L hoặc ML.");
+        }
         if (product.getImportPrice() == null || product.getImportPrice().compareTo(BigDecimal.ZERO) < 0) {
             throw new ValidationException("Giá nhập phải lớn hơn hoặc bằng 0.");
         }
@@ -142,7 +148,7 @@ public class ProductBUS {
 
     private void normalizeProduct(Product product) {
         product.setProductName(product.getProductName().trim());
-        product.setUnit(product.getUnit().trim());
+        product.setUnit(product.getUnit().trim().toUpperCase());
 
         String category = normalize(product.getProductCategory());
         product.setProductCategory(category == null ? "Khác" : category);

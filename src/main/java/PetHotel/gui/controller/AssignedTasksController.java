@@ -455,6 +455,11 @@ public class AssignedTasksController {
                 return;
             }
 
+            if (BookingService.STATUS_DONE.equals(newStatus)) {
+                confirmCompleteTask(task);
+                return;
+            }
+
             if (BookingService.STATUS_IN_PROGRESS.equals(newStatus)
                     && !BookingService.STATUS_SCHEDULED.equals(task.getStatus())) {
                 showWarning("Chỉ công việc SCHEDULED mới có thể bắt đầu.");

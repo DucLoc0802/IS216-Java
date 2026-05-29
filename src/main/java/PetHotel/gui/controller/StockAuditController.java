@@ -145,6 +145,8 @@ public class StockAuditController {
                 setText(null);
             }
         });
+        colAuditActions.setMinWidth(270);
+        colAuditActions.setPrefWidth(280);
         colAuditActions.setCellFactory(column -> new TableCell<>() {
             private final Button editButton = new Button("Sửa");
             private final Button completeButton = new Button("Hoàn tất");
@@ -152,6 +154,12 @@ public class StockAuditController {
             private final HBox actions = new HBox(6, editButton, completeButton, cancelButton);
 
             {
+                editButton.setMinWidth(72);
+                editButton.setPrefWidth(72);
+                completeButton.setMinWidth(104);
+                completeButton.setPrefWidth(104);
+                cancelButton.setMinWidth(72);
+                cancelButton.setPrefWidth(72);
                 editButton.getStyleClass().addAll("action-btn", "action-btn-outline");
                 completeButton.getStyleClass().addAll("action-btn", "action-btn-primary");
                 cancelButton.getStyleClass().addAll("action-btn", "action-btn-danger");

@@ -307,7 +307,7 @@ public class InventoryBUS {
             requireText(detail.getUnit(), "Vui lòng chọn đơn vị tính.");
             String unit = detail.getUnit().trim().toUpperCase();
             if (!Set.of("G", "KG", "ML", "L").contains(unit)) {
-                throw new ValidationException("Đơn vị tính chỉ được là G, KG, ML hoặc L.");
+                throw new ValidationException("Đơn vị tính chỉ được là G, KG, L hoặc ML.");
             }
         }
         if (note != null && note.length() > 4000) {

@@ -327,6 +327,10 @@ public class PetController {
     @FXML public void onServiceHistory(ActionEvent event) { showInfo("Ngoài phạm vi", "UC-PET-08 chưa triển khai trong lần này."); }
     @FXML 
     public void onHealthRecord(ActionEvent event) { 
+        if (isPetCareStaff()) {
+            showCareStaffLimitedMessage();
+            return;
+        }
         if (selectedPet != null) {
             // Lấy cửa sổ hiện tại làm cha
             Stage mainStage = null;
@@ -435,11 +439,13 @@ public class PetController {
         HBox.setHgrow(columns.getChildren().get(0), Priority.ALWAYS);
         HBox.setHgrow(columns.getChildren().get(1), Priority.ALWAYS);
 
-        Button health = primaryButton(isPetCareStaff() ? "Ghi nhận sức khỏe" : "Xem ghi nhận");
+        Button health = primaryButton("Xem ghi nhận");
         Button history = secondaryButton("Lịch sử dịch vụ");
         Button close = secondaryButton("Đóng");
-        if (!isPetCareStaff()) {
-            health.setTooltip(new Tooltip("Mở ghi nhận sức khỏe ở chế độ chỉ xem."));
+        health.setTooltip(new Tooltip("Mở ghi nhận sức khỏe ở chế độ chỉ xem."));
+        if (isPetCareStaff()) {
+            health.setVisible(false);
+            health.setManaged(false);
         }
         history.setDisable(true);
         history.setTooltip(new Tooltip("Chưa triển khai"));
@@ -476,15 +482,14 @@ public class PetController {
             Role role = SessionManager.getInstance().getCurrentUser() == null
                     ? null
                     : SessionManager.getInstance().getCurrentUser().getRole();
-            boolean editMode = role == Role.PET_CARE_STAFF;
-            controller.setEditMode(editMode);
+            controller.setEditMode(false);
             controller.setOnSaved(() -> {
                 markNeedsRefresh();
                 reloadPetsFromDatabase(pet.getPetId());
             });
 
             // Sử dụng hàm modalStage CÓ truyền parentStage vào
-            Stage stage = modalStage(editMode ? "Ghi Nhận Sức Khỏe" : "Xem Ghi Nhận Sức Khỏe", parentStage); //đã sửa
+            Stage stage = modalStage("Xem Ghi Nhận Sức Khỏe", parentStage); //đã sửa
             prepareHealthFormStage(stage, root);
             
             // Ép hệ điều hành Focus để tránh lỗi mất hover và kẹt ComboBox
@@ -773,7 +778,7 @@ public class PetController {
     }
 
     private void showCareStaffLimitedMessage() {
-        showInfo("Không đủ quyền", "Chỉ nhân viên chăm sóc được ghi nhận sức khỏe thú cưng.");
+        showInfo("Không đủ quyền", "Nhân viên chăm sóc chỉ được xem danh sách thú cưng.");
     }
 
     private void showError(String title, Exception e) {

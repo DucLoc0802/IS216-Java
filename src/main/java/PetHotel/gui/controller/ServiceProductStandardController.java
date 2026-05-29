@@ -112,7 +112,7 @@ public class ServiceProductStandardController {
 
     private void setupComboboxes() {
         cbSpecies.setItems(FXCollections.observableArrayList("DOG", "CAT"));
-        cbUnit.setItems(FXCollections.observableArrayList("ML", "L", "G", "KG"));
+        cbUnit.setItems(FXCollections.observableArrayList("G", "KG", "L", "ML"));
 
         cbSpecies.setValue("DOG");
         cbUnit.setValue("ML");

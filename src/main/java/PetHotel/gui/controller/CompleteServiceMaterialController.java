@@ -277,7 +277,25 @@ public class CompleteServiceMaterialController {
     private String getCurrentBranchId() {
         // Tạm thời sử dụng SessionManager hoặc giá trị mặc định
         // Bạn nên lấy từ booking.branch_id
-        return "BR001"; // Placeholder - cần sửa
+        if (bookingService != null
+                && bookingService.getBranchId() != null
+                && !bookingService.getBranchId().trim().isEmpty()) {
+            return bookingService.getBranchId().trim();
+        }
+
+        String sessionBranchId = SessionManager.getInstance().getBranchId();
+        if (sessionBranchId != null && !sessionBranchId.trim().isEmpty()) {
+            return sessionBranchId.trim();
+        }
+
+        if (currentUser != null
+                && currentUser.getEmployee() != null
+                && currentUser.getEmployee().getBranchId() != null
+                && !currentUser.getEmployee().getBranchId().trim().isEmpty()) {
+            return currentUser.getEmployee().getBranchId().trim();
+        }
+
+        return "BR001";
     }
 
     // ── Helper Methods ──────────────────────────────────────────

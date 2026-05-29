@@ -1,26 +1,21 @@
 package PetHotel.gui.controller;
 
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import java.io.IOException;
+import java.util.List;
+import java.util.function.Consumer;
 
 import PetHotel.bus.ServiceBUS;
 import PetHotel.model.AppUser;
 import PetHotel.model.ServiceCategory;
-
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.function.Consumer;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 /**
  * AddServiceController — Điều khiển dialog thêm dịch vụ mới
@@ -36,7 +31,7 @@ public class AddServiceController {
     private ComboBox<ServiceCategory> cmbCategory;
 
     @FXML
-    private TextField txtSpecies;
+    private ComboBox<String> cmbSpecies;
 
     @FXML
     private TextField txtPrice;
@@ -122,11 +117,14 @@ public class AddServiceController {
             }
         });
 
-        txtSpecies.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal.length() <= 50) {
+        cmbSpecies.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
                 lblSpeciesError.setText("");
             }
         });
+
+        cmbSpecies.setItems(FXCollections.observableArrayList("DOG", "CAT"));
+
 
         txtPrice.textProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal.isEmpty()) {
@@ -154,7 +152,7 @@ public class AddServiceController {
             // Lấy dữ liệu từ form
             String serviceName = txtServiceName.getText().trim();
             ServiceCategory category = cmbCategory.getValue();
-            String species = txtSpecies.getText().trim();
+            String speciesText = cmbSpecies.getValue();
             String priceStr = txtPrice.getText().trim();
             String durationStr = txtDuration.getText().trim();
 
@@ -166,6 +164,16 @@ public class AddServiceController {
 
             if (category == null) {
                 lblCategoryError.setText("Loại dịch vụ không được để trống");
+                return;
+            }
+            
+            String species;
+            if ("Chó".equals(speciesText)) {
+                species = "DOG";
+            } else if ("Mèo".equals(speciesText)) {
+                species = "CAT";
+            } else {
+                showError("Loài thú cưng không hợp lệ.");
                 return;
             }
 

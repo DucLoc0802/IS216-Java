@@ -65,9 +65,10 @@
             </VBox>
             <VBox spacing="4" HBox.hgrow="ALWAYS">
                 <Label styleClass="form-label" text="Loài" />
-                <TextField fx:id="txtSpecies" 
-                          promptText="VD: Chó, Mèo, Chim..." 
-                          styleClass="form-field" />
+                <ComboBox fx:id="cmbSpecies" 
+                          promptText="Chọn loài" 
+                          prefWidth="200"
+                          styleClass="form-combo" />
                 <Label fx:id="lblSpeciesError" styleClass="form-error" text="" />
             </VBox>
         </HBox>

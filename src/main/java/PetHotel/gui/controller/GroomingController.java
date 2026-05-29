@@ -392,6 +392,11 @@ public class GroomingController {
                 return;
             }
 
+            if (BookingService.STATUS_DONE.equals(newStatus)) {
+                confirmCompleteTask(row);
+                return;
+            }
+
             if (BookingService.STATUS_IN_PROGRESS.equals(newStatus)
                     && !BookingService.STATUS_PENDING.equals(row.getStatus())
                     && !BookingService.STATUS_SCHEDULED.equals(row.getStatus())) {
@@ -762,7 +767,10 @@ public class GroomingController {
 
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            handleStatusChange(row, BookingService.STATUS_DONE);
+            CompleteServiceMaterialController.openDialog(row.getBookingService(), currentUser, () -> {
+                loadGroomingSchedule();
+                hideTaskDetails();
+            });
         }
     }
 
@@ -995,6 +1003,7 @@ public class GroomingController {
         public String getCustomerPhone() { return bookingService.getCustomerPhone(); }
         public String getCustomerAddress() { return bookingService.getCustomerAddress(); }
         public String getNote() { return bookingService.getNote(); }
+        public BookingService getBookingService() { return bookingService; }
 
         public boolean hasAssignedStaff() {
             return getEmployeeId() != null && !getEmployeeId().trim().isEmpty();

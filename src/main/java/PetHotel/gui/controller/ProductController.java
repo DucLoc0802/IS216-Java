@@ -112,8 +112,8 @@ public class ProductController {
         colMinQuantity.setCellValueFactory(cell -> new SimpleStringProperty(formatDecimal(cell.getValue().getMinQuantity())));
         colStatus.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getStatusText()));
 
-        colActions.setMinWidth(180);
-        colActions.setPrefWidth(190);
+        colActions.setMinWidth(230);
+        colActions.setPrefWidth(240);
 
         colStatus.setCellFactory(column -> new TableCell<>() {
             @Override
@@ -139,10 +139,12 @@ public class ProductController {
             private final HBox actions = new HBox(8, editButton, deleteButton);
 
             {
-                editButton.setMinWidth(54);
-                editButton.setPrefWidth(54);
-                deleteButton.setMinWidth(104);
-                deleteButton.setPrefWidth(104);
+                editButton.setMinWidth(72);
+                editButton.setPrefWidth(72);
+                deleteButton.setMinWidth(126);
+                deleteButton.setPrefWidth(126);
+                editButton.setMaxWidth(Double.MAX_VALUE);
+                deleteButton.setMaxWidth(Double.MAX_VALUE);
                 editButton.getStyleClass().addAll("action-btn", "action-btn-outline");
                 deleteButton.getStyleClass().addAll("action-btn", "action-btn-danger");
 

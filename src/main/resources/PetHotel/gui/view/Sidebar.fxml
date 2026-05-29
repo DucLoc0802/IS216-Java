@@ -122,6 +122,13 @@
                 </HBox>
             </VBox>
 
+            <VBox fx:id="menuMaterialWaste" onMouseClicked="#onMenu" styleClass="menu-item" userData="material-waste">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label styleClass="menu-icon" text="!" />
+                    <Label styleClass="menu-label" text="Hao Hụt Vật Liệu" />
+                </HBox>
+            </VBox>
+
             <VBox fx:id="menuInventory" onMouseClicked="#onMenu" styleClass="menu-item" userData="inventory">
                 <HBox alignment="CENTER_LEFT" spacing="12">
                     <Label styleClass="menu-icon" text="🏭" />

@@ -55,7 +55,7 @@
             </VBox>
             <VBox spacing="4" HBox.hgrow="ALWAYS">
                 <Label styleClass="form-label" text="Đơn Vị Tính *" />
-                <TextField fx:id="unitField" promptText="chai, hộp, cái..." styleClass="form-field" />
+                <ComboBox fx:id="unitField" promptText="Chọn G, KG, L hoặc ML" styleClass="form-combo" />
                 <Label fx:id="unitErrorLabel" styleClass="form-error" text="" />
             </VBox>
         </HBox>
