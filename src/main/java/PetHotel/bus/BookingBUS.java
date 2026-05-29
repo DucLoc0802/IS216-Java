@@ -38,7 +38,7 @@ public class BookingBUS {
         createBooking(booking, roomId, null);
     }
 
-    public void createBooking(Booking booking, String roomId, String petId) {
+    public Booking createBooking(Booking booking, String roomId, String petId) {
         if (booking.getCustomerId() == null || booking.getCustomerId().trim().isEmpty())
             throw new ValidationException("Vui lòng chọn khách hàng.");
         if (roomId == null || roomId.trim().isEmpty())
@@ -50,7 +50,12 @@ public class BookingBUS {
         if (!booking.getCheckoutExpectedAt().isAfter(booking.getCheckinExpectedAt()))
             throw new ValidationException("Ngày check-out phải sau ngày check-in.");
 
-        booking.setBookingId("BK" + String.format("%06d", (int)(Math.random() * 999999)));
+        try {
+            int nextNum = bookingDAO.getNextBookingNumber();
+            booking.setBookingId("BKD" + String.format("%03d", nextNum));
+        } catch (SQLException e) {
+            booking.setBookingId("BKD" + String.format("%03d", (int)(Math.random() * 999)));
+        }
         booking.setBranchId("BR001");
         if (booking.getDepositAmount() == null)
             booking.setDepositAmount(BigDecimal.ZERO);
@@ -61,6 +66,7 @@ public class BookingBUS {
             if (petId != null && !petId.trim().isEmpty()) {
                 new RoomBUS().autoUpdateRoomStatus(roomId);
             }
+            return booking; 
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi tạo booking.", e);
         }
@@ -131,6 +137,22 @@ public class BookingBUS {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi xóa booking.", e);
+        }
+    }
+
+    public String getBookingRoomId(String bookingId) {
+        try {
+            return bookingDAO.findBookingRoomId(bookingId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lấy booking room id.", e);
+        }
+    }
+
+    public void addPetToBookingRoom(String bookingRoomId, String petId) {
+        try {
+            bookingDAO.insertBookingRoomPet(bookingRoomId, petId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi thêm thú cưng vào booking.", e);
         }
     }
 }

@@ -2,6 +2,7 @@ package PetHotel.gui.controller;
 
 import PetHotel.bus.BookingBUS;
 import PetHotel.model.Booking;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -105,8 +106,24 @@ public class BookingController {
         colBkNote.setCellValueFactory(d ->
             new SimpleStringProperty(d.getValue().getSpecialNote() != null ?
                 d.getValue().getSpecialNote() : ""));
-        colBkStatus.setCellValueFactory(d ->
-            new SimpleStringProperty(d.getValue().getStatus()));
+        colBkStatus.setCellFactory(col -> new TableCell<Booking, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                    getStyleClass().clear();
+                } else {
+                    Label label = new Label(item);
+                    label.getStyleClass().addAll("status-badge", getStatusClass(item));
+                    setGraphic(label);
+                    setText(null);
+                }
+            }
+        });
+        colBkStatus.setCellValueFactory(d -> 
+        new SimpleStringProperty(translateBookingStatus(d.getValue().getStatus())));
 
         // Cột thao tác
         colBkActions.setCellFactory(col -> new TableCell<>() {
@@ -123,6 +140,30 @@ public class BookingController {
                 setGraphic(empty ? null : btn);
             }
         });
+    }
+
+    private String translateBookingStatus(String status) {
+        if (status == null) return "—";
+        return switch (status.trim()) {
+            case "PENDING"     -> "Chờ xác nhận";
+            case "CONFIRMED"   -> "Đã xác nhận";
+            case "CHECKED_IN"  -> "Đang lưu trú";
+            case "CHECKED_OUT" -> "Đã trả phòng";
+            case "CANCELLED"   -> "Đã hủy";
+            default            -> status;
+        };
+    }
+
+    private String getStatusClass(String status) {
+        if (status == null) return "status-pending";
+        return switch (status) {
+            case "PENDING",     "Chờ xác nhận"  -> "status-pending";
+            case "CONFIRMED",   "Đã xác nhận"   -> "status-confirmed";
+            case "CHECKED_IN",  "Đang lưu trú"  -> "status-checked_in";
+            case "CHECKED_OUT", "Đã trả phòng"  -> "status-checked_out";
+            case "CANCELLED",   "Đã hủy"        -> "status-cancelled";
+            default                              -> "status-pending";
+        };
     }
 
     private void setupTabs() {
@@ -187,13 +228,20 @@ public class BookingController {
             javafx.scene.Parent root = loader.load();
 
             CreateBookingController controller = loader.getController();
-            controller.setOnSaveCallback(() -> loadBookings(null));
+            controller.setOnSaveCallback(newBooking -> {
+                // không làm gì ở đây
+            });
 
             javafx.stage.Stage dialog = new javafx.stage.Stage();
             dialog.setTitle("Tạo Booking Mới");
             dialog.initModality(javafx.stage.Modality.APPLICATION_MODAL);
             dialog.setScene(new javafx.scene.Scene(root));
             dialog.showAndWait();
+
+            // Load lại SAU KHI dialog đóng
+            loadBookings(null);
+            bookingTable.scrollTo(0);
+
         } catch (Exception e) {
             showAlert("Lỗi", "Không thể mở form: " + e.getMessage());
         }
