@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import PetHotel.dao.InvoiceDAO;
+import PetHotel.model.Customer;
 import PetHotel.model.Invoice;
 import PetHotel.model.InvoiceDetail;
 import PetHotel.model.Payment;
@@ -104,6 +105,54 @@ public class InvoiceBUS {
         return invoiceDAO.findBookingFees();
     }
 
+    public List<Customer> searchInvoiceCustomers(String keyword) throws SQLException {
+        return invoiceDAO.searchInvoiceCustomers(keyword);
+    }
+
+    public List<Invoice.InvoiceSource> findUninvoicedBookingSources(String customerId) throws SQLException {
+        requireCustomerId(customerId);
+        return invoiceDAO.findUninvoicedBookingSources(customerId.trim());
+    }
+
+    public Map<String, Double> findBookingPrepaidAmounts(String customerId) throws SQLException {
+        requireCustomerId(customerId);
+        return invoiceDAO.findBookingPrepaidAmounts(customerId.trim());
+    }
+
+    public List<Invoice.InvoiceSource> findUninvoicedServiceSources(String customerId) throws SQLException {
+        requireCustomerId(customerId);
+        return invoiceDAO.findUninvoicedServiceSources(customerId.trim());
+    }
+
+    public List<InvoiceDetail> buildInvoiceDetailsForSource(String sourceType, String sourceId, String orderId)
+            throws SQLException {
+        if (sourceType == null || sourceType.trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng chọn loại nguồn tạo hóa đơn.");
+        }
+        if (sourceId == null || sourceId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng chọn booking hoặc grooming cần tạo hóa đơn.");
+        }
+        if (orderId == null || orderId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Mã hóa đơn không được rỗng.");
+        }
+
+        List<InvoiceDetail> details = invoiceDAO.buildInvoiceDetailsForSource(
+            sourceType.trim(),
+            sourceId.trim(),
+            orderId.trim()
+        );
+        if (details == null || details.isEmpty()) {
+            if ("BOOKING".equalsIgnoreCase(sourceType)) {
+                throw new IllegalArgumentException("Booking này không còn khoản phí cần tạo hóa đơn.");
+            }
+            if ("GROOMING".equalsIgnoreCase(sourceType) || "SERVICE".equalsIgnoreCase(sourceType)) {
+                throw new IllegalArgumentException("Dịch vụ này đã có hóa đơn hoặc không còn khoản phí hợp lệ.");
+            }
+            throw new IllegalArgumentException("Nguồn này đã có hóa đơn hoặc không còn khoản phí hợp lệ.");
+        }
+        return details;
+    }
+
     public void payInvoice(Invoice invoice, String paymentMethod, double amount) throws SQLException {
         if (invoice == null || invoice.getId() == null || invoice.getId().trim().isEmpty()) {
             throw new IllegalArgumentException("Vui lòng chọn hóa đơn cần thanh toán");
@@ -184,12 +233,19 @@ public class InvoiceBUS {
         if (invoice == null) {
             throw new IllegalArgumentException("Vui lòng chọn hóa đơn cần hủy");
         }
-        return cancelInvoice(invoice.getId());
+        return cancelInvoice(invoice.getId(), null);
     }
 
     public boolean cancelInvoice(String orderId) throws SQLException {
+        return cancelInvoice(orderId, null);
+    }
+
+    public boolean cancelInvoice(String orderId, String reason) throws SQLException {
         if (orderId == null || orderId.trim().isEmpty()) {
             throw new IllegalArgumentException("Mã hóa đơn không được rỗng");
+        }
+        if (reason == null || reason.trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng nhập lý do hủy hóa đơn.");
         }
 
         Invoice invoice = invoiceDAO.getInvoiceById(orderId.trim());
@@ -199,7 +255,10 @@ public class InvoiceBUS {
 
         String status = invoice.getStatus();
         if ("PAID".equalsIgnoreCase(status)) {
-            throw new IllegalArgumentException("Không thể hủy hóa đơn đã thanh toán.");
+            throw new IllegalArgumentException("Hóa đơn đã thanh toán, không thể hủy.");
+        }
+        if ("PARTIAL".equalsIgnoreCase(status)) {
+            throw new IllegalArgumentException("Hóa đơn đã thanh toán một phần, không thể hủy trực tiếp. Vui lòng thanh toán tiếp hoặc liên hệ quản lý.");
         }
         if ("CANCELLED".equalsIgnoreCase(status)) {
             throw new IllegalArgumentException("Hóa đơn này đã bị hủy.");
@@ -211,7 +270,18 @@ public class InvoiceBUS {
             throw new IllegalArgumentException("Không thể hủy hóa đơn có trạng thái " + status);
         }
 
-        return invoiceDAO.cancelInvoice(orderId.trim());
+        boolean cancelled = invoiceDAO.cancelInvoice(orderId.trim());
+        if (!cancelled) {
+            throw new IllegalArgumentException("Không thể hủy hóa đơn. Hóa đơn có thể đã đổi trạng thái.");
+        }
+        return true;
+    }
+
+    public Invoice getInvoiceById(String orderId) throws SQLException {
+        if (orderId == null || orderId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Mã hóa đơn không được rỗng");
+        }
+        return invoiceDAO.getInvoiceById(orderId.trim());
     }
 
     public List<InvoiceDetail> getInvoiceDetailsByOrderId(String orderId) throws SQLException {
@@ -271,12 +341,18 @@ public class InvoiceBUS {
         }
     }
 
+    private void requireCustomerId(String customerId) {
+        if (customerId == null || customerId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng chọn khách hàng.");
+        }
+    }
+
     private boolean isPayable(String status) {
         return "PENDING".equalsIgnoreCase(status) || "PARTIAL".equalsIgnoreCase(status);
     }
 
     private boolean isCancelable(String status) {
-        return isPayable(status);
+        return "PENDING".equalsIgnoreCase(status);
     }
 
     public List<Invoice> getBranchInvoices(String branchId) {

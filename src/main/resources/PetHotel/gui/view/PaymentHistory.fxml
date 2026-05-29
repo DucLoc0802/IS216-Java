@@ -33,8 +33,8 @@
         </VBox>
         <DatePicker fx:id="dpFromDate" prefWidth="140" promptText="Từ ngày" styleClass="filter-combo" />
         <DatePicker fx:id="dpToDate" prefWidth="140" promptText="Đến ngày" styleClass="filter-combo" />
-        <Button onAction="#onSearch" styleClass="action-btn action-btn-primary" text="Lọc" />
-        <Button onAction="#onClear" styleClass="action-btn action-btn-outline" text="Xóa lọc" />
+        <Button onAction="#onSearch" styleClass="action-btn action-btn-primary" text="Tìm kiếm" />
+        <Button onAction="#onClear" styleClass="action-btn action-btn-outline" text="Xóa bộ lọc" />
     </HBox>
 
     <VBox spacing="12" styleClass="content-panel" VBox.vgrow="ALWAYS">
@@ -48,9 +48,6 @@
                 <TableColumn fx:id="colStatus" prefWidth="110" text="Trạng thái" />
                 <TableColumn fx:id="colPaidAt" prefWidth="170" text="Ngày thanh toán" />
             </columns>
-            <placeholder>
-                <Label text="Không có giao dịch nào" />
-            </placeholder>
         </TableView>
     </VBox>
 </VBox>

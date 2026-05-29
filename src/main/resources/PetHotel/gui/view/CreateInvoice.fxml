@@ -1,26 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox prefWidth="680" spacing="0"
+<VBox prefHeight="760" prefWidth="1180" spacing="0"
       style="-fx-background-color: white;"
-      styleClass="form-root"
+      styleClass="form-root create-invoice-root"
       stylesheets="@../css/style.css"
       xmlns="http://javafx.com/javafx/25"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="PetHotel.gui.controller.CreateInvoiceController">
 
     <HBox alignment="CENTER_LEFT" spacing="12"
-          style="-fx-background-color: #f4eadf; -fx-padding: 18 22 18 22;"
+          style="-fx-background-color: #f4eadf; -fx-padding: 16 22 16 22;"
           styleClass="form-header">
         <VBox spacing="3">
             <Label styleClass="form-header-title"
@@ -28,98 +27,94 @@
                    text="Tạo Hóa Đơn Mới" />
             <Label styleClass="form-header-subtitle"
                    style="-fx-font-size: 12px; -fx-text-fill: #766b60;"
-                   text="Tạo hóa đơn từ booking, grooming và chi phí phát sinh" />
+                   text="Tìm khách hàng, chọn booking hoặc dịch vụ chưa tạo hóa đơn" />
         </VBox>
         <Region HBox.hgrow="ALWAYS" />
-        <Button onAction="#onClose"
-                styleClass="form-close-btn"
-                text="Đóng" />
+        <Button onAction="#onClose" styleClass="form-close-btn" text="Đóng" />
     </HBox>
 
-    <VBox spacing="14" style="-fx-padding: 18 22 18 22;" styleClass="form-body">
+    <VBox spacing="14" style="-fx-padding: 18 22 18 22;" styleClass="form-body" VBox.vgrow="ALWAYS">
+        <VBox spacing="10" styleClass="create-invoice-section">
+            <Label styleClass="form-section-title" text="Tìm kiếm khách hàng" />
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <TextField fx:id="txtCustomerSearch"
+                           prefHeight="38"
+                           promptText="Nhập tên hoặc số điện thoại khách hàng..."
+                           styleClass="form-field"
+                           HBox.hgrow="ALWAYS" />
+                <Button onAction="#onSearchCustomer"
+                        prefHeight="38"
+                        minWidth="92"
+                        styleClass="btn-primary"
+                        text="Tìm kiếm" />
+            </HBox>
+            <TableView fx:id="tableCustomer" prefHeight="250" styleClass="management-table">
+                <columns>
+                    <TableColumn fx:id="colCustomerId" prefWidth="130" text="Mã KH" />
+                    <TableColumn fx:id="colCustomerName" prefWidth="310" text="Khách hàng" />
+                    <TableColumn fx:id="colCustomerPhone" prefWidth="180" text="Số điện thoại" />
+                    <TableColumn fx:id="colCustomerEmail" prefWidth="310" text="Email" />
+                </columns>
+            </TableView>
+        </VBox>
 
-        <Label styleClass="form-section-title" text="Thông Tin Booking" />
-        <HBox spacing="14">
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Booking *" />
-                <ComboBox fx:id="cbbBooking" maxWidth="Infinity" visibleRowCount="8" styleClass="form-combo" />
-            </VBox>
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Khách hàng" />
-                <TextField fx:id="txtCustomer" editable="false" maxWidth="Infinity" styleClass="form-field" />
-            </VBox>
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Phí booking/phòng" />
-                <TextField fx:id="txtBookingFee" editable="false" maxWidth="Infinity" promptText="0" styleClass="form-field" />
-            </VBox>
-        </HBox>
+        <VBox spacing="6" styleClass="create-invoice-section">
+            <Label styleClass="form-section-title" text="Thông tin khách hàng đã chọn" />
+            <GridPane hgap="12" vgap="6">
+                <Label styleClass="form-label" text="Khách hàng" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                <Label fx:id="lblSelectedCustomer" styleClass="ph-info-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                <Label styleClass="form-label" text="Số điện thoại" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                <Label fx:id="lblSelectedPhone" styleClass="ph-info-value" text="-" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+            </GridPane>
+        </VBox>
 
-        <Separator styleClass="form-divider" />
-
-        <Label styleClass="form-section-title" text="Dịch Vụ &amp; Grooming" />
-        <HBox spacing="14">
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Grooming" />
-                <ComboBox fx:id="cbbGrooming" maxWidth="Infinity" styleClass="form-combo" />
+        <VBox spacing="12" VBox.vgrow="ALWAYS">
+            <VBox spacing="8" styleClass="create-invoice-section" VBox.vgrow="ALWAYS">
+                <Label styleClass="form-section-title" text="Booking chưa tạo hóa đơn" />
+                <TableView fx:id="tableBookingSource" prefHeight="190" styleClass="create-invoice-table" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colBookingId" prefWidth="120" text="Mã booking" />
+                        <TableColumn fx:id="colBookingPet" prefWidth="180" text="Thú cưng" />
+                        <TableColumn fx:id="colBookingRoom" prefWidth="120" text="Phòng" />
+                        <TableColumn fx:id="colBookingCheckin" prefWidth="170" text="Ngày nhận" />
+                        <TableColumn fx:id="colBookingCheckout" prefWidth="170" text="Ngày trả" />
+                        <TableColumn fx:id="colBookingStatus" prefWidth="130" text="Trạng thái" />
+                        <TableColumn fx:id="colBookingTotal" prefWidth="150" text="Tạm tính" />
+                        <TableColumn fx:id="colBookingPrepaid" prefWidth="150" text="Đã trả trước" />
+                    </columns>
+                </TableView>
             </VBox>
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Phí grooming" />
-                <TextField fx:id="txtGroomingFee" maxWidth="Infinity" promptText="0" styleClass="form-field" />
-            </VBox>
-        </HBox>
 
-        <Separator styleClass="form-divider" />
-
-        <Label styleClass="form-section-title" text="Chi Phí Phát Sinh" />
-        <HBox spacing="14">
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Tên chi phí" />
-                <TextField fx:id="txtExtraName" maxWidth="Infinity" promptText="Ví dụ: phụ phí vệ sinh" styleClass="form-field" />
+            <VBox spacing="8" styleClass="create-invoice-section" VBox.vgrow="ALWAYS">
+                <Label styleClass="form-section-title" text="Grooming / dịch vụ chưa tạo hóa đơn" />
+                <TableView fx:id="tableServiceSource" prefHeight="190" styleClass="create-invoice-table" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colServiceId" prefWidth="140" text="Mã dịch vụ" />
+                        <TableColumn fx:id="colServicePet" prefWidth="190" text="Thú cưng" />
+                        <TableColumn fx:id="colServiceName" prefWidth="300" text="Tên dịch vụ" />
+                        <TableColumn fx:id="colServiceDate" prefWidth="190" text="Ngày sử dụng" />
+                        <TableColumn fx:id="colServiceStatus" prefWidth="130" text="Trạng thái" />
+                        <TableColumn fx:id="colServiceTotal" prefWidth="150" text="Thành tiền" />
+                    </columns>
+                </TableView>
             </VBox>
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Số tiền" />
-                <TextField fx:id="txtExtraFee" maxWidth="Infinity" promptText="0" styleClass="form-field" />
-            </VBox>
-        </HBox>
-
-        <Separator styleClass="form-divider" />
-
-        <Label styleClass="form-section-title" text="Thông Tin Hóa Đơn" />
-        <HBox spacing="14">
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Ngày tạo" />
-                <DatePicker fx:id="dpCreatedDate" maxWidth="Infinity" styleClass="form-combo" />
-            </VBox>
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Trạng thái" />
-                <ComboBox fx:id="cbbStatus" maxWidth="Infinity" styleClass="form-combo" />
-            </VBox>
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label styleClass="form-label" text="Tổng tiền *" />
-                <TextField fx:id="txtTotalAmount" editable="false" maxWidth="Infinity" promptText="0" styleClass="form-field" />
-            </VBox>
-        </HBox>
-
-        <Separator styleClass="form-divider" />
-
-        <Label styleClass="form-section-title" text="Ghi Chú" />
-        <VBox spacing="4">
-            <TextArea fx:id="txtNote"
-                      prefRowCount="3"
-                      promptText="Ghi chú bổ sung cho hóa đơn"
-                      styleClass="form-area"
-                      wrapText="true" />
         </VBox>
     </VBox>
 
-    <HBox alignment="CENTER_RIGHT" spacing="10"
+    <HBox alignment="CENTER_RIGHT" spacing="12"
           style="-fx-background-color: #faf8f6; -fx-padding: 14 22 16 22;"
           styleClass="form-footer">
-        <Button onAction="#onClose"
-                styleClass="btn-secondary"
-                text="Hủy" />
-        <Button onAction="#onCreateInvoice"
-                styleClass="btn-primary"
-                text="Tạo hóa đơn" />
+        <GridPane hgap="10" vgap="3" styleClass="invoice-summary-grid">
+            <Label styleClass="invoice-summary-label" text="Tạm tính" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+            <Label fx:id="lblSubtotal" styleClass="invoice-summary-value" text="0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+            <Label styleClass="invoice-summary-label" text="Đã trả trước" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+            <Label fx:id="lblPrepaid" styleClass="invoice-summary-value" text="0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+        </GridPane>
+        <Region minWidth="12" />
+        <Label styleClass="total-grand" text="Cần thanh toán" />
+        <Label fx:id="lblSummaryTotal" styleClass="total-grand-big" text="0" />
+        <Region minWidth="12" />
+        <Button onAction="#onClose" styleClass="btn-secondary" text="Hủy" />
+        <Button fx:id="btnCreateInvoice" onAction="#onCreateInvoice" styleClass="btn-primary" text="Tạo hóa đơn" />
     </HBox>
 </VBox>

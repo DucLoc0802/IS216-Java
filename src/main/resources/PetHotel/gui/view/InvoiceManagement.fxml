@@ -30,31 +30,31 @@
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
         <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
             <Label styleClass="search-icon" text="🔍" />
-            <TextField fx:id="txtSearch" promptText="Mã HĐ, tên khách hàng..." styleClass="search-input" HBox.hgrow="ALWAYS" />
+            <TextField fx:id="txtSearch" promptText="Tìm theo tên hoặc số điện thoại..." styleClass="search-input" HBox.hgrow="ALWAYS" />
         </HBox>
         <DatePicker fx:id="filterFrom" prefWidth="140" styleClass="filter-combo" />
         <DatePicker fx:id="filterTo" prefWidth="140" styleClass="filter-combo" />
-        <ComboBox fx:id="cbbStatusFilter" prefWidth="130" promptText="Trạng thái" styleClass="filter-combo" />
-        <Button onAction="#handleSearch" style="-fx-padding: 7 16 7 16;" styleClass="action-btn action-btn-primary" text="Lọc" />
+        <ComboBox fx:id="cbbStatusFilter" prefWidth="150" promptText="Tất cả trạng thái" styleClass="filter-combo" />
+        <Button onAction="#handleSearch" style="-fx-padding: 7 16 7 16;" styleClass="action-btn action-btn-primary" text="Tìm kiếm" />
     </HBox>
 
     <HBox spacing="18">
         <VBox spacing="12" styleClass="content-panel" HBox.hgrow="ALWAYS">
-            <TableView fx:id="tableInvoice" styleClass="data-table invoice-table" VBox.vgrow="ALWAYS">
+            <TableView fx:id="tableInvoice" styleClass="invoice-table" VBox.vgrow="ALWAYS">
                 <columns>
-                    <TableColumn fx:id="colOrderId" prefWidth="110" text="Mã HĐ" />
-                    <TableColumn fx:id="colCustomer" prefWidth="170" text="Khách Hàng" />
-                    <TableColumn fx:id="colCreatedDate" prefWidth="180" text="Ngày Tạo" />
-                    <TableColumn fx:id="colGrandTotal" prefWidth="150" text="Tổng Tiền" />
-                    <TableColumn fx:id="colStatus" prefWidth="150" text="Trạng Thái" />
+                    <TableColumn fx:id="colOrderId" prefWidth="90" text="Mã HĐ" />
+                    <TableColumn fx:id="colCustomer" prefWidth="180" text="Khách hàng" />
+                    <TableColumn fx:id="colCustomerPhone" prefWidth="120" text="SĐT" />
+                    <TableColumn fx:id="colCreatedDate" prefWidth="150" text="Ngày tạo" />
+                    <TableColumn fx:id="colCreatedByEmp" prefWidth="110" text="Nhân viên lập" />
+                    <TableColumn fx:id="colGrandTotal" prefWidth="120" text="Tổng tiền" />
+                    <TableColumn fx:id="colRemainingAmount" prefWidth="120" text="Còn lại" />
+                    <TableColumn fx:id="colStatus" prefWidth="160" text="Trạng thái" />
                 </columns>
-                <placeholder>
-                    <Label styleClass="table-empty" text="Không có hóa đơn nào" />
-                </placeholder>
             </TableView>
             
             <HBox alignment="CENTER_RIGHT">
-                <Pagination fx:id="pagination" maxPageIndicatorCount="5" pageCount="1" />
+                <Pagination fx:id="pagination" maxPageIndicatorCount="5" pageCount="1" styleClass="invoice-pagination" />
             </HBox>
         </VBox>
 
