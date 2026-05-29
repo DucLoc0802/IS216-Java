@@ -169,7 +169,7 @@ create table product (
    constraint fk_product_category foreign key ( product_category_id )
       references category_product ( product_category_id ),
    constraint ck_product_cost_price check ( cost_price >= 0 ),
-   constraint ck_product_import_price check ( import_price >= 0 ),c
+   constraint ck_product_import_price check ( import_price >= 0 ),
    constraint ck_product_is_active check ( is_active in ( 0,
                                                         1 ) )
     --0: INACTIVE; 1: ACTIVE
