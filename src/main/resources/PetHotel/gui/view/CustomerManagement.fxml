@@ -14,7 +14,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="18" styleClass="main-content" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="PetHotel.gui.controller.CustomerController">
+<VBox spacing="18" styleClass="main-content" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="PetHotel.gui.controller.CustomerController">
 
     <fx:define>
         <ToggleGroup fx:id="customerPetTabs" />
@@ -27,7 +27,10 @@
             <Label fx:id="subtitleLabel" styleClass="ph-page-subtitle" text="Quản lý thông tin khách hàng" />
         </VBox>
         <HBox alignment="CENTER_LEFT" spacing="6" styleClass="ph-module-tabs">
-            <ToggleButton fx:id="tabCustomer" onAction="#onShowCustomerTab" selected="true" styleClass="ph-module-tab" text="Quản lý khách hàng" toggleGroup="$customerPetTabs" />
+            <ToggleButton fx:id="tabCustomer" onAction="#onShowCustomerTab" selected="true" styleClass="ph-module-tab" text="Quản lý khách hàng">
+            <toggleGroup>
+               <ToggleGroup fx:id="customerPetTabs" />
+            </toggleGroup></ToggleButton>
             <ToggleButton fx:id="tabPet" onAction="#onShowPetTab" styleClass="ph-module-tab" text="Danh sách thú cưng" toggleGroup="$customerPetTabs" />
         </HBox>
         <Region HBox.hgrow="ALWAYS" />
@@ -47,7 +50,6 @@
 
             <HBox alignment="CENTER_LEFT" spacing="10" styleClass="action-toolbar">
                 <Button fx:id="btnEdit" disable="true" onAction="#onEdit" styleClass="action-btn action-btn-outline" text="Sửa" />
-                <Button fx:id="btnDelete" disable="true" onAction="#onDelete" styleClass="action-btn action-btn-danger" text="Xóa" />
                 <Button fx:id="btnHistory" disable="true" onAction="#onViewHistory" styleClass="action-btn action-btn-outline" text="Lịch Sử DV" />
             </HBox>
 

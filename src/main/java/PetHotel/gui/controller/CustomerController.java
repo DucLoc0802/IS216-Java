@@ -17,7 +17,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
+import java.util.function.Function;
 
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -98,6 +101,7 @@ public class CustomerController {
         petBUS = new PetBUS(authBUS);
         setupTableColumns();
         customerTable.setItems(pagedCustomers);
+        setActionButtons(false);
         customerTable.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             selectedCustomer = newVal;
             setActionButtons(newVal != null);
@@ -134,9 +138,9 @@ public class CustomerController {
     }
 
     private void setActionButtons(boolean enabled) {
-        btnEdit.setDisable(true);
-        btnDelete.setDisable(true);
-        btnHistory.setDisable(true);
+        if (btnEdit != null) btnEdit.setDisable(!enabled);
+        if (btnDelete != null) btnDelete.setDisable(!enabled);
+        if (btnHistory != null) btnHistory.setDisable(!enabled);
     }
 
     private void loadCustomers(String customerIdToSelect) {
@@ -217,9 +221,28 @@ public class CustomerController {
 
     @FXML public void onClearFilter(ActionEvent event) { searchField.clear(); loadCustomers(null); }
     @FXML public void onAddCustomer(ActionEvent event) { openCustomerForm(); }
-    @FXML public void onEdit(ActionEvent event) { showInfo("Ngoài phạm vi", "UC-CUS-04 chưa triển khai trong lần này."); }
+    @FXML public void onEdit(ActionEvent event) {
+        Customer customer = currentSelectedCustomer();
+        if (customer == null) {
+            showInfo("Chưa chọn khách hàng", "Vui lòng chọn khách hàng cần sửa.");
+            return;
+        }
+        Customer refreshed = findCustomerById(customer.getCustomerId());
+        openEditCustomerForm(refreshed != null ? refreshed : customer, null);
+    }
     @FXML public void onDelete(ActionEvent event) { showInfo("Ngoài phạm vi", "UC-CUS-05 chưa triển khai trong lần này."); }
-    @FXML public void onViewHistory(ActionEvent event) { showInfo("Ngoài phạm vi", "UC-CUS-06 chưa triển khai trong lần này."); }
+    @FXML public void onViewHistory(ActionEvent event) {
+        Customer customer = currentSelectedCustomer();
+        if (customer == null) {
+            showInfo("Chưa chọn khách hàng", "Vui lòng chọn khách hàng để xem lịch sử dịch vụ.");
+            return;
+        }
+        try {
+            openServiceHistoryDialog(customer, toServiceHistoryRows(customerBUS.getCustomerServiceHistory(customer.getCustomerId())));
+        } catch (Exception e) {
+            showError("Không tải được lịch sử dịch vụ", e);
+        }
+    }
 
     @FXML
     public void onShowCustomerTab(ActionEvent event) {
@@ -288,6 +311,154 @@ public class CustomerController {
         if (event.getClickCount() == 2 && selectedCustomer != null) {
             openCustomerDetail(selectedCustomer);
         }
+    }
+
+    private Customer currentSelectedCustomer() {
+        Customer tableSelection = customerTable == null ? null : customerTable.getSelectionModel().getSelectedItem();
+        return tableSelection != null ? tableSelection : selectedCustomer;
+    }
+
+    private void openServiceHistoryDialog(Customer customer, ObservableList<ServiceHistoryRow> rows) {
+        Stage stage = modalStage("Lịch Sử Dịch Vụ");
+        TableView<ServiceHistoryRow> table = new TableView<>(rows);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setFixedCellSize(36);
+        table.setMinHeight(320);
+        table.setPrefHeight(380);
+        table.getStyleClass().addAll("data-table", "management-table", "ph-customer-table");
+
+        table.getColumns().add(historyColumn("Mã booking", 105, ServiceHistoryRow::bookingId));
+        table.getColumns().add(historyColumn("Ngày sử dụng", 145, ServiceHistoryRow::usedAt));
+        table.getColumns().add(historyColumn("Tên thú cưng", 130, ServiceHistoryRow::petName));
+        table.getColumns().add(historyColumn("Tên dịch vụ", 180, ServiceHistoryRow::serviceName));
+        table.getColumns().add(historyColumn("Nhân viên", 150, ServiceHistoryRow::employeeName));
+        table.getColumns().add(historyColumn("Trạng thái", 120, ServiceHistoryRow::status));
+        table.getColumns().add(historyColumn("Thành tiền", 120, ServiceHistoryRow::amount));
+        table.setPlaceholder(new Label("Chưa có lịch sử dịch vụ cho khách hàng này."));
+
+        VBox tableCard = card(null, table);
+        VBox.setVgrow(table, Priority.ALWAYS);
+        VBox.setVgrow(tableCard, Priority.ALWAYS);
+
+        Button close = secondaryButton("Đóng");
+        close.setOnAction(e -> stage.close());
+
+        VBox root = new VBox(16,
+                profileHeader("Lịch Sử Dịch Vụ", customer.getFullName(),
+                        customer.getCustomerId() + " · " + valueOrDash(customer.getPhone()), initials(customer.getFullName())),
+                tableCard,
+                footer(close));
+        root.getStyleClass().add("ph-modal-root");
+
+        stage.setScene(new Scene(root, 980, 560));
+        addStylesheet(stage);
+        stage.showAndWait();
+    }
+
+    private TableColumn<ServiceHistoryRow, String> historyColumn(String title, double prefWidth,
+                                                                 Function<ServiceHistoryRow, String> valueProvider) {
+        TableColumn<ServiceHistoryRow, String> column = new TableColumn<>(title);
+        column.setPrefWidth(prefWidth);
+        column.setCellValueFactory(data -> new SimpleStringProperty(valueProvider.apply(data.getValue())));
+        column.setStyle("-fx-alignment: CENTER;");
+        return column;
+    }
+
+    private ObservableList<ServiceHistoryRow> toServiceHistoryRows(List<Object[]> rawRows) {
+        ObservableList<ServiceHistoryRow> rows = FXCollections.observableArrayList();
+        if (rawRows == null) return rows;
+        for (Object[] row : rawRows) {
+            if (row == null) continue;
+            rows.add(new ServiceHistoryRow(
+                    textOrDash(valueAt(row, 0)),
+                    formatDateTimeValue(valueAt(row, 1)),
+                    textOrDash(valueAt(row, 2)),
+                    textOrDash(valueAt(row, 3)),
+                    textOrDash(valueAt(row, 4)),
+                    normalizeStatus(valueAt(row, 5)),
+                    formatMoney(valueAt(row, 6))));
+        }
+        return rows;
+    }
+
+    private Object valueAt(Object[] row, int index) {
+        return index >= 0 && index < row.length ? row[index] : null;
+    }
+
+    private String textOrDash(Object value) {
+        if (value == null) return "-";
+        String text = String.valueOf(value).trim();
+        return text.isEmpty() ? "-" : text;
+    }
+
+    private String normalizeStatus(Object value) {
+        String text = textOrDash(value);
+        return "-".equals(text) ? text : text.replace('_', ' ');
+    }
+
+    private String formatDateTimeValue(Object value) {
+        if (value == null) return "-";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        if (value instanceof OffsetDateTime offsetDateTime) {
+            return offsetDateTime.format(formatter);
+        }
+        if (value instanceof LocalDateTime localDateTime) {
+            return localDateTime.format(formatter);
+        }
+        if (value instanceof LocalDate localDate) {
+            return localDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        }
+        if (value instanceof java.sql.Timestamp timestamp) {
+            return timestamp.toLocalDateTime().format(formatter);
+        }
+        if (value instanceof java.sql.Date date) {
+            return date.toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        }
+        return textOrDash(value);
+    }
+
+    private String formatMoney(Object value) {
+        if (value == null) return "-";
+        double amount;
+        if (value instanceof Number number) {
+            amount = number.doubleValue();
+        } else {
+            try {
+                amount = Double.parseDouble(String.valueOf(value));
+            } catch (NumberFormatException e) {
+                return textOrDash(value);
+            }
+        }
+        return NumberFormat.getNumberInstance(new Locale("vi", "VN")).format(amount) + " VND";
+    }
+
+    private static final class ServiceHistoryRow {
+        private final String bookingId;
+        private final String usedAt;
+        private final String petName;
+        private final String serviceName;
+        private final String employeeName;
+        private final String status;
+        private final String amount;
+
+        private ServiceHistoryRow(String bookingId, String usedAt, String petName, String serviceName,
+                                  String employeeName, String status, String amount) {
+            this.bookingId = bookingId;
+            this.usedAt = usedAt;
+            this.petName = petName;
+            this.serviceName = serviceName;
+            this.employeeName = employeeName;
+            this.status = status;
+            this.amount = amount;
+        }
+
+        private String bookingId() { return bookingId; }
+        private String usedAt() { return usedAt; }
+        private String petName() { return petName; }
+        private String serviceName() { return serviceName; }
+        private String employeeName() { return employeeName; }
+        private String status() { return status; }
+        private String amount() { return amount; }
     }
 
     private void openCustomerForm() {
@@ -495,8 +666,10 @@ public class CustomerController {
                 Customer display = refreshed != null ? refreshed : updated;
                 updateCustomerInLists(display);
                 stage.close();
-                detailStage.close();
-                openCustomerDetail(display);
+                if (detailStage != null) {
+                    detailStage.close();
+                    openCustomerDetail(display);
+                }
             } catch (Exception ex) {
                 error.setText(ex.getMessage());
             }
@@ -548,7 +721,7 @@ public class CustomerController {
         Label line1 = new Label(pet.getPetId() + " - " + pet.getPetName());
         line1.getStyleClass().add("ph-pet-row-title");
 
-        Label line2 = new Label(pet.getSpecies() + " / " + valueOrDash(pet.getBreed())
+        Label line2 = new Label(displaySpecies(pet.getSpecies()) + " / " + valueOrDash(pet.getBreed())
                 + " · " + linkedPetHealthLabel(pet.getPetId())
                 + " · Đang hoạt động");
         line2.getStyleClass().add("ph-pet-row-meta");
@@ -620,13 +793,11 @@ public class CustomerController {
         GridPane petInfo = formGrid();
         addInfo(petInfo, 0, "Mã thú cưng", pet.getPetId());
         addInfo(petInfo, 1, "Tên thú cưng", pet.getPetName());
-        addInfo(petInfo, 2, "Loài", pet.getSpecies());
+        addInfo(petInfo, 2, "Loài", displaySpecies(pet.getSpecies()));
         addInfo(petInfo, 3, "Giống", valueOrDash(pet.getBreed()));
-        addInfo(petInfo, 4, "Ngày sinh", "Chưa có cột trong DB");
-        addInfo(petInfo, 5, "Cân nặng", pet.getWeightKg() == null ? "Chưa ghi nhận" : pet.getWeightKg() + " kg");
-        addInfo(petInfo, 6, "Màu lông", "Chưa có cột trong DB");
-        addInfo(petInfo, 7, "Trạng thái", "Đang hoạt động");
-        addInfo(petInfo, 8, "Ghi chú", valueOrDash(pet.getSpecialNote()));
+        addInfo(petInfo, 4, "Cân nặng", pet.getWeightKg() == null ? "Chưa ghi nhận" : pet.getWeightKg() + " kg");
+        addInfo(petInfo, 5, "Trạng thái", "Đang hoạt động");
+        addInfo(petInfo, 6, "Ghi chú", valueOrDash(pet.getSpecialNote()));
 
         GridPane ownerHealth = formGrid();
         addInfo(ownerHealth, 0, "Chủ sở hữu", owner == null ? "Chưa liên kết chủ sở hữu" : owner.getCustomerId() + " - " + owner.getFullName());
@@ -654,7 +825,7 @@ public class CustomerController {
         });
 
         VBox root = new VBox(16,
-                profileHeader("Hồ Sơ Thú Cưng", pet.getPetName(), pet.getSpecies() + " / " + valueOrDash(pet.getBreed()) + " - " + petHealthLabel(latest), initials(pet.getPetName())),
+                profileHeader("Hồ Sơ Thú Cưng", pet.getPetName(), displaySpecies(pet.getSpecies()) + " / " + valueOrDash(pet.getBreed()) + " - " + petHealthLabel(latest), initials(pet.getPetName())),
                 columns,
                 footer(health, edit, close));
         root.getStyleClass().add("ph-modal-root");
@@ -969,6 +1140,15 @@ public class CustomerController {
 
     private String valueOrDash(String value) {
         return value == null || value.isBlank() ? "-" : value;
+    }
+
+    private String displaySpecies(String species) {
+        if (species == null || species.isBlank()) return "-";
+        return switch (species.trim().toUpperCase()) {
+            case "DOG" -> "Chó";
+            case "CAT" -> "Mèo";
+            default -> species;
+        };
     }
 
     private String valueOrNotUpdated(String value) {

@@ -1,5 +1,12 @@
 package PetHotel.gui.controller;
 
+import java.net.URL;
+import java.sql.SQLException;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import PetHotel.bus.AuthBUS;
 import PetHotel.bus.CustomerBUS;
 import PetHotel.bus.PetBUS;
@@ -10,19 +17,9 @@ import PetHotel.model.Customer;
 import PetHotel.model.Pet;
 import PetHotel.model.PetHealthRecord;
 import PetHotel.util.Role;
-
-import java.net.URL;
-import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.ObservableList;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -107,7 +104,7 @@ public class PetController {
         petTable.setFixedCellSize(36);
         colPetId.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getPetId()));
         colPetName.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getPetName()));
-        colPetSpecies.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getSpecies() + " / " + valueOrDash(d.getValue().getBreed())));
+        colPetSpecies.setCellValueFactory(d -> new SimpleStringProperty(displaySpecies(d.getValue().getSpecies()) + " / " + valueOrDash(d.getValue().getBreed())));
         colPetOwner.setCellValueFactory(d -> new SimpleStringProperty(ownerNameByCustomerId.getOrDefault(d.getValue().getCustomerId(), "Chưa liên kết")));
         colPetHealth.setCellValueFactory(d -> new SimpleStringProperty(healthTableLabel(d.getValue().getPetId())));
     }
@@ -328,7 +325,18 @@ public class PetController {
     }
     @FXML public void onDeletePet(ActionEvent event) { showInfo("Ngoài phạm vi", "UC-PET-05 chưa triển khai trong lần này."); }
     @FXML public void onServiceHistory(ActionEvent event) { showInfo("Ngoài phạm vi", "UC-PET-08 chưa triển khai trong lần này."); }
-    @FXML public void onHealthRecord(ActionEvent event) { if (selectedPet != null) openHealthForm(selectedPet); }
+    @FXML 
+    public void onHealthRecord(ActionEvent event) { 
+        if (selectedPet != null) {
+            // Lấy cửa sổ hiện tại làm cha
+            Stage mainStage = null;
+            if (btnHealth != null && btnHealth.getScene() != null) {
+                mainStage = (Stage) btnHealth.getScene().getWindow();
+            }
+            // Truyền false để không đóng màn hình chính khi lưu xong
+            openHealthForm(selectedPet, mainStage, false); 
+        }
+    }
 
     @FXML
     public void onTableClick(MouseEvent event) {
@@ -394,6 +402,7 @@ public class PetController {
         stage.setMinHeight(680);
         root.applyCss();
         root.layout();
+        //Đã sửa xóa snapshot()
         root.snapshot(null, null);
         stage.sizeToScene();
         stage.centerOnScreen();
@@ -409,13 +418,11 @@ public class PetController {
         GridPane petInfo = formGrid();
         addInfo(petInfo, 0, "Mã thú cưng", pet.getPetId());
         addInfo(petInfo, 1, "Tên thú cưng", pet.getPetName());
-        addInfo(petInfo, 2, "Loài", pet.getSpecies());
+        addInfo(petInfo, 2, "Loài", displaySpecies(pet.getSpecies()));
         addInfo(petInfo, 3, "Giống", valueOrDash(pet.getBreed()));
-        addInfo(petInfo, 4, "Ngày sinh", "Chưa có cột trong DB");
-        addInfo(petInfo, 5, "Cân nặng", pet.getWeightKg() == null ? "Chưa ghi nhận cân nặng" : pet.getWeightKg() + " kg");
-        addInfo(petInfo, 6, "Màu lông", "Chưa có cột trong DB");
-        addInfo(petInfo, 7, "Trạng thái", "Đang hoạt động");
-        addInfo(petInfo, 8, "Ghi chú đặc biệt", valueOrDash(pet.getSpecialNote()));
+        addInfo(petInfo, 4, "Cân nặng", pet.getWeightKg() == null ? "Chưa ghi nhận cân nặng" : pet.getWeightKg() + " kg");
+        addInfo(petInfo, 5, "Trạng thái", "Đang hoạt động");
+        addInfo(petInfo, 6, "Ghi chú đặc biệt", valueOrDash(pet.getSpecialNote()));
 
         GridPane ownerHealth = formGrid();
         addInfo(ownerHealth, 0, "Chủ sở hữu", ownerText);
@@ -438,12 +445,12 @@ public class PetController {
         history.setTooltip(new Tooltip("Chưa triển khai"));
         close.setOnAction(e -> stage.close());
         health.setOnAction(e -> {
-            stage.close();
-            openHealthForm(pet);
+            //đã sửa xóa e.close();
+            openHealthForm(pet, stage, true); //Đã sửa
         });
 
         VBox root = new VBox(16,
-                profileHeader(pet.getPetName(), pet.getSpecies() + " / " + valueOrDash(pet.getBreed()) + " · " + healthLabel(latest), initials(pet.getPetName())),
+                profileHeader(pet.getPetName(), displaySpecies(pet.getSpecies()) + " / " + valueOrDash(pet.getBreed()) + " · " + healthLabel(latest), initials(pet.getPetName())),
                 columns,
                 footer(health, history, close));
         root.getStyleClass().add("ph-modal-root");
@@ -453,7 +460,7 @@ public class PetController {
         stage.showAndWait();
     }
 
-    private void openHealthForm(Pet pet) {
+    private void openHealthForm(Pet pet, Stage parentStage, boolean closeParentOnSave) { //đã sửa
         System.out.println("[HealthForm] open start");
         String fxmlPath = "/PetHotel/gui/view/HealthRecordForm.fxml";
         try {
@@ -476,11 +483,23 @@ public class PetController {
                 reloadPetsFromDatabase(pet.getPetId());
             });
 
-            Stage stage = modalStage(editMode ? "Ghi Nhận Sức Khỏe" : "Xem Ghi Nhận Sức Khỏe");
+            // Sử dụng hàm modalStage CÓ truyền parentStage vào
+            Stage stage = modalStage(editMode ? "Ghi Nhận Sức Khỏe" : "Xem Ghi Nhận Sức Khỏe", parentStage); //đã sửa
             prepareHealthFormStage(stage, root);
-            stage.setOnShown(e -> System.out.println("[HealthForm] shown"));
+            
+            // Ép hệ điều hành Focus để tránh lỗi mất hover và kẹt ComboBox
+            stage.setOnShown(e -> {
+                System.out.println("[HealthForm] shown");
+                stage.requestFocus();
+            });
+            
             stage.showAndWait();
+            
             if (controller.isSaved()) {
+                // Chỉ đóng parentStage nếu nó là Form Chi Tiết
+                if (closeParentOnSave && parentStage != null) {
+                    parentStage.close();
+                }
                 openPetDetail(petBUS.getPetDetail(pet.getPetId()));
             }
         } catch (Exception e) {
@@ -501,7 +520,6 @@ public class PetController {
         stage.setMinHeight(620);
         root.applyCss();
         root.layout();
-        root.snapshot(null, null);
         stage.sizeToScene();
         stage.centerOnScreen();
     }
@@ -578,10 +596,23 @@ public class PetController {
         grid.add(v, 1, row);
     }
 
-    private Stage modalStage(String title) {
+// 1. Giữ nguyên hàm cũ của bạn
+    private Stage modalStage(String title) { //đã sửa
+        return modalStage(title, null); // Gọi sang hàm mới
+    }
+
+    // 2. Thêm hàm mới này vào ngay bên dưới:
+    private Stage modalStage(String title, Stage owner) { //đã sửa 
         Stage stage = new Stage();
         stage.setTitle(title);
-        stage.initModality(Modality.APPLICATION_MODAL);
+        
+        // ĐÂY LÀ DÒNG PHÉP THUẬT GIẢI QUYẾT LỖI ĐƠ FORM:
+        if (owner != null) {
+            stage.initOwner(owner); 
+        }
+        
+        // Khi có Owner, bắt buộc dùng WINDOW_MODAL
+        stage.initModality(owner != null ? Modality.WINDOW_MODAL : Modality.APPLICATION_MODAL);
         return stage;
     }
 
@@ -719,6 +750,15 @@ public class PetController {
 
     private String valueOrDash(String value) {
         return value == null || value.isBlank() ? "-" : value;
+    }
+
+    private String displaySpecies(String species) {
+        if (species == null || species.isBlank()) return "-";
+        return switch (species.trim().toUpperCase()) {
+            case "DOG" -> "Chó";
+            case "CAT" -> "Mèo";
+            default -> species;
+        };
     }
 
     private void showInfo(String title, String message) {
