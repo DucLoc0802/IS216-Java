@@ -943,40 +943,266 @@
     -fx-background-color: -ph-bg-row-sel;
 }
 
-.data-table .table-cell {
-    -fx-text-fill: -ph-text-primary;
-    -fx-font-size: 12px;
-    -fx-padding: 5 8 5 8;
-    -fx-alignment: CENTER_LEFT;
+.invoice-table,
+.table-view.invoice-table {
+    -fx-background-color: #FFFDF9;
+    -fx-border-color: #E5D3C3;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-table-cell-border-color: transparent;
 }
 
-.report-table .column-header .label {
-    -fx-alignment: CENTER;
-    -fx-text-alignment: CENTER;
+.invoice-table:focused,
+.table-view.invoice-table:focused {
+    -fx-background-color: #FFFDF9;
+    -fx-border-color: #E5D3C3;
+    -fx-background-insets: 0;
+    -fx-effect: none;
 }
 
-.report-table .table-cell {
-    -fx-alignment: CENTER;
-    -fx-text-alignment: CENTER;
+.invoice-table .column-header-background,
+.invoice-table .nested-column-header,
+.invoice-table .filler,
+.invoice-table .column-header-background .filler {
+    -fx-background-color: #F7EFE7;
+    -fx-background-insets: 0;
 }
 
-.invoice-table .table-row-cell {
-    -fx-cell-size: 60px;
+.invoice-table .column-header-background {
+    -fx-background-radius: 12 12 0 0;
+    -fx-border-color: transparent transparent #E8D8C8 transparent;
+    -fx-border-width: 0 0 1 0;
 }
 
-.invoice-table .table-cell {
-    -fx-padding: 7 12 7 12;
-    -fx-border-color: transparent #18A8E5 transparent transparent;
+.invoice-table .column-header,
+.invoice-table .filler {
+    -fx-background-color: #F7EFE7;
+    -fx-border-color: transparent #E8D8C8 transparent transparent;
     -fx-border-width: 0 1 0 0;
+    -fx-size: 42px;
 }
 
 .invoice-table .column-header .label {
+    -fx-text-fill: #2B2118;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
     -fx-padding: 0 12 0 12;
 }
 
-.table-empty {
-    -fx-text-fill: -ph-text-muted;
-    -fx-font-size: 13px;
+.invoice-table .table-row-cell {
+    -fx-background-color: #FFFDF9;
+    -fx-border-color: transparent transparent #F0E5DA transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-cell-size: 44px;
+}
+
+.invoice-table .table-row-cell:odd {
+    -fx-background-color: #FFFDF9;
+}
+
+.invoice-table .table-row-cell:filled:hover,
+.invoice-table .table-row-cell:hover {
+    -fx-background-color: #FFF7F0;
+}
+
+.invoice-table .table-row-cell:filled:selected,
+.invoice-table .table-row-cell:filled:focused,
+.invoice-table .table-row-cell:filled:focused:selected,
+.invoice-table .table-row-cell:selected,
+.invoice-table .table-row-cell:focused:selected {
+    -fx-background-color: #F4E8DC;
+}
+
+.invoice-table .table-row-cell:filled:selected .table-cell,
+.invoice-table .table-row-cell:filled:focused:selected .table-cell,
+.invoice-table .table-row-cell:filled:focused .table-cell,
+.invoice-table .table-row-cell:filled:selected .text,
+.invoice-table .table-row-cell:filled:focused:selected .text,
+.invoice-table .table-row-cell:filled:focused .text,
+.invoice-table .table-row-cell:selected .table-cell,
+.invoice-table .table-row-cell:focused:selected .table-cell,
+.invoice-table .table-row-cell:selected .text,
+.invoice-table .table-row-cell:focused:selected .text {
+    -fx-fill: #2B2118;
+    -fx-text-fill: #2B2118;
+    -fx-font-weight: 600;
+}
+
+.invoice-table .table-cell {
+    -fx-border-color: transparent #EFE2D5 transparent transparent;
+    -fx-border-width: 0 1 0 0;
+    -fx-text-fill: #2B2118;
+    -fx-font-size: 12px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0 10 0 10;
+}
+
+.invoice-table .virtual-flow,
+.invoice-table .clipped-container,
+.invoice-table .sheet,
+.invoice-table .table-row-cell:empty,
+.invoice-table .corner {
+    -fx-background-color: #FFFDF9;
+}
+
+.invoice-table .scroll-bar:vertical,
+.invoice-table .scroll-bar:horizontal,
+.invoice-detail-table .scroll-bar:vertical,
+.invoice-detail-table .scroll-bar:horizontal {
+    -fx-background-color: #FFF7F0;
+    -fx-padding: 0;
+}
+
+.invoice-table .scroll-bar:vertical,
+.invoice-detail-table .scroll-bar:vertical {
+    -fx-pref-width: 9px;
+}
+
+.invoice-table .scroll-bar:horizontal,
+.invoice-detail-table .scroll-bar:horizontal {
+    -fx-pref-height: 9px;
+}
+
+.invoice-table .scroll-bar .track,
+.invoice-detail-table .scroll-bar .track {
+    -fx-background-color: #FFF7F0;
+    -fx-background-radius: 8px;
+}
+
+.invoice-table .scroll-bar .thumb,
+.invoice-detail-table .scroll-bar .thumb {
+    -fx-background-color: #B67A55;
+    -fx-background-radius: 8px;
+}
+
+.invoice-table .scroll-bar .thumb:hover,
+.invoice-detail-table .scroll-bar .thumb:hover {
+    -fx-background-color: #A64B2A;
+}
+
+.invoice-table .scroll-bar .increment-button,
+.invoice-table .scroll-bar .decrement-button,
+.invoice-detail-table .scroll-bar .increment-button,
+.invoice-detail-table .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.invoice-table .scroll-bar .increment-arrow,
+.invoice-table .scroll-bar .decrement-arrow,
+.invoice-detail-table .scroll-bar .increment-arrow,
+.invoice-detail-table .scroll-bar .decrement-arrow {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.invoice-detail-table,
+.table-view.invoice-detail-table {
+    -fx-background-color: #FFFDF9;
+    -fx-border-color: #E5D3C3;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-table-cell-border-color: transparent;
+}
+
+.invoice-detail-table:focused,
+.table-view.invoice-detail-table:focused {
+    -fx-background-color: #FFFDF9;
+    -fx-border-color: #E5D3C3;
+    -fx-background-insets: 0;
+    -fx-effect: none;
+}
+
+.invoice-detail-table .column-header-background,
+.invoice-detail-table .nested-column-header,
+.invoice-detail-table .filler,
+.invoice-detail-table .column-header-background .filler {
+    -fx-background-color: #F7EFE7;
+    -fx-background-insets: 0;
+}
+
+.invoice-detail-table .column-header-background {
+    -fx-background-radius: 12 12 0 0;
+    -fx-border-color: transparent transparent #E8D8C8 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.invoice-detail-table .column-header,
+.invoice-detail-table .filler {
+    -fx-background-color: #F7EFE7;
+    -fx-border-color: transparent #E8D8C8 transparent transparent;
+    -fx-border-width: 0 1 0 0;
+    -fx-size: 38px;
+}
+
+.invoice-detail-table .column-header .label {
+    -fx-text-fill: #2B2118;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-padding: 0 10 0 10;
+}
+
+.invoice-detail-table .table-row-cell {
+    -fx-background-color: #FFFDF9;
+    -fx-border-color: transparent transparent #F0E5DA transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-cell-size: 42px;
+}
+
+.invoice-detail-table .table-row-cell:odd {
+    -fx-background-color: #FFFDF9;
+}
+
+.invoice-detail-table .table-row-cell:filled:hover {
+    -fx-background-color: #FFF7F0;
+}
+
+.invoice-detail-table .table-row-cell:filled:selected,
+.invoice-detail-table .table-row-cell:filled:focused,
+.invoice-detail-table .table-row-cell:filled:focused:selected {
+    -fx-background-color: #F4E8DC;
+    -fx-text-background-color: #2B2118;
+}
+
+.invoice-detail-table .table-row-cell:filled:selected .table-cell,
+.invoice-detail-table .table-row-cell:filled:focused:selected .table-cell,
+.invoice-detail-table .table-row-cell:filled:focused .table-cell,
+.invoice-detail-table .table-row-cell:filled:selected .text,
+.invoice-detail-table .table-row-cell:filled:focused:selected .text,
+.invoice-detail-table .table-row-cell:filled:focused .text {
+    -fx-fill: #2B2118;
+    -fx-text-fill: #2B2118;
+    -fx-font-weight: 600;
+}
+
+.invoice-detail-table .table-cell {
+    -fx-border-color: transparent #EFE2D5 transparent transparent;
+    -fx-border-width: 0 1 0 0;
+    -fx-text-fill: #2B2118;
+    -fx-font-size: 12px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0 10 0 10;
+}
+
+.invoice-detail-table .virtual-flow,
+.invoice-detail-table .clipped-container,
+.invoice-detail-table .sheet,
+.invoice-detail-table .table-row-cell:empty,
+.invoice-detail-table .corner {
+    -fx-background-color: #FFFDF9;
+}
 }
 
 
