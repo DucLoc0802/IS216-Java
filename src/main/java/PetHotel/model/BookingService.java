@@ -36,6 +36,12 @@ public class BookingService {
     private String note;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+    private String serviceName;
+    private String petName;
+    private String petSpecies;
+    private String customerName;
+    private String customerPhone;
+    private String customerAddress;
 
     // ── Constructors ──────────────────────────────────────────────
 
@@ -57,7 +63,7 @@ public class BookingService {
     }
 
     // ── Getters / Setters ─────────────────────────────────────────
-
+    
     public String getBookingServiceId()                  { return bookingServiceId; }
     public void setBookingServiceId(String v)            { this.bookingServiceId = v; }
 
@@ -87,6 +93,54 @@ public class BookingService {
 
     public OffsetDateTime getUpdatedAt()                 { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime v)           { this.updatedAt = v; }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+
+    public String getPetName() {
+        return petName;
+    }
+
+    public void setPetName(String petName) {
+        this.petName = petName;
+    }
+
+    public String getPetSpecies() {
+        return petSpecies;
+    }
+
+    public void setPetSpecies(String petSpecies) {
+        this.petSpecies = petSpecies;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public String getCustomerPhone() {
+        return customerPhone;
+    }
+
+    public void setCustomerPhone(String customerPhone) {
+        this.customerPhone = customerPhone;
+    }
+
+    public String getCustomerAddress() {
+        return customerAddress;
+    }
+
+    public void setCustomerAddress(String customerAddress) {
+        this.customerAddress = customerAddress;
+    }
 
     /** @return true nếu dịch vụ chưa hoàn tất */
     public boolean isActive() {

@@ -61,8 +61,8 @@ public class AuthBUS {
                 throw new AuthenticationException("Tài khoản đã bị khóa. Liên hệ quản trị viên để được hỗ trợ.");
             }
 
-            // 4. Kiểm tra password bằng PasswordUtil
-            if (!PasswordUtil.checkPassword(rawPassword, user.getPasswordHash())) {
+            // 4. Kiểm tra password. Sample DB hiện đang lưu plaintext trong password_hash.
+            if (!matchesPassword(rawPassword, user.getPasswordHash())) {
                 throw new AuthenticationException("Tên đăng nhập hoặc mật khẩu không đúng.");
             }
 
@@ -194,6 +194,20 @@ public class AuthBUS {
         }
         if (!hasUpper || !hasLower || !hasDigit) {
             throw new ValidationException("Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số.");
+        }
+    }
+
+    private boolean matchesPassword(String rawPassword, String storedPassword) {
+        if (storedPassword == null) {
+            return false;
+        }
+        if (rawPassword.equals(storedPassword)) {
+            return true;
+        }
+        try {
+            return PasswordUtil.checkPassword(rawPassword, storedPassword);
+        } catch (RuntimeException e) {
+            return false;
         }
     }
 }

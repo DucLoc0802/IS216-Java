@@ -89,6 +89,7 @@ public class EmployeeController {
     @FXML
     public void initialize() {
         setupColumns();
+        employeeTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         setupSelectionListener();
         loadBranchFilter();
         loadStats();

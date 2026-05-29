@@ -10,18 +10,12 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<!--
-  account-form.fxml — Form Tạo / Sửa Tài Khoản
-  ─────────────────────────────────────────────────────────────────
-  Controller: PetHotel.gui.controller.AccountFormController
-
-  Mode:
-    CREATE → title "Tạo Tài Khoản Mới"
-    EDIT   → title "Chỉnh Sửa Tài Khoản"
-  ─────────────────────────────────────────────────────────────────
--->
-
-<VBox maxWidth="480" prefWidth="480" spacing="0" style="-fx-background-color: white; -fx-background-radius: 14px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.18), 30, 0, 0, 8);" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="PetHotel.gui.controller.AccountFormController">
+<VBox maxWidth="480" prefWidth="480" spacing="0"
+      style="-fx-background-color: white; -fx-background-radius: 14px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.18), 30, 0, 0, 8);"
+      stylesheets="@../css/style.css"
+      xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="PetHotel.gui.controller.AccountFormController">
 
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="form-header">
         <Region styleClass="form-header-icon" />
@@ -34,12 +28,11 @@
     </HBox>
 
     <VBox spacing="16" styleClass="form-body">
-
         <Label styleClass="form-section-title" text="Thông Tin Tài Khoản" />
 
         <VBox spacing="4">
-            <Label styleClass="form-label" text="Mã Nhân Viên *" />
-            <TextField fx:id="txtEmployeeId" promptText="EMP001" styleClass="form-field" />
+            <Label styleClass="form-label" text="Nhân Viên *" />
+            <ComboBox fx:id="cbEmployee" maxWidth="1.7976931348623157E308" promptText="Chọn nhân viên..." styleClass="form-combo" />
         </VBox>
 
         <VBox spacing="4">
@@ -65,13 +58,11 @@
             <Label styleClass="form-label" text="Vai trò *" />
             <ComboBox fx:id="cbRole" maxWidth="1.7976931348623157E308" promptText="Chọn vai trò..." styleClass="form-combo" />
         </VBox>
-
-        <Label fx:id="lblError" styleClass="form-error" text="" wrapText="true" />
     </VBox>
 
     <HBox alignment="CENTER_RIGHT" spacing="10" styleClass="form-footer">
-        <Button onAction="#handleCancel" styleClass="btn-secondary" text="Hủy" />
+        <Button fx:id="btnCancel" onAction="#handleCancel" styleClass="btn-secondary" text="Hủy" />
         <Button fx:id="btnSave" onAction="#handleSave" styleClass="btn-primary" text="Tạo Tài Khoản" />
     </HBox>
 
-</VBox>  
+</VBox>

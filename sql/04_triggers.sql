@@ -25,137 +25,199 @@
 
 -- 1. Chống trùng lịch đặt phòng
 CREATE OR REPLACE TRIGGER booking_room_no_overlap
-BEFORE INSERT OR UPDATE ON booking_room
-FOR EACH ROW
-DECLARE
-    v_conflict_booking_id       booking.booking_id%TYPE;
-    v_conflict_booking_room_id  booking_room.booking_room_id%TYPE;
-BEGIN
-    -- Chọn mã booking và booking_room bị trùng để báo lỗi
-    SELECT br.booking_id, br.booking_room_id
-    INTO v_conflict_booking_id, v_conflict_booking_room_id
-    FROM booking_room br
-    JOIN booking b_old
-        ON br.booking_id = b_old.booking_id
-    JOIN booking b_new
-        ON b_new.booking_id = :NEW.booking_id
-    WHERE br.room_id = :NEW.room_id
-      AND br.booking_room_id <> :NEW.booking_room_id
-      AND b_old.status <> 'CANCELLED'
-      AND b_new.status <> 'CANCELLED'
-      AND b_new.checkin_expected_at < b_old.checkout_expected_at
-      AND b_new.checkout_expected_at > b_old.checkin_expected_at
-      AND ROWNUM = 1;
+FOR INSERT OR UPDATE ON booking_room
+COMPOUND TRIGGER
 
-    -- Phát hiện trùng lịch đặt phòng
-    RAISE_APPLICATION_ERROR(
-        -20001,
-        'Booking room schedule overlap detected. Conflicting booking_id = ' ||
-        v_conflict_booking_id || ', booking_room_id = ' || v_conflict_booking_room_id
-    );
+   -- Kiểu dữ liệu lưu tạm (booking_id, room_id, booking_room_id)
+   TYPE t_row IS RECORD (
+      booking_id       booking.booking_id%TYPE,
+      room_id          room.room_id%TYPE,
+      booking_room_id  booking_room.booking_room_id%TYPE
+   );
+   TYPE t_rows IS TABLE OF t_row INDEX BY PLS_INTEGER;
+   g_rows t_rows;
 
-EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-        NULL;
+   --Trước mỗi dòng: lưu lại các giá trị của dòng sắp thay đổi
+   BEFORE EACH ROW IS
+   BEGIN
+      g_rows(g_rows.COUNT + 1).booking_id      := :NEW.booking_id;
+      g_rows(g_rows.COUNT).room_id             := :NEW.room_id;
+      g_rows(g_rows.COUNT).booking_room_id     := :NEW.booking_room_id;
+   END BEFORE EACH ROW;
+
+   --Sau khi tất cả các dòng đã được xử lý: kiểm tra trùng lịch
+   AFTER STATEMENT IS
+      v_conflict_booking_id       booking.booking_id%TYPE;
+      v_conflict_booking_room_id  booking_room.booking_room_id%TYPE;
+   BEGIN
+      FOR i IN 1 .. g_rows.COUNT LOOP
+         BEGIN
+            SELECT br.booking_id, br.booking_room_id
+            INTO v_conflict_booking_id, v_conflict_booking_room_id
+            FROM booking_room br
+            JOIN booking b_old ON br.booking_id = b_old.booking_id
+            JOIN booking b_new ON b_new.booking_id = g_rows(i).booking_id
+            WHERE br.room_id = g_rows(i).room_id
+              AND br.booking_room_id <> g_rows(i).booking_room_id
+              AND b_old.status <> 'CANCELLED'
+              AND b_new.status <> 'CANCELLED'
+              AND b_new.checkin_expected_at < b_old.checkout_expected_at
+              AND b_new.checkout_expected_at > b_old.checkin_expected_at
+              AND ROWNUM = 1;
+
+            -- Nếu tìm thấy xung đột
+            RAISE_APPLICATION_ERROR(
+                -20001,
+                'Booking room schedule overlap detected. Conflicting booking_id = ' ||
+                v_conflict_booking_id || ', booking_room_id = ' || v_conflict_booking_room_id
+            );
+
+         EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+               NULL;  -- Không xung đột, tiếp tục
+         END;
+      END LOOP;
+   END AFTER STATEMENT;
+
 END;
 /
 
 -- 2. Một nhân viên không thể thực hiện hai dịch vụ cùng một lúc
 CREATE OR REPLACE TRIGGER employee_no_overlap
-BEFORE INSERT OR UPDATE ON booking_services
-FOR EACH ROW
-DECLARE
-    v_conflict_booking_service_id  booking_services.booking_service_id%TYPE;
-    v_conflict_booking_id          booking_services.booking_id%TYPE;
-    v_new_end_time                 TIMESTAMP(6) WITH TIME ZONE;
-BEGIN
-    -- Kiểm tra dữ liệu đầu vào cần thiết
-    IF :NEW.employee_id IS NULL
-       OR :NEW.service_id IS NULL
-       OR :NEW.scheduled_at IS NULL
-       OR :NEW.status NOT IN ('SCHEDULED', 'IN_PROGRESS') THEN
-        RETURN;
-    END IF;
-
-    -- Tính thời gian kết thúc của dịch vụ mới
-    SELECT fn_add_minutes(:NEW.scheduled_at, s.duration_minutes)
-    INTO v_new_end_time
-    FROM services s
-    WHERE s.service_id = :NEW.service_id;
-
-    -- Kiểm tra nhân viên có bị trùng lịch với dịch vụ khác không
-    SELECT bs.booking_service_id, bs.booking_id
-    INTO v_conflict_booking_service_id, v_conflict_booking_id
-    FROM booking_services bs
-    JOIN services s_old
-        ON bs.service_id = s_old.service_id
-    WHERE bs.employee_id = :NEW.employee_id
-      AND bs.booking_service_id <> :NEW.booking_service_id
-      AND bs.status IN ('SCHEDULED', 'IN_PROGRESS')
-      AND bs.scheduled_at IS NOT NULL
-      AND :NEW.scheduled_at < fn_add_minutes(bs.scheduled_at, s_old.duration_minutes)
-      AND v_new_end_time > bs.scheduled_at
-      AND ROWNUM = 1;
-
-    -- Phát hiện nhân viên bị trùng lịch thực hiện dịch vụ
-    RAISE_APPLICATION_ERROR(
-        -20011,
-        'Employee schedule overlap detected. Conflicting booking_service_id = ' ||
-        v_conflict_booking_service_id || ', booking_id = ' || v_conflict_booking_id
+FOR INSERT OR UPDATE ON booking_services
+COMPOUND TRIGGER
+    TYPE t_changed_row IS RECORD (
+        booking_service_id booking_services.booking_service_id%TYPE,
+        booking_id         booking_services.booking_id%TYPE,
+        employee_id        booking_services.employee_id%TYPE,
+        service_id         booking_services.service_id%TYPE,
+        scheduled_at       booking_services.scheduled_at%TYPE
     );
 
-EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-        NULL;
+    TYPE t_changed_rows IS TABLE OF t_changed_row INDEX BY PLS_INTEGER;
+    g_rows t_changed_rows;
+
+    BEFORE EACH ROW IS
+        v_index PLS_INTEGER;
+    BEGIN
+        IF :NEW.employee_id IS NOT NULL
+           AND :NEW.service_id IS NOT NULL
+           AND :NEW.scheduled_at IS NOT NULL
+           AND :NEW.status IN ('SCHEDULED', 'IN_PROGRESS') THEN
+            v_index := g_rows.COUNT + 1;
+            g_rows(v_index).booking_service_id := :NEW.booking_service_id;
+            g_rows(v_index).booking_id         := :NEW.booking_id;
+            g_rows(v_index).employee_id        := :NEW.employee_id;
+            g_rows(v_index).service_id         := :NEW.service_id;
+            g_rows(v_index).scheduled_at       := :NEW.scheduled_at;
+        END IF;
+    END BEFORE EACH ROW;
+
+    AFTER STATEMENT IS
+        v_conflict_booking_service_id booking_services.booking_service_id%TYPE;
+        v_conflict_booking_id         booking_services.booking_id%TYPE;
+        v_new_end_time                TIMESTAMP(6) WITH TIME ZONE;
+    BEGIN
+        IF g_rows.COUNT > 0 THEN
+            FOR i IN 1 .. g_rows.COUNT LOOP
+                SELECT fn_add_minutes(g_rows(i).scheduled_at, s.duration_minutes)
+                INTO v_new_end_time
+                FROM services s
+                WHERE s.service_id = g_rows(i).service_id;
+
+                BEGIN
+                    SELECT bs.booking_service_id, bs.booking_id
+                    INTO v_conflict_booking_service_id, v_conflict_booking_id
+                    FROM booking_services bs
+                    JOIN services s_old ON bs.service_id = s_old.service_id
+                    WHERE bs.employee_id = g_rows(i).employee_id
+                      AND bs.booking_service_id <> g_rows(i).booking_service_id
+                      AND bs.status IN ('SCHEDULED', 'IN_PROGRESS')
+                      AND bs.scheduled_at IS NOT NULL
+                      AND g_rows(i).scheduled_at < fn_add_minutes(bs.scheduled_at, s_old.duration_minutes)
+                      AND v_new_end_time > bs.scheduled_at
+                      AND ROWNUM = 1;
+
+                    RAISE_APPLICATION_ERROR(
+                        -20011,
+                        'Employee schedule overlap detected. Conflicting booking_service_id = ' ||
+                        v_conflict_booking_service_id || ', booking_id = ' || v_conflict_booking_id
+                    );
+                EXCEPTION
+                    WHEN NO_DATA_FOUND THEN
+                        NULL;
+                END;
+            END LOOP;
+        END IF;
+    END AFTER STATEMENT;
 END;
 /
 
 -- 3. Trong cùng một booking, các dịch vụ không được trùng thời gian
 CREATE OR REPLACE TRIGGER booking_service_no_overlap_same_booking
-BEFORE INSERT OR UPDATE ON booking_services
-FOR EACH ROW
-DECLARE
-    v_conflict_booking_service_id  booking_services.booking_service_id%TYPE;
-    v_new_end_time                 TIMESTAMP(6) WITH TIME ZONE;
-BEGIN
-    -- Kiểm tra dữ liệu đầu vào cần thiết
-    IF :NEW.booking_id IS NULL
-       OR :NEW.service_id IS NULL
-       OR :NEW.scheduled_at IS NULL
-       OR :NEW.status NOT IN ('SCHEDULED', 'IN_PROGRESS') THEN
-        RETURN;
-    END IF;
-
-    -- Tính thời gian kết thúc của dịch vụ mới
-    SELECT fn_add_minutes(:NEW.scheduled_at, s.duration_minutes)
-    INTO v_new_end_time
-    FROM services s
-    WHERE s.service_id = :NEW.service_id;
-
-    -- Kiểm tra trùng lịch trong cùng booking
-    SELECT bs.booking_service_id
-    INTO v_conflict_booking_service_id
-    FROM booking_services bs
-    JOIN services s_old
-        ON bs.service_id = s_old.service_id
-    WHERE bs.booking_id = :NEW.booking_id
-      AND bs.booking_service_id <> :NEW.booking_service_id
-      AND bs.status IN ('SCHEDULED', 'IN_PROGRESS')
-      AND bs.scheduled_at IS NOT NULL
-      AND :NEW.scheduled_at < fn_add_minutes(bs.scheduled_at, s_old.duration_minutes)
-      AND v_new_end_time > bs.scheduled_at
-      AND ROWNUM = 1;
-
-    -- Phát hiện dịch vụ bị trùng thời gian trong cùng một booking
-    RAISE_APPLICATION_ERROR(
-        -20012,
-        'Service schedule overlap detected within the same booking. Conflicting booking_service_id = ' ||
-        v_conflict_booking_service_id
+FOR INSERT OR UPDATE ON booking_services
+COMPOUND TRIGGER
+    TYPE t_changed_row IS RECORD (
+        booking_service_id booking_services.booking_service_id%TYPE,
+        booking_id         booking_services.booking_id%TYPE,
+        service_id         booking_services.service_id%TYPE,
+        scheduled_at       booking_services.scheduled_at%TYPE
     );
 
-EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-        NULL;
+    TYPE t_changed_rows IS TABLE OF t_changed_row INDEX BY PLS_INTEGER;
+    g_rows t_changed_rows;
+
+    BEFORE EACH ROW IS
+        v_index PLS_INTEGER;
+    BEGIN
+        IF :NEW.booking_id IS NOT NULL
+           AND :NEW.service_id IS NOT NULL
+           AND :NEW.scheduled_at IS NOT NULL
+           AND :NEW.status IN ('SCHEDULED', 'IN_PROGRESS') THEN
+            v_index := g_rows.COUNT + 1;
+            g_rows(v_index).booking_service_id := :NEW.booking_service_id;
+            g_rows(v_index).booking_id         := :NEW.booking_id;
+            g_rows(v_index).service_id         := :NEW.service_id;
+            g_rows(v_index).scheduled_at       := :NEW.scheduled_at;
+        END IF;
+    END BEFORE EACH ROW;
+
+    AFTER STATEMENT IS
+        v_conflict_booking_service_id booking_services.booking_service_id%TYPE;
+        v_new_end_time                TIMESTAMP(6) WITH TIME ZONE;
+    BEGIN
+        IF g_rows.COUNT > 0 THEN
+            FOR i IN 1 .. g_rows.COUNT LOOP
+                SELECT fn_add_minutes(g_rows(i).scheduled_at, s.duration_minutes)
+                INTO v_new_end_time
+                FROM services s
+                WHERE s.service_id = g_rows(i).service_id;
+
+                BEGIN
+                    SELECT bs.booking_service_id
+                    INTO v_conflict_booking_service_id
+                    FROM booking_services bs
+                    JOIN services s_old ON bs.service_id = s_old.service_id
+                    WHERE bs.booking_id = g_rows(i).booking_id
+                      AND bs.booking_service_id <> g_rows(i).booking_service_id
+                      AND bs.status IN ('SCHEDULED', 'IN_PROGRESS')
+                      AND bs.scheduled_at IS NOT NULL
+                      AND g_rows(i).scheduled_at < fn_add_minutes(bs.scheduled_at, s_old.duration_minutes)
+                      AND v_new_end_time > bs.scheduled_at
+                      AND ROWNUM = 1;
+
+                    RAISE_APPLICATION_ERROR(
+                        -20012,
+                        'Service schedule overlap detected within the same booking. Conflicting booking_service_id = ' ||
+                        v_conflict_booking_service_id
+                    );
+                EXCEPTION
+                    WHEN NO_DATA_FOUND THEN
+                        NULL;
+                END;
+            END LOOP;
+        END IF;
+    END AFTER STATEMENT;
 END;
 /
 

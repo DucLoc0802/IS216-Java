@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import PetHotel.dao.BookingServiceDAO;
+import PetHotel.dao.ServiceCategoryDAO;
 import PetHotel.exception.ValidationException;
 import PetHotel.model.AppUser;
 import PetHotel.model.BookingService;
@@ -14,6 +15,7 @@ import PetHotel.model.Customer;
 import PetHotel.model.Employee;
 import PetHotel.model.Pet;
 import PetHotel.model.PetService;
+import PetHotel.model.ServiceCategory;
 import PetHotel.util.Role;
 
 /**
@@ -28,6 +30,7 @@ public class GroomingBUS {
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private final BookingServiceDAO bookingServiceDAO = new BookingServiceDAO();
+    private final ServiceCategoryDAO serviceCategoryDAO = new ServiceCategoryDAO();
 
     /**
      * Lấy danh sách lịch grooming theo ngày
@@ -36,36 +39,71 @@ public class GroomingBUS {
      * @param status null = tất cả
      * @param currentUser Người dùng hiện tại (để kiểm tra quyền)
      */
-    public List<BookingService> getGroomingScheduleByDate(String dateStr, String employeeId, String status, AppUser currentUser)
-            throws SQLException, ValidationException {
-        
-        // Kiểm tra quyền: Lễ tân, Nhân viên chăm sóc, Quản lý chi nhánh
-        if (!currentUser.hasRole(Role.RECEPTIONIST) && 
-            !currentUser.hasRole(Role.PET_CARE_STAFF) &&
-            !currentUser.hasRole(Role.BRANCH_MANAGER) &&
-            !currentUser.hasRole(Role.ADMIN)) {
+    public List<BookingService> getGroomingScheduleByDate(
+        String dateStr,
+        String employeeId,
+        String status,
+        AppUser currentUser
+    ) throws SQLException, ValidationException {
+
+        if (currentUser == null) {
+            throw new ValidationException("Chưa đăng nhập");
+        }
+
+        if (!currentUser.hasRole(Role.RECEPTIONIST)
+                && !currentUser.hasRole(Role.PET_CARE_STAFF)
+                && !currentUser.hasRole(Role.BRANCH_MANAGER)
+                && !currentUser.hasRole(Role.ADMIN)) {
             throw new ValidationException("Bạn không có quyền xem lịch grooming");
         }
 
-        // Nhân viên chăm sóc chỉ xem lịch của mình
-        if (currentUser.hasRole(Role.PET_CARE_STAFF) && employeeId == null) {
-            employeeId = currentUser.getEmployeeId();
-        }
-
-        // Validate ngày
         if (!isValidDateFormat(dateStr)) {
             throw new ValidationException("Định dạng ngày không hợp lệ (yyyy-MM-dd)");
         }
+
+        /*
+        * Chỉ đúng role Nhân viên chăm sóc mới bị giới hạn xem lịch của chính mình.
+        */
+        if (currentUser.getRole() == Role.PET_CARE_STAFF) {
+            employeeId = currentUser.getEmployeeId();
+        }
+
+        System.out.println("DEBUG BUS role = " + currentUser.getRole());
+        System.out.println("DEBUG BUS employeeId after role filter = " + employeeId);
+        System.out.println("DEBUG BUS status = " + status);
+        System.out.println("DEBUG BUS dateStr = " + dateStr);
 
         return bookingServiceDAO.findByDateAndFilter(dateStr, employeeId, status);
     }
 
     /**
-     * Lấy lịch grooming hôm nay
+     * Lấy toàn bộ lịch grooming, không giới hạn ngày.
+     * @param employeeId null = tất cả
+     * @param status null = tất cả
+     * @param currentUser Người dùng hiện tại (để kiểm tra quyền)
      */
-    public List<BookingService> getTodayGrooming(String employeeId) throws SQLException {
-        String today = LocalDate.now().format(DATE_FORMAT);
-        return bookingServiceDAO.findByDateAndFilter(today, employeeId, null);
+    public List<BookingService> getAllGroomingSchedules(
+        String employeeId,
+        String status,
+        AppUser currentUser
+    ) throws SQLException, ValidationException {
+
+        if (currentUser == null) {
+            throw new ValidationException("Chưa đăng nhập");
+        }
+
+        if (!currentUser.hasRole(Role.RECEPTIONIST)
+                && !currentUser.hasRole(Role.PET_CARE_STAFF)
+                && !currentUser.hasRole(Role.BRANCH_MANAGER)
+                && !currentUser.hasRole(Role.ADMIN)) {
+            throw new ValidationException("Bạn không có quyền xem lịch grooming");
+        }
+
+        if (currentUser.getRole() == Role.PET_CARE_STAFF) {
+            employeeId = currentUser.getEmployeeId();
+        }
+
+        return bookingServiceDAO.findAllAndFilter(employeeId, status);
     }
 
     /**
@@ -91,9 +129,18 @@ public class GroomingBUS {
     public void updateGroomingStatus(String bookingServiceId, String newStatus, AppUser currentUser)
             throws SQLException, ValidationException {
         
+        if (currentUser == null) {
+            throw new ValidationException("Chưa đăng nhập");
+        }
+
         // Kiểm tra quyền
         if (!isValidStatusTransition(newStatus)) {
             throw new ValidationException("Trạng thái không hợp lệ");
+        }
+
+        if (BookingService.STATUS_CANCELLED.equals(newStatus)) {
+            cancelGroomingSchedule(bookingServiceId, currentUser);
+            return;
         }
 
         // Lễ tân: có thể tạo/hủy
@@ -106,7 +153,58 @@ public class GroomingBUS {
             throw new ValidationException("Bạn không có quyền cập nhật lịch grooming");
         }
 
-        bookingServiceDAO.updateStatus(bookingServiceId, newStatus);
+        if (bookingServiceId == null || bookingServiceId.trim().isEmpty()) {
+            throw new ValidationException("Mã lịch grooming không hợp lệ");
+        }
+
+        BookingService schedule = bookingServiceDAO.findById(bookingServiceId.trim());
+        if (schedule == null) {
+            throw new ValidationException("Không tìm thấy lịch grooming cần cập nhật");
+        }
+
+        if (BookingService.STATUS_IN_PROGRESS.equals(newStatus)
+                && (schedule.getEmployeeId() == null || schedule.getEmployeeId().trim().isEmpty())) {
+            throw new ValidationException("Chỉ có thể bắt đầu lịch grooming sau khi đã phân công nhân viên chăm sóc");
+        }
+
+        bookingServiceDAO.updateStatus(bookingServiceId.trim(), newStatus);
+    }
+
+    /**
+     * Hủy lịch grooming khi khách thay đổi yêu cầu.
+     * Chỉ lễ tân, quản lý chi nhánh và admin được hủy lịch.
+     */
+    public void cancelGroomingSchedule(String bookingServiceId, AppUser currentUser)
+            throws SQLException, ValidationException {
+
+        if (currentUser == null) {
+            throw new ValidationException("Chưa đăng nhập");
+        }
+
+        if (!currentUser.hasRole(Role.RECEPTIONIST)
+                && !currentUser.hasRole(Role.BRANCH_MANAGER)
+                && !currentUser.hasRole(Role.ADMIN)) {
+            throw new ValidationException("Bạn không có quyền hủy lịch grooming");
+        }
+
+        if (bookingServiceId == null || bookingServiceId.trim().isEmpty()) {
+            throw new ValidationException("Mã lịch grooming không hợp lệ");
+        }
+
+        BookingService schedule = bookingServiceDAO.findById(bookingServiceId.trim());
+        if (schedule == null) {
+            throw new ValidationException("Không tìm thấy lịch grooming cần hủy");
+        }
+
+        if (BookingService.STATUS_DONE.equals(schedule.getStatus())) {
+            throw new ValidationException("Lịch grooming đã hoàn thành, không thể hủy");
+        }
+
+        if (BookingService.STATUS_CANCELLED.equals(schedule.getStatus())) {
+            throw new ValidationException("Lịch grooming đã được hủy trước đó");
+        }
+
+        bookingServiceDAO.updateStatus(bookingServiceId.trim(), BookingService.STATUS_CANCELLED);
     }
 
     /**
@@ -237,10 +335,6 @@ public void createGroomingSchedule(
         throw new ValidationException("Vui lòng chọn dịch vụ grooming");
     }
 
-    if (employeeId == null || employeeId.trim().isEmpty()) {
-        throw new ValidationException("Vui lòng chọn nhân viên thực hiện");
-    }
-
     if (branchId == null || branchId.trim().isEmpty()) {
         throw new ValidationException("Không xác định được chi nhánh");
     }
@@ -257,6 +351,11 @@ public void createGroomingSchedule(
         throw new ValidationException("Không thể đặt lịch grooming ở ngày quá khứ");
     }
 
+    // Kiểm tra xem dịch vụ đã được kích hoạt chưa
+    if (!bookingServiceDAO.isServiceActive(serviceId.trim())) {
+        throw new ValidationException("Dịch vụ này hiện không khả dụng. Vui lòng chọn dịch vụ khác hoặc liên hệ quản lý chi nhánh.");
+    }
+
     bookingServiceDAO.createGroomingSchedule(
             customerId,
             petId,
@@ -267,5 +366,159 @@ public void createGroomingSchedule(
             scheduleTime,
             note
     );
+}
+
+/**
+ * Lấy danh sách loại dịch vụ grooming
+ */
+public List<ServiceCategory> getGroomingServiceCategories(AppUser currentUser)
+        throws SQLException, ValidationException {
+
+    if (!currentUser.hasRole(Role.RECEPTIONIST)
+            && !currentUser.hasRole(Role.BRANCH_MANAGER)
+            && !currentUser.hasRole(Role.ADMIN)) {
+        throw new ValidationException("Bạn không có quyền xem loại dịch vụ grooming");
+    }
+
+    return serviceCategoryDAO.findGroomingCategories();
+}
+
+/**
+ * Lấy danh sách dịch vụ grooming theo loại dịch vụ
+ */
+public List<PetService> getGroomingServicesByCategory(String serviceCategoryId, AppUser currentUser)
+        throws SQLException, ValidationException {
+
+    if (!currentUser.hasRole(Role.RECEPTIONIST)
+            && !currentUser.hasRole(Role.BRANCH_MANAGER)
+            && !currentUser.hasRole(Role.ADMIN)) {
+        throw new ValidationException("Bạn không có quyền xem dịch vụ grooming");
+    }
+
+    if (serviceCategoryId == null || serviceCategoryId.trim().isEmpty()) {
+        throw new ValidationException("Loại dịch vụ không hợp lệ");
+    }
+
+    return bookingServiceDAO.getGroomingServicesByCategory(serviceCategoryId);
+}
+
+/**
+ * Lấy danh sách công việc grooming chưa phân công
+ */
+public List<BookingService> getUnassignedGroomingTasks(
+        String dateStr,
+        String status,
+        String keyword,
+        AppUser currentUser
+) throws SQLException, ValidationException {
+
+    if (!currentUser.hasRole(Role.BRANCH_MANAGER)
+            && !currentUser.hasRole(Role.ADMIN)) {
+        throw new ValidationException("Bạn không có quyền xem danh sách công việc chưa phân công");
+    }
+
+    if (!isValidDateFormat(dateStr)) {
+        throw new ValidationException("Định dạng ngày không hợp lệ (yyyy-MM-dd)");
+    }
+
+    return bookingServiceDAO.findUnassignedGroomingTasks(dateStr, status, keyword);
+}
+
+/**
+ * Phân công nhân viên cho công việc grooming
+ */
+public void assignEmployeeToTask(
+        String bookingServiceId,
+        String employeeId,
+        String note,
+        AppUser currentUser
+) throws SQLException, ValidationException {
+
+    if (!currentUser.hasRole(Role.BRANCH_MANAGER)
+            && !currentUser.hasRole(Role.ADMIN)) {
+        throw new ValidationException("Bạn không có quyền phân công nhân viên");
+    }
+
+    if (bookingServiceId == null || bookingServiceId.trim().isEmpty()) {
+        throw new ValidationException("Mã công việc không hợp lệ");
+    }
+
+    if (employeeId == null || employeeId.trim().isEmpty()) {
+        throw new ValidationException("Mã nhân viên không hợp lệ");
+    }
+
+    bookingServiceDAO.assignEmployeeToTask(bookingServiceId, employeeId, note);
+}
+
+/**
+ * Đếm số công việc của nhân viên trong một ngày
+ */
+public int getEmployeeTaskCount(String employeeId, String dateStr, AppUser currentUser)
+        throws SQLException, ValidationException {
+
+    if (employeeId == null || employeeId.trim().isEmpty()) {
+        throw new ValidationException("Mã nhân viên không hợp lệ");
+    }
+
+    if (!isValidDateFormat(dateStr)) {
+        throw new ValidationException("Định dạng ngày không hợp lệ (yyyy-MM-dd)");
+    }
+
+    return bookingServiceDAO.countEmployeeTasksByDate(employeeId, dateStr);
+}
+
+/**
+ * Lấy danh sách công việc được phân công cho nhân viên
+ */
+public List<BookingService> getEmployeeAssignedTasks(
+        String employeeId,
+        String dateStr,
+        String status,
+        String keyword,
+        AppUser currentUser
+) throws SQLException, ValidationException {
+
+    if (!currentUser.hasRole(Role.PET_CARE_STAFF)
+            && !currentUser.hasRole(Role.BRANCH_MANAGER)
+            && !currentUser.hasRole(Role.ADMIN)) {
+        throw new ValidationException("Bạn không có quyền xem danh sách công việc được phân công");
+    }
+
+    // Nhân viên chăm sóc chỉ xem công việc của mình
+    if (currentUser.getRole() == Role.PET_CARE_STAFF
+        && !employeeId.equals(currentUser.getEmployeeId())) {
+    throw new ValidationException("Bạn chỉ có thể xem công việc của mình");
+    }
+
+    if (employeeId == null || employeeId.trim().isEmpty()) {
+        throw new ValidationException("Mã nhân viên không hợp lệ");
+    }
+
+    if (!isValidDateFormat(dateStr)) {
+        throw new ValidationException("Định dạng ngày không hợp lệ (yyyy-MM-dd)");
+    }
+
+    return bookingServiceDAO.findEmployeeAssignedTasks(employeeId, dateStr, status, keyword);
+}
+
+/**
+ * Đếm số công việc của nhân viên theo trạng thái trong một ngày
+ */
+public int getEmployeeTaskCountByStatus(
+        String employeeId,
+        String dateStr,
+        String status,
+        AppUser currentUser
+) throws SQLException, ValidationException {
+
+    if (employeeId == null || employeeId.trim().isEmpty()) {
+        throw new ValidationException("Mã nhân viên không hợp lệ");
+    }
+
+    if (!isValidDateFormat(dateStr)) {
+        throw new ValidationException("Định dạng ngày không hợp lệ (yyyy-MM-dd)");
+    }
+
+    return bookingServiceDAO.countEmployeeTasksByDateAndStatus(employeeId, dateStr, status);
 }
 }

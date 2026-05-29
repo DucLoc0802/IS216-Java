@@ -1,67 +1,121 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="PetHotel.gui.controller.GroomingBookingController"
-      spacing="16"
-      prefWidth="620"
-      style="-fx-background-color: #fffaf5;">
+<VBox maxWidth="550" prefWidth="550" spacing="0" 
+      styleClass="form-root"
+      stylesheets="@../css/style.css" 
+      xmlns="http://javafx.com/javafx/17" 
+      xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="PetHotel.gui.controller.GroomingBookingController">
 
-    <padding>
-        <Insets top="20" right="24" bottom="20" left="24"/>
-    </padding>
+    <!-- HEADER -->
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="form-header">
+        <Label styleClass="form-header-icon" text="" />
+        <VBox spacing="2">
+            <Label fx:id="formTitle" 
+                   styleClass="form-header-title"
+                   text="Đặt Lịch Grooming" />
+            <Label fx:id="formSubtitle" 
+                   styleClass="form-header-subtitle"
+                   text="Chọn dịch vụ và nhân viên thực hiện" />
+        </VBox>
+        <Region HBox.hgrow="ALWAYS" />
+        <Button onAction="#handleCancel" 
+                styleClass="form-close-btn"
+                text="Đóng" />
+    </HBox>
 
-    <Label text="Đặt Lịch Grooming"
-           style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #3b2314;"/>
+    <!-- BODY -->
+    <VBox spacing="16" styleClass="form-body">
 
-    <GridPane hgap="14" vgap="14">
-        <columnConstraints>
-            <ColumnConstraints prefWidth="160"/>
-            <ColumnConstraints hgrow="ALWAYS"/>
-        </columnConstraints>
+        <!-- SECTION: Thông Tin Khách Hàng -->
+        <Label styleClass="form-section-title" text="Thông Tin Khách Hàng &amp; Thú Cưng" />
 
-        <Label text="Khách hàng:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-        <ComboBox fx:id="cbCustomer" prefWidth="360"
-                  GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+        <HBox spacing="14">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Khách hàng *" />
+                <ComboBox fx:id="cbCustomer" styleClass="form-combo" />
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Thú cưng *" />
+                <ComboBox fx:id="cbPet" styleClass="form-combo" />
+            </VBox>
+        </HBox>
 
-        <Label text="Thú cưng:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-        <ComboBox fx:id="cbPet" prefWidth="360"
-                  GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+        <Separator styleClass="form-divider" />
 
-        <Label text="Dịch vụ grooming:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-        <ComboBox fx:id="cbService" prefWidth="360"
-                  GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        <!-- SECTION: Dịch Vụ -->
+        <Label styleClass="form-section-title" text="Dịch Vụ Grooming" />
 
-        <Label text="Nhân viên:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <ComboBox fx:id="cbEmployee" prefWidth="360"
-                  GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+        <HBox spacing="14">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Loại dịch vụ *" />
+                <ComboBox fx:id="cbServiceCategory" styleClass="form-combo" />
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Dịch vụ grooming *" />
+                <ComboBox fx:id="cbService" styleClass="form-combo" />
+            </VBox>
+        </HBox>
 
-        <Label text="Ngày hẹn:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-        <DatePicker fx:id="dpScheduleDate" prefWidth="360"
-                    GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+        <Separator styleClass="form-divider" />
 
-        <Label text="Giờ hẹn:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-        <TextField fx:id="txtScheduleTime"
-                   promptText="Ví dụ: 09:30"
-                   GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+        <!-- SECTION: Lịch Hẹn -->
+        <Label styleClass="form-section-title" text="Lịch Hẹn &amp; Nhân Viên" />
 
-        <Label text="Ghi chú:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
-        <TextArea fx:id="txtNote"
-                  prefRowCount="3"
-                  wrapText="true"
-                  GridPane.rowIndex="6"
-                  GridPane.columnIndex="1"/>
-    </GridPane>
+        <HBox spacing="14">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Ngày hẹn *" />
+                <DatePicker fx:id="dpScheduleDate" styleClass="form-combo" />
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="form-label" text="Giờ hẹn *" />
+                <TextField fx:id="txtScheduleTime"
+                          promptText="VD: 09:30" 
+                          styleClass="form-field" />
+            </VBox>
+        </HBox>
 
-    <HBox alignment="CENTER_RIGHT" spacing="10">
-        <Button text="Hủy" onAction="#handleCancel"/>
-        <Button text="Lưu lịch"
-                onAction="#handleSave"
-                style="-fx-background-color: #5b2f1b; -fx-text-fill: white; -fx-font-weight: bold;"/>
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Nhân viên *" />
+            <ComboBox fx:id="cbEmployee" styleClass="form-combo" />
+        </VBox>
+
+        <Separator styleClass="form-divider" />
+
+        <!-- SECTION: Ghi Chú -->
+        <Label styleClass="form-section-title" text="Ghi Chú" />
+
+        <VBox spacing="4">
+            <Label styleClass="form-label" text="Ghi chú bổ sung" />
+            <TextArea fx:id="txtNote" 
+                     promptText="Ví dụ: sợ tắm, cắn nhẹ, có dị ứng..." 
+                     styleClass="form-area"
+                     prefRowCount="3"
+                     wrapText="true" />
+            <Label styleClass="form-hint" text="Không bắt buộc - dùng để ghi nhận đặc điểm đặc biệt" />
+        </VBox>
+
+    </VBox>
+
+    <!-- FOOTER -->
+    <HBox alignment="CENTER_RIGHT" spacing="10" styleClass="form-footer">
+        <Button onAction="#handleCancel" 
+                styleClass="btn-secondary" 
+                text="Hủy" />
+        <Button onAction="#handleSave" 
+                styleClass="btn-primary" 
+                text="Lưu Lịch" />
     </HBox>
 
 </VBox>

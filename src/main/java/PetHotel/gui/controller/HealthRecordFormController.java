@@ -1,14 +1,13 @@
 package PetHotel.gui.controller;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import PetHotel.bus.AuthBUS;
 import PetHotel.bus.PetBUS;
 import PetHotel.model.Pet;
 import PetHotel.model.PetHealthRecord;
 import PetHotel.util.Role;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
@@ -77,6 +76,7 @@ public class HealthRecordFormController {
 
         applyMode();
         printFieldState("initialize");
+        Platform.runLater(() -> txtSymptom.requestFocus());
     }
 
     public void setPet(Pet pet) {

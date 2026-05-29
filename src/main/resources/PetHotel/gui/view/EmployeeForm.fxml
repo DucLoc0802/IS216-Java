@@ -37,6 +37,11 @@
             <TextField fx:id="txtFullName" styleClass="form-field" />
         </VBox>
 
+        <VBox spacing="4">
+            <Label text="Lương cơ bản" styleClass="form-label" />
+            <TextField fx:id="txtSalary" promptText="Ví dụ: 8000000" styleClass="form-field" />
+        </VBox>
+
         <HBox spacing="14">
             <VBox spacing="4" HBox.hgrow="ALWAYS">
                 <Label text="Email" styleClass="form-label" />

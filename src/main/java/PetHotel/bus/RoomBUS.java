@@ -78,6 +78,20 @@ public class RoomBUS {
         }
     }
 
+    /**
+     * Tự động cập nhật trạng thái phòng dựa trên thú cưng đang ở hiện tại.
+     * Nếu có thú cưng đang active → IN_USE, nếu không → AVAILABLE.
+     */
+    public void autoUpdateRoomStatus(String roomId) {
+        try {
+            String petNames = roomDAO.findCurrentPetNamesByRoomId(roomId);
+            String newStatus = (petNames != null && !petNames.isEmpty()) ? "IN_USE" : "AVAILABLE";
+            roomDAO.updateStatus(roomId, newStatus, null);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tự động cập nhật trạng thái phòng.", e);
+        }
+    }
+
     // ── UC-ROOM-04/05: Sửa / Xóa phòng ─────────────────────────
 
     public void updateRoom(Room room) {

@@ -20,34 +20,33 @@
         <Region styleClass="section-header-line" />
         <Label styleClass="section-header" text="Quản Lý Hóa Đơn" />
         <Region HBox.hgrow="ALWAYS" />
-        <Button onAction="#onCreateInvoice" styleClass="action-btn action-btn-primary" text="Tạo Hóa Đơn" />
-        <Button fx:id="btnPay" disable="true" onAction="#onPayment" styleClass="action-btn action-btn-success" text="Thanh Toán" />
-        <Button fx:id="btnPrint" disable="true" onAction="#onPrint" styleClass="action-btn action-btn-outline" text="In / Xuất" />
+        <Button onAction="#onCreateInvoice" styleClass="action-btn action-btn-primary" text="+ Tạo Hóa Đơn" />
+        <Button fx:id="btnPay" disable="true" onAction="#onPayment" styleClass="action-btn action-btn-success" text="💳 Thanh Toán" />
+        <Button fx:id="btnCancelInvoice" disable="true" onAction="#onCancelInvoice" style="-fx-text-fill: #b91c1c; -fx-border-color: #b91c1c;" styleClass="action-btn action-btn-outline" text="Hủy hóa đơn" />
+        <Button fx:id="btnPrint" disable="true" onAction="#onPrint" styleClass="action-btn action-btn-outline" text="🖨 In / Xuất" />
+        <Button fx:id="btnPaymentHistory" onAction="#onPaymentHistory" styleClass="action-btn action-btn-outline" text="Lịch sử giao dịch" />
     </HBox>
 
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
         <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
-            <Label styleClass="search-icon" text="" />
-            <TextField fx:id="searchField" promptText="Mã HĐ, tên khách hàng..." styleClass="search-input" HBox.hgrow="ALWAYS" />
+            <Label styleClass="search-icon" text="🔍" />
+            <TextField fx:id="txtSearch" promptText="Mã HĐ, tên khách hàng..." styleClass="search-input" HBox.hgrow="ALWAYS" />
         </HBox>
         <DatePicker fx:id="filterFrom" prefWidth="140" styleClass="filter-combo" />
         <DatePicker fx:id="filterTo" prefWidth="140" styleClass="filter-combo" />
-        <ComboBox fx:id="filterStatus" prefWidth="130" promptText="Trạng thái" styleClass="filter-combo" />
-        <Button onAction="#onFilter" style="-fx-padding: 7 16 7 16;" styleClass="action-btn action-btn-primary" text="Lọc" />
+        <ComboBox fx:id="cbbStatusFilter" prefWidth="130" promptText="Trạng thái" styleClass="filter-combo" />
+        <Button onAction="#handleSearch" style="-fx-padding: 7 16 7 16;" styleClass="action-btn action-btn-primary" text="Lọc" />
     </HBox>
 
     <HBox spacing="18">
         <VBox spacing="12" styleClass="content-panel" HBox.hgrow="ALWAYS">
-            <TableView fx:id="invoiceTable" onMouseClicked="#onTableClick" styleClass="data-table" VBox.vgrow="ALWAYS">
+            <TableView fx:id="tableInvoice" styleClass="data-table invoice-table" VBox.vgrow="ALWAYS">
                 <columns>
-                    <TableColumn fx:id="colInvId" prefWidth="90" text="Mã HĐ" />
-                    <TableColumn fx:id="colInvCustomer" prefWidth="150" text="Khách Hàng" />
-                    <TableColumn fx:id="colInvDate" prefWidth="110" text="Ngày Tạo" />
-                    <TableColumn fx:id="colInvTotal" prefWidth="120" text="Tổng Tiền" />
-                    <TableColumn fx:id="colInvDiscount" prefWidth="100" text="Giảm Giá" />
-                    <TableColumn fx:id="colInvFinal" prefWidth="120" text="Thực Trả" />
-                    <TableColumn fx:id="colInvStatus" prefWidth="110" text="Trạng Thái" />
-                    <TableColumn fx:id="colInvAction" prefWidth="130" resizable="false" text="Thao Tác" />
+                    <TableColumn fx:id="colOrderId" prefWidth="110" text="Mã HĐ" />
+                    <TableColumn fx:id="colCustomer" prefWidth="170" text="Khách Hàng" />
+                    <TableColumn fx:id="colCreatedDate" prefWidth="180" text="Ngày Tạo" />
+                    <TableColumn fx:id="colGrandTotal" prefWidth="150" text="Tổng Tiền" />
+                    <TableColumn fx:id="colStatus" prefWidth="150" text="Trạng Thái" />
                 </columns>
                 <placeholder>
                     <Label styleClass="table-empty" text="Không có hóa đơn nào" />
@@ -59,12 +58,6 @@
             </HBox>
         </VBox>
 
-        <VBox prefWidth="300" spacing="12" styleClass="content-panel">
-            <Label styleClass="panel-title" text="Chi Tiết Hóa Đơn" />
-            <VBox fx:id="invoicePreview" spacing="6">
-                <Label style="-fx-text-fill: -ph-text-muted; -fx-font-size: 12px;" text="Chọn hóa đơn để xem chi tiết" wrapText="true" />
-            </VBox>
-        </VBox>
     </HBox>
 
 </VBox>

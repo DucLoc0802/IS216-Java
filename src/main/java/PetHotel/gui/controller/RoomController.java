@@ -14,12 +14,15 @@ import java.util.List;
 public class RoomController {
 
     // ── FXML fields — tên phải khớp fx:id trong FXML ────────────
+    @FXML private Label titleLabel;
+    @FXML private Label subtitleLabel;
     @FXML private TextField searchField;
     @FXML private ComboBox<String> filterStatus;
     @FXML private ComboBox<String> filterType;
     @FXML private TableView<Room> roomTable;
 
     @FXML private TableColumn<Room, String> colRoomId;
+    @FXML private TableColumn<Room, String> colRoomNumber;
     @FXML private TableColumn<Room, String> colRoomType;
     @FXML private TableColumn<Room, String> colRoomFloor;
     @FXML private TableColumn<Room, Double> colRoomPrice;
@@ -28,6 +31,9 @@ public class RoomController {
     @FXML private TableColumn<Room, String> colRoomPet;
     @FXML private TableColumn<Room, String> colRoomAction;
 
+    @FXML private Button btnClearFilter;
+    @FXML private Button btnEdit;
+    @FXML private Button btnDelete;
     @FXML private Label countOccupied;
     @FXML private Label countAvailable;
     @FXML private Label countCleaning;
@@ -42,23 +48,44 @@ public class RoomController {
         setupColumns();
         setupComboBoxes();
         loadRooms();
+
+        roomTable.getSelectionModel().selectedItemProperty().addListener((obs, old, newVal) -> {
+            boolean selected = newVal != null;
+            btnEdit.setDisable(!selected);
+            btnDelete.setDisable(!selected);
+        });
     }
 
     private void setupColumns() {
-    colRoomId.setCellValueFactory(d ->
-        new SimpleStringProperty(d.getValue().getRoomId()));
-    colRoomType.setCellValueFactory(d ->
-        new SimpleStringProperty(d.getValue().getTypeName()));
-    colRoomFloor.setCellValueFactory(d ->
-        new SimpleStringProperty("—"));
-    colRoomPrice.setCellValueFactory(d ->
-        new SimpleObjectProperty<>(d.getValue().getBasePricePerDay()));
-    colRoomCap.setCellValueFactory(d ->
-        new SimpleObjectProperty<>(d.getValue().getMaxPets()));
-    colRoomStatus.setCellValueFactory(d ->
-        new SimpleStringProperty(d.getValue().getStatus()));
-    colRoomPet.setCellValueFactory(d ->
-        new SimpleStringProperty("—"));
+        roomTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        roomTable.setFixedCellSize(36);
+        colRoomId.setCellValueFactory(d ->
+            new SimpleStringProperty(d.getValue().getRoomId()));
+        colRoomNumber.setCellValueFactory(d ->
+            new SimpleStringProperty(d.getValue().getRoomNumber()));
+        colRoomType.setCellValueFactory(d ->
+            new SimpleStringProperty(d.getValue().getTypeName()));
+        colRoomFloor.setCellValueFactory(d ->
+            new SimpleStringProperty("—"));
+        colRoomPrice.setCellValueFactory(d ->
+            new SimpleObjectProperty<>(d.getValue().getBasePricePerDay()));
+        colRoomCap.setCellValueFactory(d ->
+            new SimpleObjectProperty<>(d.getValue().getMaxPets()));
+        colRoomStatus.setCellValueFactory(d -> {
+            Room room = d.getValue();
+            // Tự động suy luận trạng thái dựa vào thú cưng hiện tại
+            String petNames = room.getCurrentPetNames();
+            if (petNames != null && !petNames.isEmpty() && !"AVAILABLE".equals(room.getStatus())) {
+                // Giữ nguyên IN_USE nếu có thú cưng
+            } else if (petNames != null && !petNames.isEmpty()) {
+                room.setStatus("IN_USE");
+            }
+            return new SimpleStringProperty(room.getStatus());
+        });
+        colRoomPet.setCellValueFactory(d -> {
+            String petNames = d.getValue().getCurrentPetNames();
+            return new SimpleStringProperty(petNames != null && !petNames.isEmpty() ? petNames : "—");
+        });
 
     // Cột Thao Tác — có nút Cập nhật trạng thái
     colRoomAction.setCellFactory(col -> new TableCell<>() {
@@ -185,6 +212,48 @@ public class RoomController {
     public void handleDelete(ActionEvent event) {
         Room selected = roomTable.getSelectionModel().getSelectedItem();
         if (selected == null) { showAlert("Thông báo", "Vui lòng chọn phòng cần xóa."); return; }
+        try {
+            roomBUS.deleteRoom(selected.getRoomId());
+            loadRooms();
+            showAlert("Thành công", "Đã xóa phòng " + selected.getRoomNumber());
+        } catch (Exception e) {
+            showAlert("Lỗi", e.getMessage());
+        }
+    }
+
+    // Các phương thức cho nút mới trong action-toolbar và filter-bar
+    @FXML public void onClearFilter(ActionEvent event) {
+        searchField.clear();
+        filterStatus.setValue("Tất cả");
+        filterType.setValue("Tất cả");
+        loadRooms();
+    }
+
+    @FXML public void onEditRoom(ActionEvent event) {
+        Room selected = roomTable.getSelectionModel().getSelectedItem();
+        if (selected == null) { showAlert("Thông báo", "Vui lòng chọn phòng."); return; }
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                getClass().getResource("/PetHotel/gui/view/EditRoomDialog.fxml"));
+            javafx.scene.Parent root = loader.load();
+
+            EditRoomController controller = loader.getController();
+            controller.setRoom(selected);
+            controller.setOnSaveCallback(this::loadRooms);
+
+            javafx.stage.Stage dialog = new javafx.stage.Stage();
+            dialog.setTitle("Sửa Phòng - " + selected.getRoomNumber());
+            dialog.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            dialog.setScene(new javafx.scene.Scene(root));
+            dialog.showAndWait();
+        } catch (Exception e) {
+            showAlert("Lỗi", "Không thể mở form: " + e.getMessage());
+        }
+    }
+
+    @FXML public void onDeleteRoom(ActionEvent event) {
+        Room selected = roomTable.getSelectionModel().getSelectedItem();
+        if (selected == null) { showAlert("Thông báo", "Vui lòng chọn phòng."); return; }
         try {
             roomBUS.deleteRoom(selected.getRoomId());
             loadRooms();

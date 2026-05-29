@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,7 +37,7 @@ public class AppUserDAO {
         "    e.status_code, " +
         "    e.note " +
         "FROM app_user au " +
-        "JOIN employee e ON au.employee_id = e.employee_id " +
+        "LEFT JOIN employee e ON au.employee_id = e.employee_id " +
         "WHERE LOWER(au.user_name) = LOWER(?)";
 
     private static final String SQL_FIND_BY_EMPLOYEE_ID =
@@ -52,8 +53,8 @@ public class AppUserDAO {
         "    e.status_code, " +
         "    e.note " +
         "FROM app_user au " +
-        "JOIN employee e ON au.employee_id = e.employee_id " +
-        "WHERE au.employee_id = ?";
+        "LEFT JOIN employee e ON au.employee_id = e.employee_id " +
+        "WHERE e.employee_id = ?";
 
     private static final String SQL_FIND_ALL =
         "SELECT " +
@@ -68,7 +69,7 @@ public class AppUserDAO {
         "    e.status_code, " +
         "    e.note " +
         "FROM app_user au " +
-        "JOIN employee e ON au.employee_id = e.employee_id " +
+        "LEFT JOIN employee e ON au.employee_id = e.employee_id " +
         "ORDER BY au.created_at DESC";
 
     private static final String SQL_SEARCH =
@@ -84,7 +85,7 @@ public class AppUserDAO {
         "    e.status_code, " +
         "    e.note " +
         "FROM app_user au " +
-        "JOIN employee e ON au.employee_id = e.employee_id " +
+        "LEFT JOIN employee e ON au.employee_id = e.employee_id " +
         "WHERE (LOWER(au.user_name) LIKE LOWER(?) " +
         "    OR LOWER(e.full_name) LIKE LOWER(?) " +
         "    OR LOWER(e.email) LIKE LOWER(?)) " +
@@ -116,6 +117,13 @@ public class AppUserDAO {
         "    SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) AS locked, " +
         "    SUM(CASE WHEN role_emp = '0' THEN 1 ELSE 0 END) AS admin " +
         "FROM app_user";
+
+    private static final String SQL_FIND_EMPLOYEES_WITHOUT_ACCOUNT =
+        "SELECT e.employee_id, e.branch_id, e.full_name, e.salary, e.email, e.phone, e.hire_date, e.status_code, e.note " +
+        "FROM employee e " +
+        "LEFT JOIN app_user au ON au.employee_id = e.employee_id " +
+        "WHERE au.employee_id IS NULL " +
+        "ORDER BY e.full_name, e.employee_id";
 
     // ── Public Methods ───────────────────────────────────────────
 
@@ -251,6 +259,30 @@ public class AppUserDAO {
         return stats;
     }
 
+    public List<Employee> findEmployeesWithoutAccount() throws SQLException {
+        List<Employee> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_FIND_EMPLOYEES_WITHOUT_ACCOUNT);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Employee employee = new Employee();
+                employee.setEmployeeId(rs.getString("employee_id"));
+                employee.setBranchId(rs.getString("branch_id"));
+                employee.setFullName(rs.getString("full_name"));
+                employee.setSalary(rs.getBigDecimal("salary"));
+                employee.setEmail(rs.getString("email"));
+                employee.setPhone(rs.getString("phone"));
+
+                employee.setHireDate(getOffsetDateTime(rs, "hire_date"));
+
+                employee.setStatusCode(rs.getString("status_code"));
+                employee.setNote(rs.getString("note"));
+                list.add(employee);
+            }
+        }
+        return list;
+    }
+
     // ── Private Helpers ──────────────────────────────────────────
 
     private AppUser mapRow(ResultSet rs) throws SQLException {
@@ -264,39 +296,36 @@ public class AppUserDAO {
         user.setUserName(rs.getString("user_name"));
         user.setActive(rs.getInt("is_active") == 1);
 
-        Timestamp lastLogin = rs.getTimestamp("last_login");
-        if (lastLogin != null) {
-            user.setLastLogin(lastLogin.toInstant().atOffset(java.time.ZoneOffset.UTC));
+        user.setLastLogin(getOffsetDateTime(rs, "last_login"));
+        user.setCreatedAt(getOffsetDateTime(rs, "created_at"));
+        user.setUpdatedAt(getOffsetDateTime(rs, "updated_at"));
+
+        String empId = rs.getString("emp_id");
+        if (empId != null) {
+            Employee employee = new Employee();
+            employee.setEmployeeId(empId);
+            employee.setBranchId(rs.getString("branch_id"));
+            employee.setFullName(rs.getString("full_name"));
+            employee.setEmail(rs.getString("email"));
+            employee.setPhone(rs.getString("phone"));
+
+            employee.setHireDate(getOffsetDateTime(rs, "hire_date"));
+
+            employee.setStatusCode(rs.getString("status_code"));
+            employee.setNote(rs.getString("note"));
+
+            user.setEmployee(employee);
         }
-
-        Timestamp createdAt = rs.getTimestamp("created_at");
-        if (createdAt != null) {
-            user.setCreatedAt(createdAt.toInstant().atOffset(java.time.ZoneOffset.UTC));
-        }
-
-        Timestamp updatedAt = rs.getTimestamp("updated_at");
-        if (updatedAt != null) {
-            user.setUpdatedAt(updatedAt.toInstant().atOffset(java.time.ZoneOffset.UTC));
-        }
-
-        // Employee fields
-        Employee employee = new Employee();
-        employee.setEmployeeId(rs.getString("emp_id"));
-        employee.setBranchId(rs.getString("branch_id"));
-        employee.setFullName(rs.getString("full_name"));
-        employee.setEmail(rs.getString("email"));
-        employee.setPhone(rs.getString("phone"));
-
-        Timestamp hireDate = rs.getTimestamp("hire_date");
-        if (hireDate != null) {
-            employee.setHireDate(hireDate.toInstant().atOffset(java.time.ZoneOffset.UTC));
-        }
-
-        employee.setStatusCode(rs.getString("status_code"));
-        employee.setNote(rs.getString("note"));
-
-        user.setEmployee(employee);
 
         return user;
+    }
+
+    private OffsetDateTime getOffsetDateTime(ResultSet rs, String column) throws SQLException {
+        try {
+            return rs.getObject(column, OffsetDateTime.class);
+        } catch (SQLException | AbstractMethodError e) {
+            Timestamp timestamp = rs.getTimestamp(column);
+            return timestamp == null ? null : timestamp.toInstant().atOffset(java.time.ZoneOffset.UTC);
+        }
     }
 }
