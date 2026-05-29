@@ -1,6 +1,7 @@
 package PetHotel.dao;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import PetHotel.model.Invoice;
 import PetHotel.model.InvoiceDetail;
@@ -269,12 +272,77 @@ public class InvoiceDAO {
             ps.setString(1, orderId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return mapRow(rs);
+                    Invoice invoice = mapRow(rs);
+                    applyLatestPaymentTenderInfo(conn, invoice);
+                    return invoice;
                 }
             }
         }
 
         return null;
+    }
+
+    private void applyLatestPaymentTenderInfo(Connection conn, Invoice invoice) throws SQLException {
+        if (invoice == null || invoice.getId() == null) {
+            return;
+        }
+
+        String noteColumn = null;
+        if (hasColumn(conn, "PAYMENTS", "NOTE")) {
+            noteColumn = "note";
+        } else if (hasColumn(conn, "PAYMENTS", "DESCRIPTION")) {
+            noteColumn = "description";
+        }
+
+        if (noteColumn == null) {
+            return;
+        }
+
+        String sql =
+            "SELECT amount, payment_note " +
+            "FROM ( " +
+            "  SELECT amount, " + noteColumn + " AS payment_note " +
+            "  FROM payments " +
+            "  WHERE order_id = ? " +
+            "    AND UPPER(NVL(status, ' ')) IN ('SUCCESS', 'PAID') " +
+            "  ORDER BY paid_at DESC, payment_id DESC " +
+            ") " +
+            "WHERE ROWNUM = 1";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, invoice.getId());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return;
+                }
+
+                String note = rs.getString("payment_note");
+                if (note == null || note.trim().isEmpty()) {
+                    return;
+                }
+
+                double[] tenderInfo = parseTenderInfo(note, rs.getDouble("amount"));
+                invoice.setCustomerTenderedAmount(tenderInfo[0]);
+                invoice.setChangeAmount(tenderInfo[1]);
+            }
+        }
+    }
+
+    private double[] parseTenderInfo(String note, double paymentAmount) {
+        double customerTendered = 0;
+        double changeAmount = 0;
+
+        Matcher matcher = Pattern.compile("[-+]?\\d+(?:\\.\\d+)?").matcher(note.replace(",", ""));
+        if (matcher.find()) {
+            customerTendered = Double.parseDouble(matcher.group());
+        }
+        if (matcher.find()) {
+            changeAmount = Double.parseDouble(matcher.group());
+        } else if (customerTendered > 0) {
+            changeAmount = Math.max(customerTendered - paymentAmount, 0);
+        }
+
+        return new double[] { Math.max(customerTendered, 0), Math.max(changeAmount, 0) };
     }
 
     public String generateNextOrderId() throws SQLException {
@@ -830,19 +898,68 @@ public List<InvoiceDetail> getInvoiceDetailsByOrderId(String orderId) throws SQL
 }
 
 public boolean createPayment(String orderId, String paymentMethod, double amount) throws SQLException {
+    return createPayment(orderId, paymentMethod, amount, null);
+}
+
+public boolean createPayment(String orderId, String paymentMethod, double amount, String note) throws SQLException {
+    try (Connection conn = DBConnection.getConnection()) {
+        if (note != null && !note.trim().isEmpty() && hasColumn(conn, "PAYMENTS", "NOTE")) {
+            String sql =
+                "INSERT INTO payments " +
+                "(payment_id, order_id, payment_method, amount, status, paid_at, created_at, updated_at, note) " +
+                "VALUES (?, ?, ?, ?, 'SUCCESS', SYSTIMESTAMP, SYSTIMESTAMP, SYSTIMESTAMP, ?)";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, generateNextPaymentId());
+                ps.setString(2, orderId);
+                ps.setString(3, paymentMethod);
+                ps.setDouble(4, amount);
+                ps.setString(5, note);
+                return ps.executeUpdate() > 0;
+            }
+        }
+
+        if (note != null && !note.trim().isEmpty() && hasColumn(conn, "PAYMENTS", "DESCRIPTION")) {
+            String sql =
+                "INSERT INTO payments " +
+                "(payment_id, order_id, payment_method, amount, status, paid_at, created_at, updated_at, description) " +
+                "VALUES (?, ?, ?, ?, 'SUCCESS', SYSTIMESTAMP, SYSTIMESTAMP, SYSTIMESTAMP, ?)";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, generateNextPaymentId());
+                ps.setString(2, orderId);
+                ps.setString(3, paymentMethod);
+                ps.setDouble(4, amount);
+                ps.setString(5, note);
+                return ps.executeUpdate() > 0;
+            }
+        }
+
     String sql =
         "INSERT INTO payments " +
         "(payment_id, order_id, payment_method, amount, status, paid_at, created_at, updated_at) " +
         "VALUES (?, ?, ?, ?, 'SUCCESS', SYSTIMESTAMP, SYSTIMESTAMP, SYSTIMESTAMP)";
 
-    try (Connection conn = DBConnection.getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
         ps.setString(1, generateNextPaymentId());
         ps.setString(2, orderId);
         ps.setString(3, paymentMethod);
         ps.setDouble(4, amount);
         return ps.executeUpdate() > 0;
+    }
+    }
+}
+
+private boolean hasColumn(Connection conn, String tableName, String columnName) throws SQLException {
+    DatabaseMetaData metaData = conn.getMetaData();
+    try (ResultSet rs = metaData.getColumns(null, null, tableName.toUpperCase(), columnName.toUpperCase())) {
+        if (rs.next()) {
+            return true;
+        }
+    }
+    try (ResultSet rs = metaData.getColumns(null, metaData.getUserName(), tableName.toUpperCase(), columnName.toUpperCase())) {
+        return rs.next();
     }
 }
 

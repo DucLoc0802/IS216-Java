@@ -99,6 +99,8 @@ public class InvoiceController {
     @FXML
     private Button btnPaymentHistory;
 
+    private Invoice selectedInvoice;
+
     private final InvoiceBUS invoiceBus;
 
     public InvoiceController() {
@@ -230,13 +232,10 @@ public class InvoiceController {
             tableInvoice.setStyle("");
             tableInvoice.setFocusTraversable(false);
             tableInvoice.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-            tableInvoice.setPlaceholder(new Label(""));
+            tableInvoice.setPlaceholder(new Label("Không có dữ liệu"));
             tableInvoice.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-                if (newSelection != null) {
-                    updateActionButtons(newSelection);
-                } else {
-                    updateActionButtons(null);
-                }
+                selectedInvoice = newSelection;
+                updateActionButtons(selectedInvoice);
             });
             tableInvoice.setRowFactory(tv -> {
                 TableRow<Invoice> row = new TableRow<>();
@@ -289,7 +288,7 @@ public class InvoiceController {
             updateActionButtons(tableInvoice.getSelectionModel().getSelectedItem());
 
             if (results == null || results.isEmpty()) {
-                showAlert(Alert.AlertType.INFORMATION, "Thông báo", "Không tìm thấy hóa đơn phù hợp.");
+                tableInvoice.setPlaceholder(new Label("Không có dữ liệu"));
             }
 
         } catch (IllegalArgumentException ex) {
@@ -326,7 +325,8 @@ public class InvoiceController {
             if (txtSearch != null) {
                 txtSearch.clear();
             }
-            handleSearch(null);
+            tableInvoice.refresh();
+            updateActionButtons(selectedInvoice);
         } catch (Exception ex) {
             ex.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", "Không thể mở form tạo hóa đơn: " + ex.getMessage());
@@ -335,7 +335,7 @@ public class InvoiceController {
 
     @FXML
     public void onPayment(ActionEvent event) {
-        Invoice selectedInvoice = tableInvoice.getSelectionModel().getSelectedItem();
+        selectedInvoice = tableInvoice.getSelectionModel().getSelectedItem();
 
         if (selectedInvoice == null) {
             showAlert(Alert.AlertType.WARNING, "Thông báo", "Vui lòng chọn một hóa đơn để thanh toán.");
@@ -363,7 +363,15 @@ public class InvoiceController {
                 return;
             }
 
-            invoiceBus.payInvoice(selectedInvoice, input.get().method, input.get().amount);
+            double customerPaidAmount = input.get().amount;
+            double changeAmount = Math.max(customerPaidAmount - remaining, 0);
+
+            invoiceBus.payInvoice(selectedInvoice, input.get().method, customerPaidAmount);
+            selectedInvoice.setCustomerTenderedAmount(customerPaidAmount);
+            selectedInvoice.setChangeAmount(changeAmount);
+            selectedInvoice.setPaidAmount(selectedInvoice.getTotalAmount());
+            selectedInvoice.setRemainingAmount(0);
+            selectedInvoice.setStatus("PAID");
             showAutoCloseSuccess("Thanh toán thành công");
             handleSearch(null);
         } catch (IllegalArgumentException ex) {
@@ -376,27 +384,27 @@ public class InvoiceController {
 
     @FXML
     public void onCancelInvoice(ActionEvent event) {
-        Invoice selectedInvoice = tableInvoice.getSelectionModel().getSelectedItem();
+        selectedInvoice = tableInvoice.getSelectionModel().getSelectedItem();
 
         if (selectedInvoice == null) {
             showAlert(Alert.AlertType.WARNING, "Thông báo", "Vui lòng chọn hóa đơn cần hủy.");
             return;
         }
 
-        String status = selectedInvoice.getStatus();
-        if ("PAID".equalsIgnoreCase(status)) {
+        String status = normalizeInvoiceStatus(selectedInvoice.getStatus());
+        if ("PAID".equals(status)) {
             showAlert(Alert.AlertType.WARNING, "Thông báo", "Hóa đơn đã thanh toán, không thể hủy.");
             return;
         }
-        if ("PARTIAL".equalsIgnoreCase(status)) {
+        if ("PARTIAL".equals(status)) {
             showAlert(Alert.AlertType.WARNING, "Thông báo", "Hóa đơn đã thanh toán một phần, không thể hủy trực tiếp. Vui lòng thanh toán tiếp hoặc liên hệ quản lý.");
             return;
         }
-        if ("CANCELLED".equalsIgnoreCase(status)) {
+        if ("CANCELLED".equals(status)) {
             showAlert(Alert.AlertType.WARNING, "Thông báo", "Hóa đơn này đã bị hủy.");
             return;
         }
-        if ("REFUNDED".equalsIgnoreCase(status)) {
+        if ("REFUNDED".equals(status)) {
             showAlert(Alert.AlertType.WARNING, "Thông báo", "Không thể hủy hóa đơn đã hoàn tiền.");
             return;
         }
@@ -488,9 +496,15 @@ public class InvoiceController {
 
         List<InvoiceDetail> details;
         try {
+            double customerTenderedAmount = invoice.getCustomerTenderedAmount();
+            double changeAmount = invoice.getChangeAmount();
             Invoice latestInvoice = invoiceBus.getInvoiceById(invoice.getId());
             if (latestInvoice != null) {
                 invoice = latestInvoice;
+                if (customerTenderedAmount > 0 || changeAmount > 0) {
+                    invoice.setCustomerTenderedAmount(customerTenderedAmount);
+                    invoice.setChangeAmount(changeAmount);
+                }
             }
             details = invoiceBus.getInvoiceDetailsByOrderId(invoice.getId());
         } catch (Exception ex) {
@@ -543,6 +557,8 @@ public class InvoiceController {
         paymentInfo.add(summaryItem("Số tiền đã thanh toán", formatMoneyVnd(paidAmount)), 2, 0);
         paymentInfo.add(summaryItem("Số tiền còn lại", formatMoneyVnd(remainingAmount),
             "-fx-font-size: 16px; -fx-text-fill: " + remainingColor + "; -fx-font-weight: bold;"), 0, 1);
+        paymentInfo.add(summaryItem("Tiền khách đưa", formatMoneyVnd(invoice.getCustomerTenderedAmount())), 1, 1);
+        paymentInfo.add(summaryItem("Tiền thừa", formatMoneyVnd(invoice.getChangeAmount())), 2, 1);
 
         summary.getChildren().addAll(
             summaryGroup("Thông tin hóa đơn", invoiceInfo),
@@ -700,6 +716,22 @@ public class InvoiceController {
         };
     }
 
+    private String normalizeInvoiceStatus(String status) {
+        if (status == null) {
+            return "";
+        }
+
+        String normalized = status.trim();
+        String upper = normalized.toUpperCase();
+        return switch (upper) {
+            case "PENDING", "CHỜ THANH TOÁN", "CHO THANH TOAN" -> "PENDING";
+            case "PARTIAL", "THANH TOÁN MỘT PHẦN", "THANH TOAN MOT PHAN" -> "PARTIAL";
+            case "PAID", "ĐÃ THANH TOÁN", "DA THANH TOAN" -> "PAID";
+            case "CANCELLED", "CANCELED", "ĐÃ HỦY", "DA HUY" -> "CANCELLED";
+            default -> upper;
+        };
+    }
+
     private VBox summaryItem(String labelText, String valueText) {
         return summaryItem(labelText, valueText, "-fx-font-size: 14px; -fx-text-fill: #2c1a0e; -fx-font-weight: bold;");
     }
@@ -746,7 +778,7 @@ public class InvoiceController {
         if (invoice == null) {
             return 0;
         }
-        String status = invoice.getStatus() == null ? "" : invoice.getStatus().trim().toUpperCase();
+        String status = normalizeInvoiceStatus(invoice.getStatus());
         if ("PAID".equals(status) || "CANCELLED".equals(status) || "CANCELED".equals(status)) {
             return 0;
         }
@@ -1065,8 +1097,8 @@ public class InvoiceController {
             if (amount <= 0) {
                 return "Số tiền phải lớn hơn 0";
             }
-            if (amount - remainingAmount > 0.01) {
-                return "Số tiền thanh toán không được vượt quá số tiền còn lại";
+            if (amount + 0.01 < remainingAmount) {
+                return "Số tiền thanh toán phải bằng hoặc lớn hơn số tiền còn lại";
             }
             return null;
         } catch (NumberFormatException ex) {
@@ -1151,7 +1183,7 @@ public class InvoiceController {
     }
 
     private void updateActionButtons(Invoice invoice) {
-        boolean payable = isPayable(invoice) && hasRemainingAmount(invoice);
+        boolean payable = isPayable(invoice);
         boolean canRequestCancel = invoice != null;
 
         if (btnPay != null) {
@@ -1166,13 +1198,16 @@ public class InvoiceController {
     }
 
     private boolean isPayable(Invoice invoice) {
-        return invoice != null
-            && ("PENDING".equalsIgnoreCase(invoice.getStatus())
-                || "PARTIAL".equalsIgnoreCase(invoice.getStatus()));
+        if (invoice == null) {
+            return false;
+        }
+
+        String status = normalizeInvoiceStatus(invoice.getStatus());
+        return "PENDING".equals(status) || "PARTIAL".equals(status);
     }
 
     private boolean isCancelable(Invoice invoice) {
-        return invoice != null && "PENDING".equalsIgnoreCase(invoice.getStatus());
+        return invoice != null && "PENDING".equals(normalizeInvoiceStatus(invoice.getStatus()));
     }
 
     private boolean hasRemainingAmount(Invoice invoice) {

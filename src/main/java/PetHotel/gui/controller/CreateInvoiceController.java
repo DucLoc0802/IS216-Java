@@ -2,6 +2,7 @@ package PetHotel.gui.controller;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -12,11 +13,13 @@ import PetHotel.model.InvoiceDetail;
 import javafx.animation.PauseTransition;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -37,8 +40,9 @@ public class CreateInvoiceController {
     private final InvoiceBUS invoiceBUS = new InvoiceBUS();
 
     private Customer selectedCustomer;
-    private Invoice.InvoiceSource selectedSource;
     private List<InvoiceDetail> previewDetails;
+    private final PauseTransition customerSearchDebounce = new PauseTransition(Duration.millis(250));
+    private boolean suppressCustomerSuggestion;
 
     @FXML private TextField txtCustomerSearch;
 
@@ -83,6 +87,16 @@ public class CreateInvoiceController {
         applySourceTableStyles();
 
         txtCustomerSearch.setOnAction(this::onSearchCustomer);
+        txtCustomerSearch.textProperty().addListener((obs, oldText, newText) -> {
+            if (suppressCustomerSuggestion) {
+                return;
+            }
+            clearSelectedCustomer();
+            clearPreview();
+            customerSearchDebounce.stop();
+            customerSearchDebounce.setOnFinished(event -> searchCustomers(false));
+            customerSearchDebounce.playFromStart();
+        });
         btnCreateInvoice.setDisable(true);
         tableCustomer.setVisible(false);
         tableCustomer.setManaged(false);
@@ -92,15 +106,16 @@ public class CreateInvoiceController {
 
     @FXML
     public void onSearchCustomer(ActionEvent event) {
+        searchCustomers(true);
+    }
+
+    private void searchCustomers(boolean explicitSearch) {
         try {
             String keyword = txtCustomerSearch.getText() == null ? null : txtCustomerSearch.getText().trim();
             if (keyword == null || keyword.isEmpty()) {
-                tableCustomer.getItems().clear();
-                tableCustomer.setVisible(false);
-                tableCustomer.setManaged(false);
+                hideCustomerSuggestions();
                 clearSelectedCustomer();
                 clearPreview();
-                showAlert(Alert.AlertType.WARNING, "Thiếu thông tin", "Vui lòng nhập mã hoặc tên khách hàng");
                 return;
             }
 
@@ -110,35 +125,39 @@ public class CreateInvoiceController {
             tableCustomer.setManaged(true);
             clearSelectedCustomer();
             clearPreview();
-            if (customers.isEmpty()) {
-                showAlert(Alert.AlertType.INFORMATION, "Không có dữ liệu", "Không tìm thấy khách hàng có booking hoặc dịch vụ chưa tạo hóa đơn");
-            }
         } catch (Exception ex) {
             ex.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", "Không thể tìm khách hàng: " + ex.getMessage());
+            if (explicitSearch) {
+                showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", "Không thể tìm khách hàng: " + ex.getMessage());
+            } else {
+                hideCustomerSuggestions();
+            }
         }
     }
 
+    private void hideCustomerSuggestions() {
+        tableCustomer.getItems().clear();
+        tableCustomer.setVisible(false);
+        tableCustomer.setManaged(false);
+    }
     @FXML
     public void onCreateInvoice(ActionEvent event) {
         if (selectedCustomer == null) {
             showAlert(Alert.AlertType.WARNING, "Thiếu thông tin", "Vui lòng chọn khách hàng");
             return;
         }
-        if (selectedSource == null) {
+        Invoice.InvoiceSource selectedBooking = getSelectedBookingSource();
+        List<Invoice.InvoiceSource> selectedServices = getSelectedServiceSources();
+        if (selectedBooking == null && selectedServices.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Thiếu thông tin", "Vui lòng chọn booking hoặc dịch vụ");
             return;
         }
 
         try {
             String orderId = invoiceBUS.generateNextOrderId();
-            List<InvoiceDetail> details = invoiceBUS.buildInvoiceDetailsForSource(
-                selectedSource.getSourceType(),
-                selectedSource.getSourceId(),
-                orderId
-            );
+            List<InvoiceDetail> details = buildSelectedInvoiceDetails(orderId, selectedBooking, selectedServices);
             double subtotal = totalOf(details);
-            double prepaid = prepaidFor(selectedSource);
+            double prepaid = prepaidFor(selectedBooking);
             double remaining = remainingAmount(subtotal, prepaid);
             if (remaining <= 0) {
                 showAlert(Alert.AlertType.WARNING, "Dữ liệu không hợp lệ", "Booking này không còn số tiền cần thanh toán");
@@ -150,8 +169,8 @@ public class CreateInvoiceController {
             invoice.setId(orderId);
             invoice.setCustomerId(selectedCustomer.getCustomerId());
             invoice.setCustomerName(selectedCustomer.getFullName());
-            invoice.setBranchId(selectedSource.getBranchId());
-            invoice.setBookingId(selectedSource.getBookingId());
+            invoice.setBranchId(sourceBranchId(selectedBooking, selectedServices));
+            invoice.setBookingId(selectedBooking == null ? null : selectedBooking.getBookingId());
             invoice.setCreatedByEmp(DEFAULT_CREATED_BY_EMP);
             invoice.setStatus("PENDING");
             invoice.setSubtotal(remaining);
@@ -186,7 +205,7 @@ public class CreateInvoiceController {
     }
 
     private void setupEmptyPlaceholders() {
-        tableCustomer.setPlaceholder(new Label(""));
+        tableCustomer.setPlaceholder(new Label("Không tìm thấy khách hàng"));
         tableBookingSource.setPlaceholder(new Label(""));
         tableServiceSource.setPlaceholder(new Label(""));
     }
@@ -208,20 +227,14 @@ public class CreateInvoiceController {
         colServiceStatus.setCellValueFactory(cell -> new ReadOnlyStringWrapper(toVietnameseWorkStatus(cell.getValue().getStatus())));
         colServiceTotal.setCellValueFactory(cell -> new ReadOnlyStringWrapper(formatMoney(cell.getValue().getTotalAmount())));
 
-        tableBookingSource.getSelectionModel().selectedItemProperty().addListener((obs, oldSource, newSource) -> {
-            if (newSource != null) {
-                tableServiceSource.getSelectionModel().clearSelection();
-                selectSource(newSource);
-            }
-        });
-        tableServiceSource.getSelectionModel().selectedItemProperty().addListener((obs, oldSource, newSource) -> {
-            if (newSource != null) {
-                tableBookingSource.getSelectionModel().clearSelection();
-                selectSource(newSource);
-            }
-        });
-        installToggleSelection(tableBookingSource);
-        installToggleSelection(tableServiceSource);
+        tableBookingSource.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        tableServiceSource.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        tableBookingSource.getSelectionModel().selectedItemProperty().addListener((obs, oldSource, newSource) -> updatePreview());
+        tableServiceSource.getSelectionModel().getSelectedItems().addListener(
+            (ListChangeListener<Invoice.InvoiceSource>) change -> updatePreview()
+        );
+        installToggleSelection(tableBookingSource, false);
+        installToggleSelection(tableServiceSource, true);
     }
 
     private void applySourceTableStyles() {
@@ -238,16 +251,38 @@ public class CreateInvoiceController {
         table.setFocusTraversable(false);
     }
 
-    private void installToggleSelection(TableView<Invoice.InvoiceSource> table) {
+    private void installToggleSelection(TableView<Invoice.InvoiceSource> table, boolean allowMultiple) {
         table.setRowFactory(tableView -> {
             TableRow<Invoice.InvoiceSource> row = new TableRow<>();
             row.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
-                Invoice.InvoiceSource clickedSource = row.getItem();
-                if (!row.isEmpty() && isSameSource(clickedSource, selectedSource)) {
-                    tableView.getSelectionModel().clearSelection();
-                    clearPreview();
-                    event.consume();
+                if (row.isEmpty()) {
+                    return;
                 }
+                Invoice.InvoiceSource clickedSource = row.getItem();
+                boolean alreadySelected = tableView.getSelectionModel().getSelectedItems().contains(clickedSource);
+                if (allowMultiple) {
+                    List<Invoice.InvoiceSource> previouslySelected =
+                        new ArrayList<>(tableView.getSelectionModel().getSelectedItems());
+                    tableView.getSelectionModel().clearSelection();
+                    for (Invoice.InvoiceSource source : previouslySelected) {
+                        if (!isSameSource(source, clickedSource)) {
+                            tableView.getSelectionModel().select(source);
+                        }
+                    }
+                    if (!alreadySelected) {
+                        tableView.getSelectionModel().select(clickedSource);
+                    }
+                    updatePreview();
+                    event.consume();
+                    return;
+                }
+                if (alreadySelected) {
+                    tableView.getSelectionModel().clearSelection();
+                } else {
+                    tableView.getSelectionModel().select(clickedSource);
+                }
+                updatePreview();
+                event.consume();
             });
             return row;
         });
@@ -265,8 +300,10 @@ public class CreateInvoiceController {
         selectedCustomer = customer;
         lblSelectedCustomer.setText(valueOrDash(customer.getCustomerId()) + " - " + valueOrDash(customer.getFullName()));
         lblSelectedPhone.setText(valueOrDash(customer.getPhone()));
-        tableCustomer.setVisible(false);
-        tableCustomer.setManaged(false);
+        suppressCustomerSuggestion = true;
+        txtCustomerSearch.setText(valueOrDash(customer.getFullName()) + " - " + valueOrDash(customer.getPhone()));
+        suppressCustomerSuggestion = false;
+        hideCustomerSuggestions();
         loadSources(customer.getCustomerId());
     }
 
@@ -289,23 +326,25 @@ public class CreateInvoiceController {
         clearPreview();
     }
 
-    private void selectSource(Invoice.InvoiceSource source) {
-        selectedSource = source;
+    private void updatePreview() {
         try {
             String tempOrderId = "PREVIEW";
-            previewDetails = invoiceBUS.buildInvoiceDetailsForSource(source.getSourceType(), source.getSourceId(), tempOrderId);
+            Invoice.InvoiceSource selectedBooking = getSelectedBookingSource();
+            List<Invoice.InvoiceSource> selectedServices = getSelectedServiceSources();
+            if (selectedBooking == null && selectedServices.isEmpty()) {
+                clearPreview();
+                return;
+            }
 
+            previewDetails = buildSelectedInvoiceDetails(tempOrderId, selectedBooking, selectedServices);
             double subtotal = totalOf(previewDetails);
-            double prepaid = prepaidFor(source);
+            double prepaid = prepaidFor(selectedBooking);
             double remaining = remainingAmount(subtotal, prepaid);
 
             lblSummaryTotal.setText(formatMoney(remaining));
             lblSubtotal.setText(formatMoney(subtotal));
             lblPrepaid.setText(formatMoney(prepaid));
             btnCreateInvoice.setDisable(remaining <= 0);
-            if (remaining <= 0) {
-                showAlert(Alert.AlertType.WARNING, "Dữ liệu không hợp lệ", "Booking này không còn số tiền cần thanh toán");
-            }
         } catch (Exception ex) {
             clearPreview();
             ex.printStackTrace();
@@ -313,8 +352,47 @@ public class CreateInvoiceController {
         }
     }
 
+    private Invoice.InvoiceSource getSelectedBookingSource() {
+        return tableBookingSource.getSelectionModel().getSelectedItem();
+    }
+
+    private List<Invoice.InvoiceSource> getSelectedServiceSources() {
+        return new ArrayList<>(tableServiceSource.getSelectionModel().getSelectedItems());
+    }
+
+    private List<InvoiceDetail> buildSelectedInvoiceDetails(String orderId,
+                                                           Invoice.InvoiceSource selectedBooking,
+                                                           List<Invoice.InvoiceSource> selectedServices) throws Exception {
+        List<InvoiceDetail> details = new ArrayList<>();
+        if (selectedBooking != null) {
+            details.addAll(invoiceBUS.buildInvoiceDetailsForSource(
+                selectedBooking.getSourceType(),
+                selectedBooking.getSourceId(),
+                orderId
+            ));
+        }
+        if (selectedServices != null) {
+            for (Invoice.InvoiceSource service : selectedServices) {
+                details.addAll(invoiceBUS.buildInvoiceDetailsForSource(
+                    service.getSourceType(),
+                    service.getSourceId(),
+                    orderId
+                ));
+            }
+        }
+        return details;
+    }
+
+    private String sourceBranchId(Invoice.InvoiceSource selectedBooking, List<Invoice.InvoiceSource> selectedServices) {
+        if (selectedBooking != null) {
+            return selectedBooking.getBranchId();
+        }
+        return selectedServices == null || selectedServices.isEmpty() ? null : selectedServices.get(0).getBranchId();
+    }
     private void clearSelectedCustomer() {
         selectedCustomer = null;
+        tableBookingSource.getSelectionModel().clearSelection();
+        tableServiceSource.getSelectionModel().clearSelection();
         tableBookingSource.getItems().clear();
         tableServiceSource.getItems().clear();
         lblSelectedCustomer.setText("-");
@@ -322,7 +400,6 @@ public class CreateInvoiceController {
     }
 
     private void clearPreview() {
-        selectedSource = null;
         previewDetails = null;
         lblSummaryTotal.setText("0");
         lblSubtotal.setText("0");

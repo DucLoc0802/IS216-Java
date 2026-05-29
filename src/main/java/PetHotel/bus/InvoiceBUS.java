@@ -180,11 +180,17 @@ public class InvoiceBUS {
             invoice.setStatus("PAID");
             throw new IllegalArgumentException("Hóa đơn này đã thanh toán đủ.");
         }
-        if (amount - remaining > 0.01) {
-            throw new IllegalArgumentException("Số tiền thanh toán không được vượt quá số tiền còn lại");
+        if (amount + 0.01 < remaining) {
+            throw new IllegalArgumentException("Số tiền thanh toán phải bằng hoặc lớn hơn số tiền còn lại");
         }
 
-        invoiceDAO.createPayment(invoice.getId(), paymentMethod.trim(), amount);
+        double paymentAmount = remaining;
+        double changeAmount = Math.max(amount - remaining, 0);
+        String note = "Khach dua: " + amount + "; Tien thua: " + changeAmount;
+
+        invoiceDAO.createPayment(invoice.getId(), paymentMethod.trim(), paymentAmount, note);
+        invoice.setCustomerTenderedAmount(amount);
+        invoice.setChangeAmount(changeAmount);
         syncPaymentStatus(invoice);
     }
 
