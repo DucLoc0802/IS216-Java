@@ -950,6 +950,16 @@
     -fx-alignment: CENTER_LEFT;
 }
 
+.report-table .column-header .label {
+    -fx-alignment: CENTER;
+    -fx-text-alignment: CENTER;
+}
+
+.report-table .table-cell {
+    -fx-alignment: CENTER;
+    -fx-text-alignment: CENTER;
+}
+
 .invoice-table .table-row-cell {
     -fx-cell-size: 60px;
 }
@@ -1527,6 +1537,103 @@
 .report-task-meta {
     -fx-font-size: 11px;
     -fx-text-fill: -ph-text-muted;
+}
+
+.report-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.report-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.report-metric-card {
+    -fx-background-color: #FFFDF8;
+    -fx-background-radius: 8px;
+    -fx-border-color: #E8D7C3;
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-padding: 12 14 12 14;
+    -fx-spacing: 4;
+    -fx-min-height: 78px;
+}
+
+.report-metric-money {
+    -fx-background-color: #FDF5EE;
+    -fx-border-color: #E8C9A8;
+}
+
+.report-metric-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: -ph-text-secondary;
+    -fx-font-weight: bold;
+}
+
+.report-metric-value {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ph-dark;
+}
+
+.report-chart-panel {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 8px;
+    -fx-border-color: -ph-border;
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-padding: 10 12 10 12;
+    -fx-min-height: 285px;
+}
+
+.report-chart-title {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ph-dark;
+}
+
+.report-chart {
+    -fx-background-color: transparent;
+    -fx-pref-height: 245px;
+}
+
+.report-chart .chart-plot-background {
+    -fx-background-color: transparent;
+}
+
+.report-chart .chart-vertical-grid-lines,
+.report-chart .chart-horizontal-grid-lines {
+    -fx-stroke: #F1E6DA;
+}
+
+.report-chart .axis {
+    -fx-tick-label-fill: -ph-text-secondary;
+    -fx-font-size: 10px;
+}
+
+.report-chart .chart-legend {
+    -fx-background-color: transparent;
+    -fx-padding: 4 0 0 0;
+}
+
+.report-chart .chart-legend-item {
+    -fx-font-size: 10px;
+    -fx-text-fill: -ph-text-secondary;
+}
+
+.report-chart .chart-legend-item-symbol {
+    -fx-pref-width: 9px;
+    -fx-pref-height: 9px;
+}
+
+.report-chart .chart-pie-label {
+    -fx-fill: -ph-text-secondary;
+    -fx-font-size: 10px;
+}
+
+.report-chart .chart-pie-label-line {
+    -fx-stroke: -ph-text-muted;
+    -fx-stroke-width: 1px;
 }
 
 

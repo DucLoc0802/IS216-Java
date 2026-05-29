@@ -82,7 +82,7 @@ public class SidebarController {
 private void applyRolePermissions(Role role) {
     switch (role) {
         case RECEPTIONIST:
-            showMenu(menuPet);
+            hideMenu(menuPet);
             hideMenu(menuDashboard);
             hideMenu(menuRoom);
             hideMenu(menuAssignedTasks);
@@ -97,7 +97,7 @@ private void applyRolePermissions(Role role) {
             break;
 
         case PET_CARE_STAFF:
-            showMenu(menuPet);
+            hideMenu(menuPet);
             showMenu(menuGrooming);
             hideMenu(menuDashboard);
             hideMenu(menuCustomer);
@@ -139,7 +139,7 @@ private void applyRolePermissions(Role role) {
             break;
 
         case ADMIN:
-            showMenu(menuPet);
+            hideMenu(menuPet);
             break;
 
         default:
