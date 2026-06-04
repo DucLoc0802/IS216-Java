@@ -571,18 +571,19 @@ public class InvoiceDAO {
             "SELECT " +
             "    bs.booking_service_id, bs.booking_id, b.branch_id, c.customer_id, " +
             "    c.full_name AS customer_name, c.phone AS customer_phone, " +
-            "    ( " +
+            "    NVL(service_pet.pet_name, ( " +
             "        SELECT LISTAGG(p2.pet_name, ', ') WITHIN GROUP (ORDER BY p2.pet_name) " +
             "        FROM booking_room br2 " +
             "        JOIN booking_room_pet brp2 ON brp2.booking_room_id = br2.booking_room_id " +
             "        JOIN pet p2 ON p2.pet_id = brp2.pet_id " +
             "        WHERE br2.booking_id = b.booking_id " +
-            "    ) AS pet_name, " +
+            "    )) AS pet_name, " +
             "    s.service_name, bs.scheduled_at, bs.status, NVL(s.base_price, 0) AS total_amount " +
             "FROM booking_services bs " +
             "JOIN booking b ON b.booking_id = bs.booking_id " +
             "JOIN customer c ON c.customer_id = b.customer_id " +
             "JOIN services s ON s.service_id = bs.service_id " +
+            "LEFT JOIN pet service_pet ON service_pet.pet_id = bs.pet_id " +
             "WHERE c.customer_id = ? " +
             "  AND b.status <> 'CANCELLED' " +
             "  AND bs.status <> 'CANCELLED' " +

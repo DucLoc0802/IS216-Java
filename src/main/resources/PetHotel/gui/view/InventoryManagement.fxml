@@ -53,6 +53,29 @@
                 text="Xóa lọc" />
     </HBox>
 
+    <VBox fx:id="lowStockAlertPanel" spacing="10" styleClass="inventory-alert-panel">
+        <HBox alignment="CENTER_LEFT" spacing="12">
+            <Label fx:id="lowStockAlertIcon" minHeight="30" minWidth="30" styleClass="inventory-alert-icon" text="OK" />
+            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                <Label fx:id="lowStockSummaryLabel" styleClass="inventory-alert-title" text="Đang tải cảnh báo tồn kho..." />
+                <Label fx:id="lowStockDetailLabel" styleClass="inventory-alert-detail" text="Kiểm tra các sản phẩm dưới điểm đặt hàng lại" wrapText="true" />
+            </VBox>
+            <Button fx:id="btnShowOutStock"
+                    managed="false"
+                    onAction="#onShowOutStock"
+                    styleClass="action-btn action-btn-outline inventory-alert-action"
+                    text="Hết hàng"
+                    visible="false" />
+            <Button fx:id="btnShowLowStock"
+                    managed="false"
+                    onAction="#onShowLowStock"
+                    styleClass="action-btn action-btn-outline inventory-alert-action"
+                    text="Sắp hết"
+                    visible="false" />
+        </HBox>
+        <HBox fx:id="lowStockItemsBox" alignment="CENTER_LEFT" managed="false" spacing="10" visible="false" />
+    </VBox>
+
     <VBox spacing="12" styleClass="content-panel" VBox.vgrow="ALWAYS">
         <TableView fx:id="inventoryTable" VBox.vgrow="ALWAYS">
             <styleClass>
@@ -68,6 +91,7 @@
                 <TableColumn fx:id="colReorderPoint" minWidth="140" prefWidth="165" text="Điểm đặt hàng lại" />
                 <TableColumn fx:id="colStockStatus" minWidth="130" prefWidth="155" text="Trạng thái tồn" />
                 <TableColumn fx:id="colLastUpdated" minWidth="170" prefWidth="200" text="Cập nhật lần cuối" />
+                <TableColumn fx:id="colActions" minWidth="125" prefWidth="135" text="Thao tác" />
             </columns>
             <placeholder>
                 <Label styleClass="table-empty" text="Không có dữ liệu tồn kho" />

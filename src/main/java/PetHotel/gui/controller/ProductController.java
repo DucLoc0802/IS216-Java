@@ -1,5 +1,13 @@
 package PetHotel.gui.controller;
 
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+
 import PetHotel.bus.ProductBUS;
 import PetHotel.exception.ValidationException;
 import PetHotel.model.AppUser;
@@ -20,14 +28,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
-
-import java.math.BigDecimal;
-import java.sql.SQLException;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
 
 public class ProductController {
     private static final List<String> FALLBACK_CATEGORIES = List.of(
@@ -82,7 +82,6 @@ public class ProductController {
             && currentUser.getRole() != Role.RECEPTIONIST
             && currentUser.getRole() != Role.PET_CARE_STAFF;
         colImportPrice.setVisible(canViewImportPrice);
-        colImportPrice.setManaged(canViewImportPrice);
 
         showManaged(btnAddProduct, canManage);
         showManaged(btnAddCategory, canManage);

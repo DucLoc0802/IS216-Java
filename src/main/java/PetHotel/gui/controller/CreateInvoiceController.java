@@ -170,7 +170,7 @@ public class CreateInvoiceController {
             invoice.setCustomerId(selectedCustomer.getCustomerId());
             invoice.setCustomerName(selectedCustomer.getFullName());
             invoice.setBranchId(sourceBranchId(selectedBooking, selectedServices));
-            invoice.setBookingId(selectedBooking == null ? null : selectedBooking.getBookingId());
+            invoice.setBookingId(sourceBookingId(selectedBooking, selectedServices));
             invoice.setCreatedByEmp(DEFAULT_CREATED_BY_EMP);
             invoice.setStatus("PENDING");
             invoice.setSubtotal(remaining);
@@ -389,6 +389,14 @@ public class CreateInvoiceController {
         }
         return selectedServices == null || selectedServices.isEmpty() ? null : selectedServices.get(0).getBranchId();
     }
+
+    private String sourceBookingId(Invoice.InvoiceSource selectedBooking, List<Invoice.InvoiceSource> selectedServices) {
+        if (selectedBooking != null) {
+            return selectedBooking.getBookingId();
+        }
+        return selectedServices == null || selectedServices.isEmpty() ? null : selectedServices.get(0).getBookingId();
+    }
+
     private void clearSelectedCustomer() {
         selectedCustomer = null;
         tableBookingSource.getSelectionModel().clearSelection();

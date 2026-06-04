@@ -1638,6 +1638,124 @@
     -fx-text-fill: -ph-amber;
 }
 
+.inventory-alert-panel {
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    -fx-border-width: 1px;
+    -fx-padding: 12 16 12 16;
+    -fx-effect: -ph-shadow-sm;
+}
+
+.inventory-alert-panel-ok {
+    -fx-background-color: #F0FDF4;
+    -fx-border-color: #BBF7D0;
+}
+
+.inventory-alert-panel-warning {
+    -fx-background-color: #FFFBEB;
+    -fx-border-color: #FDE68A;
+}
+
+.inventory-alert-icon {
+    -fx-alignment: center;
+    -fx-background-radius: 999px;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.inventory-alert-panel-ok .inventory-alert-icon {
+    -fx-background-color: #DCFCE7;
+    -fx-text-fill: #166534;
+}
+
+.inventory-alert-panel-warning .inventory-alert-icon {
+    -fx-background-color: #FEF3C7;
+    -fx-text-fill: #92400E;
+}
+
+.inventory-alert-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ph-dark;
+}
+
+.inventory-alert-detail,
+.inventory-alert-meta {
+    -fx-font-size: 11px;
+    -fx-text-fill: -ph-text-secondary;
+}
+
+.inventory-alert-action {
+    -fx-min-width: 82px;
+}
+
+.inventory-table-action {
+    -fx-padding: 6 10 6 10;
+    -fx-font-size: 11px;
+}
+
+.inventory-alert-item {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-padding: 9 12 9 12;
+    -fx-min-width: 190px;
+    -fx-pref-width: 210px;
+}
+
+.inventory-alert-item-low {
+    -fx-border-color: #FDE68A;
+}
+
+.inventory-alert-item-out {
+    -fx-border-color: #FECACA;
+}
+
+.inventory-alert-product {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ph-dark;
+}
+
+.inventory-alert-status-low,
+.inventory-alert-status-out {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.inventory-alert-status-low {
+    -fx-text-fill: #92400E;
+}
+
+.inventory-alert-status-out {
+    -fx-text-fill: #991B1B;
+}
+
+.inventory-alert-more {
+    -fx-alignment: center;
+    -fx-border-color: #E5E7EB;
+}
+
+.inventory-alert-more-count {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ph-dark;
+}
+
+.data-table .table-row-cell.inventory-row-low {
+    -fx-background-color: #FFFBEB;
+}
+
+.data-table .table-row-cell.inventory-row-out {
+    -fx-background-color: #FEF2F2;
+}
+
+.data-table .table-row-cell.inventory-row-low:selected,
+.data-table .table-row-cell.inventory-row-out:selected {
+    -fx-background-color: #FDE68A;
+}
+
 /* Inventory mini card */
 .inv-card {
     -fx-background-color: white;

@@ -81,3 +81,46 @@
 {"logId":"LOG305905","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T00:34:04.543215100+07:00"}
 {"logId":"LOG898490","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T00:37:48.414033800+07:00"}
 {"logId":"LOG246507","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T00:53:26.709573200+07:00"}
+{"logId":"LOG989373","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T10:26:21.362405+07:00"}
+{"logId":"LOG779626","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T10:29:00.407916500+07:00"}
+{"logId":"LOG422567","employeeId":"EMP002","employeeName":"Lê Thị B","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T10:29:07.772404800+07:00"}
+{"logId":"LOG119510","employeeId":"EMP002","employeeName":"Lê Thị B","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T10:29:14.452922600+07:00"}
+{"logId":"LOG079595","employeeId":"EMP001","employeeName":"Nguyễn Văn A","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T10:29:24.174019600+07:00"}
+{"logId":"LOG085091","employeeId":"EMP001","employeeName":"Nguyễn Văn A","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T10:33:28.302648900+07:00"}
+{"logId":"LOG697455","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T10:33:33.880746+07:00"}
+{"logId":"LOG528546","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T10:34:44.041182300+07:00"}
+{"logId":"LOG729014","employeeId":"EMP002","employeeName":"Lê Thị B","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T10:34:57.466240100+07:00"}
+{"logId":"LOG161711","employeeId":"EMP002","employeeName":"Lê Thị B","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T10:35:42.429415300+07:00"}
+{"logId":"LOG156692","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T10:35:51.148480300+07:00"}
+{"logId":"LOG929702","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T10:38:04.822831600+07:00"}
+{"logId":"LOG967038","employeeId":"EMP002","employeeName":"Lê Thị B","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T10:38:35.989906+07:00"}
+{"logId":"LOG756806","employeeId":"EMP002","employeeName":"Lê Thị B","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T10:39:01.396028900+07:00"}
+{"logId":"LOG559077","employeeId":"EMP001","employeeName":"Nguyễn Văn A","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T10:39:05.085237100+07:00"}
+{"logId":"LOG402112","employeeId":"EMP001","employeeName":"Nguyễn Văn A","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T10:40:51.819983+07:00"}
+{"logId":"LOG966630","employeeId":"EMP002","employeeName":"Lê Thị B","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T10:41:00.042411300+07:00"}
+{"logId":"LOG786843","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T10:54:46.184472+07:00"}
+{"logId":"LOG060742","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T10:59:36.833859100+07:00"}
+{"logId":"LOG383395","employeeId":"EMP004","employeeName":"Nguyễn Thị D","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T10:59:43.620476700+07:00"}
+{"logId":"LOG161778","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T13:33:36.199952100+07:00"}
+{"logId":"LOG119499","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T14:16:03.805997600+07:00"}
+{"logId":"LOG325557","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T14:22:19.786977+07:00"}
+{"logId":"LOG780582","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T14:25:40.813982700+07:00"}
+{"logId":"LOG991223","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T14:26:19.250338800+07:00"}
+{"logId":"LOG063216","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T14:26:56.270239500+07:00"}
+{"logId":"LOG513433","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T14:37:32.848954100+07:00"}
+{"logId":"LOG049318","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T14:40:49.976798200+07:00"}
+{"logId":"LOG430359","employeeId":"EMP002","employeeName":"Lê Thị B","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T14:40:54.065503400+07:00"}
+{"logId":"LOG569344","employeeId":"EMP002","employeeName":"Lê Thị B","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T14:41:10.446122900+07:00"}
+{"logId":"LOG376235","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T14:41:14.758264900+07:00"}
+{"logId":"LOG226764","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T14:47:18.424109200+07:00"}
+{"logId":"LOG551249","employeeId":"EMP_ADMIN","employeeName":"Quản Trị Viên Hệ Thống","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T14:47:22.960645300+07:00"}
+{"logId":"LOG702703","employeeId":"EMP_ADMIN","employeeName":"Quản Trị Viên Hệ Thống","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T14:48:39.886430800+07:00"}
+{"logId":"LOG806759","employeeId":"EMP001","employeeName":"Nguyễn Văn A","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T15:35:30.614734800+07:00"}
+{"logId":"LOG666382","employeeId":"EMP001","employeeName":"Nguyễn Văn A","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T16:09:15.001003500+07:00"}
+{"logId":"LOG805613","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T16:09:20.514047300+07:00"}
+{"logId":"LOG121361","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T16:11:42.449644900+07:00"}
+{"logId":"LOG450042","employeeId":"EMP002","employeeName":"Lê Thị B","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T16:11:47.153023+07:00"}
+{"logId":"LOG534142","employeeId":"EMP002","employeeName":"Lê Thị B","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T16:12:21.771355600+07:00"}
+{"logId":"LOG802606","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-05-30T16:12:26.323944300+07:00"}
+{"logId":"LOG335543","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng xuất","details":"Đăng xuất khỏi hệ thống.","createdAt":"2026-05-30T16:15:12.069891500+07:00"}
+{"logId":"LOG586317","employeeId":"EMP003","employeeName":"Phạm Văn C","action":"Đăng nhập","details":"Đăng nhập thành công vào hệ thống.","createdAt":"2026-06-01T09:25:15.989119400+07:00"}
