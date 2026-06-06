@@ -240,7 +240,7 @@ Ví dụ:
 
 ```text
 Tài khoản: admin
-Mật khẩu: 123456
+Mật khẩu: admin
 ```
 
 Một số tài khoản theo vai trò có thể được chuẩn bị trong dữ liệu mẫu:
@@ -248,11 +248,11 @@ Một số tài khoản theo vai trò có thể được chuẩn bị trong dữ
 ```text
 Role Lễ tân:
 Tài khoản: letan
-Mật khẩu: 123456
+Mật khẩu: letan
 
 Role CEO / Quản trị:
-Tài khoản: admin
-Mật khẩu: 123456
+Tài khoản: ceo
+Mật khẩu: ceo
 ```
 
 > **Lưu ý:** Tài khoản đăng nhập thực tế phụ thuộc vào dữ liệu trong file SQL mẫu của project. Nếu đăng nhập không thành công, cần kiểm tra lại bảng tài khoản trong cơ sở dữ liệu.
