@@ -68,3 +68,45 @@
 ```bash
 git clone https://github.com/DucLoc0802/IS216-Java.git
 cd IS216-Java
+## YÊU CẦU HỆ THỐNG
+<a name="yeucau"></a>
+
+Dự án **Hệ thống quản lý chuỗi khách sạn thú cưng Pet Hotel** là ứng dụng desktop được xây dựng bằng Java và JavaFX, sử dụng Oracle Database để lưu trữ dữ liệu. Trước khi cài đặt và chạy ứng dụng, máy tính cần đáp ứng các yêu cầu hệ thống sau:
+
+| STT | Thành phần | Yêu cầu | Ghi chú |
+|-----|------------|---------|--------|
+| 1 | Hệ điều hành | Windows 10/11, macOS hoặc Linux | Khuyến nghị sử dụng Windows 10/11 để thuận tiện khi chạy script và cấu hình môi trường. |
+| 2 | Ngôn ngữ lập trình | Java | Ứng dụng được xây dựng bằng ngôn ngữ Java theo hướng lập trình hướng đối tượng. |
+| 3 | Java Development Kit | JDK 21 trở lên | Cần cài JDK để biên dịch và chạy ứng dụng JavaFX. |
+| 4 | Framework giao diện | JavaFX 21 | Dùng để xây dựng giao diện desktop cho các màn hình như đăng nhập, lễ tân, CEO, hóa đơn, booking và báo cáo. |
+| 5 | Quản lý thư viện và build | Maven hoặc Maven Wrapper | Maven dùng để tải thư viện, biên dịch project và chạy ứng dụng. Nếu project có sẵn Maven Wrapper thì không bắt buộc cài Maven thủ công. |
+| 6 | Cơ sở dữ liệu | Oracle Database 19c/21c/23ai hoặc Oracle Database Free/Express Edition | Dùng để lưu trữ dữ liệu tập trung của hệ thống Pet Hotel. |
+| 7 | Driver kết nối CSDL | Oracle JDBC Driver / OJDBC11 | Cho phép ứng dụng Java kết nối và truy vấn dữ liệu từ Oracle Database. |
+| 8 | Công cụ quản trị CSDL | SQL Developer, DBeaver hoặc SQLPlus | Dùng để tạo user/schema, chạy script SQL, kiểm tra bảng và dữ liệu mẫu. |
+| 9 | Công cụ quản lý mã nguồn | Git | Dùng để clone repository, quản lý phiên bản source code và phối hợp làm việc nhóm. |
+| 10 | IDE lập trình | IntelliJ IDEA, NetBeans, Eclipse hoặc Visual Studio Code | Khuyến nghị IntelliJ IDEA để mở project Maven và chạy ứng dụng JavaFX dễ hơn. |
+| 11 | Bộ nhớ RAM | Tối thiểu 4GB, khuyến nghị 8GB trở lên | Giúp chạy IDE, JavaFX và Oracle Database ổn định hơn. |
+| 12 | Dung lượng ổ đĩa | Tối thiểu 2GB trống cho project, thư viện và dữ liệu mẫu | Nếu cài Oracle Database local thì cần nhiều dung lượng hơn. |
+| 13 | Kết nối mạng | Cần khi clone project và tải thư viện Maven | Sau khi tải đủ thư viện, ứng dụng có thể chạy trong môi trường local nếu database đã được cấu hình. |
+
+### Cấu hình khuyến nghị
+
+| Thành phần | Khuyến nghị |
+|-----------|------------|
+| Hệ điều hành | Windows 10/11 |
+| JDK | JDK 21 |
+| JavaFX | JavaFX 21 |
+| Database | Oracle Database Free hoặc Oracle 21c |
+| IDE | IntelliJ IDEA |
+| Công cụ SQL | SQL Developer hoặc DBeaver |
+| RAM | 8GB trở lên |
+| Build tool | Maven Wrapper đi kèm project |
+
+### Ghi chú
+
+- Người dùng cần cài đặt **JDK 21** và cấu hình biến môi trường `JAVA_HOME` nếu chạy bằng dòng lệnh.
+- Cần khởi động **Oracle Database** trước khi chạy ứng dụng.
+- Thông tin kết nối cơ sở dữ liệu cần được cấu hình đúng với user/schema của project.
+- Nếu project có file `mvnw.cmd` hoặc `mvnw`, có thể chạy bằng Maven Wrapper mà không cần cài Maven riêng.
+- Các script SQL cần được chạy đúng thứ tự để tạo bảng, ràng buộc, dữ liệu mẫu và các thành phần liên quan.
+- Hệ thống được thiết kế cho mô hình quản lý chuỗi khách sạn thú cưng, gồm nhiều vai trò như lễ tân, quản lý chi nhánh, CEO hoặc quản trị hệ thống.
